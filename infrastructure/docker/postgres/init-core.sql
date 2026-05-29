@@ -28,8 +28,9 @@ CREATE TABLE IF NOT EXISTS core."Workspaces" (
     "PricePerHour" NUMERIC(10,2) NOT NULL DEFAULT 0,
     "PricePerDay" NUMERIC(10,2),
     "PricePerMonth" NUMERIC(10,2),
-    "Amenities" TEXT[],
-    "Images" TEXT[],
+    "DepositPercentage" NUMERIC(5,2) NOT NULL DEFAULT 30.00,
+    "Amenities" JSONB,
+    "Images" JSONB,
     "Rating" NUMERIC(3,2),
     "ReviewCount" INTEGER NOT NULL DEFAULT 0,
     "IsActive" BOOLEAN NOT NULL DEFAULT TRUE,
@@ -43,8 +44,11 @@ CREATE TABLE IF NOT EXISTS core."Reservations" (
     "UserId" UUID NOT NULL,
     "StartTime" TIMESTAMPTZ NOT NULL,
     "EndTime" TIMESTAMPTZ NOT NULL,
-    "Status" VARCHAR(32) NOT NULL DEFAULT 'Pending',
+    "Status" VARCHAR(32) NOT NULL DEFAULT 'PendingPayment',
     "TotalPrice" NUMERIC(10,2),
+    "DepositAmount" NUMERIC(10,2),
+    "DepositPaid" BOOLEAN NOT NULL DEFAULT FALSE,
+    "FullyPaid" BOOLEAN NOT NULL DEFAULT FALSE,
     "Notes" TEXT,
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "UpdatedAt" TIMESTAMPTZ
@@ -60,6 +64,19 @@ CREATE TABLE IF NOT EXISTS core."Reviews" (
     "UpdatedAt" TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS "Payments" (
+    "Id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "ReservationId" UUID NOT NULL REFERENCES "Reservations"("Id") ON DELETE CASCADE,
+    "UserId" UUID NOT NULL,
+    "Amount" NUMERIC(10,2) NOT NULL,
+    "PaymentType" VARCHAR(16) NOT NULL CHECK ("PaymentType" IN ('Deposit', 'Final')),
+    "PaymentMethod" VARCHAR(32) NOT NULL DEFAULT 'Stripe',
+    "Status" VARCHAR(16) NOT NULL DEFAULT 'Pending',
+    "StripePaymentIntentId" VARCHAR(128),
+    "PaidAt" TIMESTAMPTZ,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 INSERT INTO core."Companies" ("Id", "Name", "Description", "WebsiteUrl")
 VALUES (
     'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
@@ -69,7 +86,7 @@ VALUES (
 )
 ON CONFLICT ("Id") DO NOTHING;
 
-INSERT INTO core."Workspaces" ("Id", "CompanyId", "Name", "Description", "Address", "City", "Country", "Latitude", "Longitude", "Capacity", "PricePerHour", "Amenities")
+INSERT INTO core."Workspaces" ("Id", "CompanyId", "Name", "Description", "Address", "City", "Country", "Latitude", "Longitude", "Capacity", "PricePerHour", "DepositPercentage", "Amenities")
 VALUES
 (
     'b2c3d4e5-f6a7-8901-bcde-f12345678901',
@@ -83,7 +100,8 @@ VALUES
     -74.0060,
     50,
     25.00,
-    ARRAY['WiFi', 'Meeting Rooms', 'Coffee', 'Printing', 'Parking']
+    30.00,
+    '["WiFi", "Meeting Rooms", "Coffee", "Printing", "Parking"]'
 ),
 (
     'c3d4e5f6-a7b8-9012-cdef-123456789012',
@@ -97,7 +115,8 @@ VALUES
     -122.4194,
     120,
     35.00,
-    ARRAY['WiFi', 'Meeting Rooms', 'Coffee', 'Event Space', 'Gym', 'Cafeteria']
+    30.00,
+    '["WiFi", "Meeting Rooms", "Coffee", "Event Space", "Gym", "Cafeteria"]'
 ),
 (
     'd4e5f6a7-b8c9-0123-defa-234567890123',
@@ -111,6 +130,7 @@ VALUES
     -0.1278,
     30,
     20.00,
-    ARRAY['WiFi', 'Coffee', 'Lounge', 'Rooftop', 'Bike Storage']
+    30.00,
+    '["WiFi", "Coffee", "Lounge", "Rooftop", "Bike Storage"]'
 )
 ON CONFLICT ("Id") DO NOTHING;

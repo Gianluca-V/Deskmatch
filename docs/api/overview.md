@@ -62,7 +62,7 @@ DeskMatch uses **JWT Bearer Authentication** with symmetric HMAC SHA-256 signing
 }
 ```
 
-### Core Service (`/api/offices`, `/api/companies`, `/api/reservations`, `/api/reviews`)
+### Core Service (`/api/offices`, `/api/companies`, `/api/reservations`, `/api/reviews`, `/api/payments`)
 
 #### Offices
 
@@ -128,6 +128,7 @@ DeskMatch uses **JWT Bearer Authentication** with symmetric HMAC SHA-256 signing
   "longitude": -74.006,
   "capacity": 30,
   "pricePerHour": 20.00,
+  "depositPercentage": 30,
   "amenities": ["WiFi", "Coffee", "Parking"]
 }
 ```
@@ -150,6 +151,34 @@ DeskMatch uses **JWT Bearer Authentication** with symmetric HMAC SHA-256 signing
 | POST   | `/api/reservations`               | Yes  | Create reservation                 |
 | PUT    | `/api/reservations/{id}`          | Yes  | Update reservation                 |
 | DELETE | `/api/reservations/{id}`          | Yes  | Cancel reservation                 |
+
+**Flujo de pago:** al crear una reserva se genera automáticamente un pago de seña (deposit).
+El usuario debe procesar ese pago para confirmar la reserva. Luego puede crear y pagar el monto final.
+
+#### Payments
+
+| Method | Path                                          | Auth | Description                             |
+|--------|-----------------------------------------------|------|-----------------------------------------|
+| POST   | `/api/payments/deposit/{paymentId}/process`   | Yes  | Procesar pago de seña (Stripe webhook) |
+| POST   | `/api/payments/reservations/{id}/final`       | Yes  | Crear pago del monto final             |
+| POST   | `/api/payments/final/{paymentId}/process`     | Yes  | Procesar pago final (Stripe webhook)   |
+| GET    | `/api/payments/reservations/{id}`             | Yes  | Ver pagos de una reserva               |
+
+#### Process Payment Request
+
+```json
+{
+  "stripePaymentIntentId": "pi_3Nl7pV2eZvKYlo2C1Z123456"
+}
+```
+
+#### Create Final Payment Request
+
+```json
+{
+  "userId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
 
 #### Create Reservation Request
 
