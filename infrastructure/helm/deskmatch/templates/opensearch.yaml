@@ -1,0 +1,99 @@
+{{- if .Values.opensearch.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "opensearch") .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch") .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch") .) | nindent 8 }}
+    spec:
+      containers:
+        - name: opensearch
+          image: {{ .Values.opensearch.image.repository }}:{{ .Values.opensearch.image.tag }}
+          imagePullPolicy: {{ .Values.opensearch.image.pullPolicy }}
+          ports:
+            - containerPort: 9200
+              name: http
+            - containerPort: 9300
+              name: transport
+          env:
+            - name: discovery.type
+              value: "single-node"
+            - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "deskmatch.fullname" . }}-secrets
+                  key: OPENSEARCH_PASSWORD
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+            - name: DISABLE_INSTALL_DEMO_CONFIG
+              value: "true"
+            - name: bootstrap.memory_lock
+              value: "true"
+          resources:
+            {{- toYaml .Values.opensearch.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch-dashboards
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "opensearch-dashboards") .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch-dashboards") .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch-dashboards") .) | nindent 8 }}
+    spec:
+      containers:
+        - name: opensearch-dashboards
+          image: {{ .Values.opensearch.dashboards.image.repository }}:{{ .Values.opensearch.dashboards.image.tag }}
+          imagePullPolicy: {{ .Values.opensearch.dashboards.image.pullPolicy }}
+          ports:
+            - containerPort: 5601
+          env:
+            - name: OPENSEARCH_HOSTS
+              value: "http://opensearch.{{ .Values.namespace.name }}.svc.cluster.local:9200"
+            - name: DISABLE_SECURITY_DASHBOARDS_PLUGIN
+              value: "true"
+          resources:
+            {{- toYaml .Values.opensearch.dashboards.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/status
+              port: 5601
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/status
+              port: 5601
+            initialDelaySeconds: 60
+            periodSeconds: 20
+{{- end }}

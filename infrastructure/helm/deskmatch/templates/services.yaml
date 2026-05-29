@@ -1,0 +1,169 @@
+{{/* Backend Services */}}
+{{- range $name, $svc := .Values.backendServices }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" $name) $) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $name) $) | nindent 4 }}
+---
+{{- end }}
+
+{{/* Frontend Services */}}
+{{- range $name, $fe := .Values.frontends }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" $name) $) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $fe.port }}
+      targetPort: {{ $fe.port }}
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $name) $) | nindent 4 }}
+---
+{{- end }}
+
+{{/* Infrastructure Services */}}
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "postgres") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "postgres") .) | nindent 4 }}
+---
+{{- end }}
+
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "redis") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "redis") .) | nindent 4 }}
+---
+{{- end }}
+
+{{- if .Values.opensearch.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "opensearch") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200
+      protocol: TCP
+    - name: transport
+      port: 9300
+      targetPort: 9300
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch") .) | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch-dashboards
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "opensearch-dashboards") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5601
+      targetPort: 5601
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "opensearch-dashboards") .) | nindent 4 }}
+---
+{{- end }}
+
+{{- if .Values.monitoring.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "prometheus") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "prometheus") .) | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "grafana") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "grafana") .) | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "loki") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3100
+      targetPort: 3100
+      protocol: TCP
+  selector:
+    {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "loki") .) | nindent 4 }}
+---
+{{- end }}

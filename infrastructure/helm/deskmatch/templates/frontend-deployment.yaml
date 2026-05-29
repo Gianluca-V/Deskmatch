@@ -1,0 +1,49 @@
+{{/* Generic frontend deployment template */}}
+{{- define "deskmatch.frontendDeployment" -}}
+{{- $root := .root }}
+{{- $frontend := .frontend }}
+{{- $name := $frontend.name }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $root.Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" $name) $root) | nindent 4 }}
+spec:
+  replicas: {{ $frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $name) $root) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $name) $root) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: {{ $frontend.image.repository }}:{{ $frontend.image.tag }}
+          imagePullPolicy: {{ $frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $frontend.port }}
+          resources:
+            {{- toYaml $frontend.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ $frontend.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ $frontend.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+{{- end }}
+
+{{/* Render frontend deployments */}}
+{{- range $name, $fe := .Values.frontends }}
+{{- include "deskmatch.frontendDeployment" (dict "root" $ "frontend" (merge (dict "name" $name) $fe)) }}
+---
+{{- end }}

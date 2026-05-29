@@ -1,0 +1,78 @@
+config:
+  aspnet:
+    environment: "Staging"
+  serilog:
+    minimumLevel: "Warning"
+
+backendServices:
+  api-gateway:
+    replicas: 2
+    resources:
+      requests:
+        memory: "192Mi"
+        cpu: "200m"
+      limits:
+        memory: "384Mi"
+        cpu: "500m"
+  auth-service:
+    replicas: 2
+    resources:
+      requests:
+        memory: "192Mi"
+        cpu: "200m"
+      limits:
+        memory: "384Mi"
+        cpu: "500m"
+  core-service:
+    replicas: 2
+    resources:
+      requests:
+        memory: "192Mi"
+        cpu: "200m"
+      limits:
+        memory: "384Mi"
+        cpu: "500m"
+  search-service:
+    replicas: 2
+    resources:
+      requests:
+        memory: "192Mi"
+        cpu: "200m"
+      limits:
+        memory: "384Mi"
+        cpu: "500m"
+  notification-service:
+    replicas: 2
+    resources:
+      requests:
+        memory: "192Mi"
+        cpu: "200m"
+      limits:
+        memory: "384Mi"
+        cpu: "500m"
+
+frontends:
+  frontend-web:
+    replicas: 2
+    resources:
+      requests:
+        memory: "96Mi"
+        cpu: "100m"
+      limits:
+        memory: "192Mi"
+        cpu: "200m"
+  frontend-admin:
+    replicas: 2
+    resources:
+      requests:
+        memory: "96Mi"
+        cpu: "100m"
+      limits:
+        memory: "192Mi"
+        cpu: "200m"
+
+monitoring:
+  enabled: true
+
+autoscaling:
+  enabled: false

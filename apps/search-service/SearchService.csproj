@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>DeskMatch.SearchService</RootNamespace>
+    <AssemblyName>DeskMatch.SearchService</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\domain\DeskMatch.Domain.csproj" />
+    <ProjectReference Include="..\..\shared\building-blocks\DeskMatch.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\shared\sdk\src\OpenSearch\DeskMatch.SDK.OpenSearch.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+</Project>

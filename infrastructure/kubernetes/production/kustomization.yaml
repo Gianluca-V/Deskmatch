@@ -1,0 +1,173 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: deskmatch
+
+resources:
+  - ../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "512Mi"
+          cpu: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "256Mi"
+          cpu: "500m"
+      - op: add
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+  - target:
+      kind: Deployment
+      name: auth-service
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "512Mi"
+          cpu: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "256Mi"
+          cpu: "500m"
+      - op: add
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+  - target:
+      kind: Deployment
+      name: core-service
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "512Mi"
+          cpu: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "256Mi"
+          cpu: "500m"
+      - op: add
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+  - target:
+      kind: Deployment
+      name: search-service
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "512Mi"
+          cpu: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "256Mi"
+          cpu: "500m"
+      - op: add
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+  - target:
+      kind: Deployment
+      name: notification-service
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "512Mi"
+          cpu: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "256Mi"
+          cpu: "500m"
+      - op: add
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+  - target:
+      kind: Deployment
+      name: frontend-web
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "256Mi"
+          cpu: "250m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "128Mi"
+          cpu: "100m"
+  - target:
+      kind: Deployment
+      name: frontend-admin
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits
+        value:
+          memory: "256Mi"
+          cpu: "250m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value:
+          memory: "128Mi"
+          cpu: "100m"
+  - target:
+      kind: ConfigMap
+      name: deskmatch-config
+    patch: |-
+      - op: replace
+        path: /data/ASPNETCORE_ENVIRONMENT
+        value: "Production"
+      - op: replace
+        path: /data/SERILOG_MINIMUM_LEVEL
+        value: "Warning"

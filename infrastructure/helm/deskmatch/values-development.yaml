@@ -1,0 +1,85 @@
+config:
+  aspnet:
+    environment: "Development"
+  serilog:
+    minimumLevel: "Debug"
+
+backendServices:
+  api-gateway:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits: {}
+  auth-service:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits: {}
+  core-service:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits: {}
+  search-service:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits: {}
+  notification-service:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits: {}
+
+frontends:
+  frontend-web:
+    replicas: 1
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits: {}
+  frontend-admin:
+    replicas: 1
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits: {}
+
+postgres:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits: {}
+
+redis:
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits: {}
+
+opensearch:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits: {}
+
+monitoring:
+  enabled: false
+
+autoscaling:
+  enabled: false

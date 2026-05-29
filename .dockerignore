@@ -1,0 +1,125 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.VisualState.xml
+TestResults/
+[Bb]uild[Ll]og.*
+_NCrunch_*
+.*crunch*.local.xml
+*.ncrunchsolution
+*.ncrunchproject
+*.dotCover
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+dist/
+build/
+.next/
+.nuxt/
+.output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env.local
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.*~
+*.csproj.user
+*.dbmdl
+*.jfm
+*.sln.iml
+_ReSharper.Caches/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Code coverage
+coverage/
+*.lcov
+*.coverage
+*.coveragexml
+coveragereport/
+
+# Git
+.git/
+.gitattributes
+.gitignore
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Documentation (not needed in image)
+docs/
+*.md
+!README.md
+
+# Tests (not needed in production image)
+tests/
+**/*.Tests/
+**/*.Test/
+
+# Local development tools
+tools/
+devops/
+
+# Kubernetes / Helm charts (not needed in app images)
+**/charts/
+**/helm/
+
+# Cache
+.cache/
+.tmp/
+tmp/

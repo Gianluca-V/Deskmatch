@@ -1,0 +1,179 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "prometheus") .) | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: "api-gateway"
+        static_configs:
+          - targets: ["api-gateway.{{ .Values.namespace.name }}.svc.cluster.local:5000"]
+        metrics_path: /metrics
+
+      - job_name: "auth-service"
+        static_configs:
+          - targets: ["auth-service.{{ .Values.namespace.name }}.svc.cluster.local:5001"]
+        metrics_path: /metrics
+
+      - job_name: "core-service"
+        static_configs:
+          - targets: ["core-service.{{ .Values.namespace.name }}.svc.cluster.local:5002"]
+        metrics_path: /metrics
+
+      - job_name: "search-service"
+        static_configs:
+          - targets: ["search-service.{{ .Values.namespace.name }}.svc.cluster.local:5003"]
+        metrics_path: /metrics
+
+      - job_name: "notification-service"
+        static_configs:
+          - targets: ["notification-service.{{ .Values.namespace.name }}.svc.cluster.local:5004"]
+        metrics_path: /metrics
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "prometheus") .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "prometheus") .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "prometheus") .) | nindent 8 }}
+    spec:
+      containers:
+        - name: prometheus
+          image: {{ .Values.monitoring.prometheus.image.repository }}:{{ .Values.monitoring.prometheus.image.tag }}
+          imagePullPolicy: {{ .Values.monitoring.prometheus.image.pullPolicy }}
+          ports:
+            - containerPort: 9090
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+            - name: prometheus-storage
+              mountPath: /prometheus
+          resources:
+            {{- toYaml .Values.monitoring.prometheus.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 20
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-storage
+          emptyDir: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "grafana") .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "grafana") .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "grafana") .) | nindent 8 }}
+    spec:
+      containers:
+        - name: grafana
+          image: {{ .Values.monitoring.grafana.image.repository }}:{{ .Values.monitoring.grafana.image.tag }}
+          imagePullPolicy: {{ .Values.monitoring.grafana.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: {{ .Values.monitoring.grafana.adminPassword | quote }}
+            - name: GF_SECURITY_ADMIN_USER
+              value: {{ .Values.monitoring.grafana.adminUser | quote }}
+          resources:
+            {{- toYaml .Values.monitoring.grafana.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" "loki") .) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "loki") .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" "loki") .) | nindent 8 }}
+    spec:
+      containers:
+        - name: loki
+          image: {{ .Values.monitoring.loki.image.repository }}:{{ .Values.monitoring.loki.image.tag }}
+          imagePullPolicy: {{ .Values.monitoring.loki.image.pullPolicy }}
+          ports:
+            - containerPort: 3100
+          args:
+            - "-config.file=/etc/loki/loki-config.yaml"
+          resources:
+            {{- toYaml .Values.monitoring.loki.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 30
+            periodSeconds: 20
+{{- end }}

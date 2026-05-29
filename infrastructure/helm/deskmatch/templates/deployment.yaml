@@ -1,0 +1,69 @@
+{{/* Generic backend deployment template */}}
+{{- define "deskmatch.backendDeployment" -}}
+{{- $root := .root }}
+{{- $service := .service }}
+{{- $svcName := $service.name }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svcName }}
+  namespace: {{ $root.Values.namespace.name }}
+  labels:
+    {{- include "deskmatch.serviceLabels" (merge (dict "component" $svcName) $root) | nindent 4 }}
+spec:
+  replicas: {{ $service.replicas }}
+  selector:
+    matchLabels:
+      {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $svcName) $root) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deskmatch.serviceSelectorLabels" (merge (dict "component" $svcName) $root) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ $svcName }}
+          image: {{ $service.image.repository }}:{{ $service.image.tag }}
+          imagePullPolicy: {{ $service.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "deskmatch.fullname" $root }}-config
+            - secretRef:
+                name: {{ include "deskmatch.fullname" $root }}-secrets
+          {{- if $service.env }}
+          env:
+            {{- toYaml $service.env | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ $service.port }}
+            initialDelaySeconds: {{ $service.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $service.probes.readiness.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ $service.port }}
+            initialDelaySeconds: {{ $service.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $service.probes.liveness.periodSeconds }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ $service.port }}
+            initialDelaySeconds: {{ $service.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ $service.probes.startup.periodSeconds }}
+            failureThreshold: {{ $service.probes.startup.failureThreshold }}
+      {{- if $service.strategy }}
+      strategy:
+        {{- toYaml $service.strategy | nindent 8 }}
+      {{- end }}
+{{- end }}
+
+{{/* Render backend deployments */}}
+{{- range $name, $svc := .Values.backendServices }}
+{{- include "deskmatch.backendDeployment" (dict "root" $ "service" (merge (dict "name" $name) $svc)) }}
+---
+{{- end }}

@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deskmatch-config
+  namespace: deskmatch
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:5000"
+
+  POSTGRES_HOST: "postgres.deskmatch.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DATABASE: "deskmatch"
+  POSTGRES_USER: "deskmatch"
+
+  REDIS_HOST: "redis.deskmatch.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+  OPENSEARCH_HOST: "opensearch.deskmatch.svc.cluster.local"
+  OPENSEARCH_PORT: "9200"
+  OPENSEARCH_URI: "http://opensearch.deskmatch.svc.cluster.local:9200"
+  OPENSEARCH_USER: "admin"
+
+  RABBITMQ_HOST: "rabbitmq.deskmatch.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_USER: "guest"
+  RABBITMQ_VIRTUAL_HOST: "/"
+
+  API_GATEWAY_URL: "http://api-gateway.deskmatch.svc.cluster.local:5000"
+  AUTH_SERVICE_URL: "http://auth-service.deskmatch.svc.cluster.local:5001"
+  CORE_SERVICE_URL: "http://core-service.deskmatch.svc.cluster.local:5002"
+  SEARCH_SERVICE_URL: "http://search-service.deskmatch.svc.cluster.local:5003"
+  NOTIFICATION_SERVICE_URL: "http://notification-service.deskmatch.svc.cluster.local:5004"
+
+  API_GATEWAY_PORT: "5000"
+  AUTH_SERVICE_PORT: "5001"
+  CORE_SERVICE_PORT: "5002"
+  SEARCH_SERVICE_PORT: "5003"
+  NOTIFICATION_SERVICE_PORT: "5004"
+
+  CORS_ALLOWED_ORIGINS: "http://web.deskmatch.local,http://admin.deskmatch.local"
+
+  SERILOG_MINIMUM_LEVEL: "Information"
+
+  NOTIFICATION_PROVIDER: "smtp"
+  SMTP_FROM_EMAIL: "noreply@deskmatch.com"
+  SMTP_FROM_NAME: "DeskMatch"
+
+  STORAGE_PROVIDER: "minio"
+  STORAGE_ENDPOINT: "minio.deskmatch.svc.cluster.local:9000"
+  STORAGE_BUCKET_NAME: "deskmatch"
+
+  JWT_ISSUER: "DeskMatch"
+  JWT_AUDIENCE: "DeskMatch"
+  JWT_ACCESS_TOKEN_EXPIRATION_MINUTES: "15"
+  JWT_REFRESH_TOKEN_EXPIRATION_DAYS: "7"

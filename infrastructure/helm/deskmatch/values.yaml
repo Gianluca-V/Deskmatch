@@ -1,0 +1,348 @@
+nameOverride: ""
+fullnameOverride: ""
+
+namespace:
+  create: true
+  name: deskmatch
+
+config:
+  aspnet:
+    environment: "Production"
+  postgres:
+    host: "postgres.deskmatch.svc.cluster.local"
+    port: "5432"
+    database: "deskmatch"
+    user: "deskmatch"
+  redis:
+    host: "redis.deskmatch.svc.cluster.local"
+    port: "6379"
+  opensearch:
+    host: "opensearch.deskmatch.svc.cluster.local"
+    port: "9200"
+    uri: "http://opensearch.deskmatch.svc.cluster.local:9200"
+    user: "admin"
+  rabbitmq:
+    host: "rabbitmq.deskmatch.svc.cluster.local"
+    port: "5672"
+    user: "guest"
+    virtualHost: "/"
+  cors:
+    allowedOrigins: "http://web.deskmatch.local,http://admin.deskmatch.local"
+  serilog:
+    minimumLevel: "Information"
+  notification:
+    provider: "smtp"
+    smtpFromEmail: "noreply@deskmatch.com"
+    smtpFromName: "DeskMatch"
+  storage:
+    provider: "minio"
+    endpoint: "minio.deskmatch.svc.cluster.local:9000"
+    bucketName: "deskmatch"
+  jwt:
+    issuer: "DeskMatch"
+    audience: "DeskMatch"
+    accessTokenExpirationMinutes: "15"
+    refreshTokenExpirationDays: "7"
+
+secrets:
+  postgres:
+    password: "change-me"
+  jwt:
+    secret: "super-secret-key-change-in-production-min-32-chars!!"
+  opensearch:
+    password: "admin"
+  redis:
+    password: ""
+  rabbitmq:
+    password: "guest"
+  smtp:
+    user: ""
+    password: ""
+  storage:
+    accessKey: "minioadmin"
+    secretKey: "minioadmin"
+  sendgrid:
+    apiKey: ""
+
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+opensearch:
+  enabled: true
+  image:
+    repository: opensearchproject/opensearch
+    tag: "2.11.0"
+    pullPolicy: IfNotPresent
+  dashboards:
+    image:
+      repository: opensearchproject/opensearch-dashboards
+      tag: "2.11.0"
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+monitoring:
+  enabled: true
+  prometheus:
+    image:
+      repository: prom/prometheus
+      tag: "v2.50.0"
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  grafana:
+    image:
+      repository: grafana/grafana
+      tag: "10.3.0"
+      pullPolicy: IfNotPresent
+    adminUser: "admin"
+    adminPassword: "admin"
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+  loki:
+    image:
+      repository: grafana/loki
+      tag: "2.9.0"
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+
+backendServices:
+  api-gateway:
+    image:
+      repository: deskmatch/api-gateway
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 5000
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+    probes:
+      readiness:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+      startup:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+    env: []
+    strategy: {}
+  auth-service:
+    image:
+      repository: deskmatch/auth-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 5001
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+    probes:
+      readiness:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+      startup:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+    env: []
+    strategy: {}
+  core-service:
+    image:
+      repository: deskmatch/core-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 5002
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+    probes:
+      readiness:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+      startup:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+    env: []
+    strategy: {}
+  search-service:
+    image:
+      repository: deskmatch/search-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 5003
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+    probes:
+      readiness:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+      startup:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+    env: []
+    strategy: {}
+  notification-service:
+    image:
+      repository: deskmatch/notification-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 5004
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "250m"
+    probes:
+      readiness:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+      startup:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+    env: []
+    strategy: {}
+
+frontends:
+  frontend-web:
+    image:
+      repository: deskmatch/frontend-web
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 80
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+  frontend-admin:
+    image:
+      repository: deskmatch/frontend-admin
+      tag: latest
+      pullPolicy: IfNotPresent
+    replicas: 2
+    port: 80
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    api: api.deskmatch.local
+    web: web.deskmatch.local
+    admin: admin.deskmatch.local
+    grafana: grafana.deskmatch.local
+    kibana: kibana.deskmatch.local
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
