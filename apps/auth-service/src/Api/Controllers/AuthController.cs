@@ -8,6 +8,7 @@ namespace DeskMatch.AuthService.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[Produces("application/json")]
 public sealed class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -24,8 +25,30 @@ public sealed class AuthController : ControllerBase
         _jwtTokenService = jwtTokenService;
     }
 
+    /// <summary>Registra un nuevo usuario.</summary>
+    /// <remarks>
+    /// Ejemplo:
+    ///
+    ///     POST /api/auth/register
+    ///     {
+    ///         "name": "Juan Pérez",
+    ///         "email": "juan@empresa.com",
+    ///         "password": "MiPassword1!",
+    ///         "role": "User",
+    ///         "firstName": "Juan",
+    ///         "lastName": "Pérez"
+    ///     }
+    ///
+    /// Roles válidos: Admin, Manager, User. Si no se envía role, se asigna User por defecto.
+    /// </remarks>
+    /// <response code="201">Usuario creado correctamente.</response>
+    /// <response code="400">Datos inválidos o contraseña que no cumple los requisitos.</response>
+    /// <response code="409">El email ya está registrado.</response>
     [HttpPost("register")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<UserResponse>> Register(RegisterRequest request)
     {
         var role = string.IsNullOrWhiteSpace(request.Role) ? AuthRoles.User : request.Role.Trim();
@@ -46,7 +69,6 @@ public sealed class AuthController : ControllerBase
             return Conflict(new { message = "Email is already registered." });
         }
 
-        // Determine Name: use provided Name, or construct from FirstName + LastName
         var name = request.Name?.Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -92,8 +114,27 @@ public sealed class AuthController : ControllerBase
             user.IsActive));
     }
 
+    /// <summary>Inicia sesión y devuelve un JWT.</summary>
+    /// <remarks>
+    /// Ejemplo:
+    ///
+    ///     POST /api/auth/login
+    ///     {
+    ///         "email": "juan@empresa.com",
+    ///         "password": "MiPassword1!"
+    ///     }
+    ///
+    /// Usar el token recibido en requests protegidas:
+    ///
+    ///     Authorization: Bearer {accessToken}
+    ///
+    /// </remarks>
+    /// <response code="200">Login exitoso, devuelve token y datos del usuario.</response>
+    /// <response code="401">Credenciales inválidas o usuario inactivo.</response>
     [HttpPost("login")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
@@ -122,11 +163,18 @@ public sealed class AuthController : ControllerBase
             user.FirstName,
             user.LastName,
             user.IsActive);
+
         return Ok(_jwtTokenService.CreateToken(user, role) with { User = userResponse });
     }
 
+    /// <summary>Devuelve los datos del usuario autenticado.</summary>
+    /// <remarks>Requiere header: Authorization: Bearer {token}</remarks>
+    /// <response code="200">Datos del usuario autenticado.</response>
+    /// <response code="401">Token inválido o expirado.</response>
     [HttpGet("me")]
     [Authorize]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserResponse>> Me()
     {
         var user = await _userManager.GetUserAsync(User);

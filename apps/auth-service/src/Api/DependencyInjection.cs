@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using DeskMatch.AuthService.Application.Auth.Validators;
 
 namespace DeskMatch.AuthService.Api;
 
@@ -28,6 +30,7 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
         return services;
     }
