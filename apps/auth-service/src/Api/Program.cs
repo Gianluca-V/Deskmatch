@@ -1,16 +1,16 @@
+using DeskMatch.AuthService.Api;
+using DeskMatch.AuthService.Infrastructure.Identity;
 using DeskMatch.BuildingBlocks.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile("src/Api/appsettings.json", optional: true, reloadOnChange: true);
+
 builder.Host.UseBuildingBlocks(builder.Configuration);
 
+builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddBuildingBlocks(builder.Configuration);
-
-// ─────────────────────────────── Application DI ──
-// TODO: Move registrations to DependencyInjection.cs once implemented
-// builder.Services.AddApplicationServices(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -42,6 +42,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+await app.SeedIdentityRolesAsync();
 
 app.UseBuildingBlocksMiddleware();
 
