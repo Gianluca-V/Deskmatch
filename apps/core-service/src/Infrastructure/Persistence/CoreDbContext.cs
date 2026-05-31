@@ -1,6 +1,5 @@
 using DeskMatch.CoreService.Domain.Companies;
 using Microsoft.EntityFrameworkCore;
-using DeskMatch.CoreService.Domain.Workspaces;
 
 namespace DeskMatch.CoreService.Infrastructure.Persistence;
 
@@ -10,7 +9,6 @@ public class CoreDbContext : DbContext
         : base(options) { }
 
     public DbSet<Company> Companies => Set<Company>();
-    public DbSet<Workspace> Workspaces => Set<Workspace>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
