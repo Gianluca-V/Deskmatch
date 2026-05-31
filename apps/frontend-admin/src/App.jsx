@@ -1,27 +1,20 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function Sidebar() {
   return (
-    <aside style={{ width: '220px', padding: '24px', backgroundColor: '#111827', color: '#f9fafb' }}>
+    <aside style={{ width: '220px', padding: '24px', backgroundColor: 'var(--color-accent)', color: '#ffffff' }}>
       <h2>Admin</h2>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
-        <Link to="/" style={{ color: '#f9fafb', textDecoration: 'none' }}>Dashboard</Link>
-        <Link to="/companies" style={{ color: '#f9fafb', textDecoration: 'none' }}>Empresas</Link>
-        <Link to="/offices" style={{ color: '#f9fafb', textDecoration: 'none' }}>Oficinas</Link>
-        <Link to="/reservations" style={{ color: '#f9fafb', textDecoration: 'none' }}>Reservas</Link>
-        <Link to="/users" style={{ color: '#f9fafb', textDecoration: 'none' }}>Usuarios</Link>
+        <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>Dashboard</Link>
+        <Link to="/companies" style={{ color: '#ffffff', textDecoration: 'none' }}>Empresas</Link>
+        <Link to="/offices" style={{ color: '#ffffff', textDecoration: 'none' }}>Oficinas</Link>
+        <Link to="/reservations" style={{ color: '#ffffff', textDecoration: 'none' }}>Reservas</Link>
+        <Link to="/users" style={{ color: '#ffffff', textDecoration: 'none' }}>Usuarios</Link>
       </nav>
     </aside>
-  );
-}
-
-function Login() {
-  return (
-    <section style={{ maxWidth: '480px', margin: 'auto', padding: '40px' }}>
-      <h1>Iniciar sesión</h1>
-      <p>Utiliza la autenticación para acceder al panel de administración.</p>
-    </section>
   );
 }
 
@@ -107,7 +100,7 @@ function ProtectedRoute({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: '32px', backgroundColor: '#f8fafc' }}>
+      <main style={{ flex: 1, padding: '32px', backgroundColor: 'var(--color-bg)' }}>
         {children}
       </main>
     </div>
@@ -118,6 +111,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/companies" element={<ProtectedRoute><Companies /></ProtectedRoute>} />
       <Route path="/companies/:id" element={<ProtectedRoute><CompanyDetail /></ProtectedRoute>} />

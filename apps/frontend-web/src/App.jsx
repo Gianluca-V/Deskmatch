@@ -1,4 +1,6 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function Home() {
   return (
@@ -27,24 +29,6 @@ function OfficeDetail() {
   );
 }
 
-function Login() {
-  return (
-    <section>
-      <h1>Iniciar sesión</h1>
-      <p>Ingresa tus credenciales para continuar.</p>
-    </section>
-  );
-}
-
-function Register() {
-  return (
-    <section>
-      <h1>Registrarse</h1>
-      <p>Crea una nueva cuenta para usar DeskMatch.</p>
-    </section>
-  );
-}
-
 function Dashboard() {
   return (
     <section>
@@ -55,17 +39,21 @@ function Dashboard() {
 }
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = ['/login', '/register'].includes(location.pathname);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header style={{ padding: '16px', backgroundColor: '#0f172a', color: '#f8fafc' }}>
-        <nav style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <Link to="/" style={{ color: '#f8fafc', textDecoration: 'none' }}>Home</Link>
-          <Link to="/offices" style={{ color: '#f8fafc', textDecoration: 'none' }}>Oficinas</Link>
-          <Link to="/dashboard" style={{ color: '#f8fafc', textDecoration: 'none' }}>Dashboard</Link>
-          <Link to="/login" style={{ color: '#f8fafc', textDecoration: 'none' }}>Login</Link>
-          <Link to="/register" style={{ color: '#f8fafc', textDecoration: 'none' }}>Registrarse</Link>
-        </nav>
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+      {!hideNavbar && (
+        <header style={{ padding: '16px', backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>
+          <nav style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>Home</Link>
+            <Link to="/offices" style={{ color: '#ffffff', textDecoration: 'none' }}>Oficinas</Link>
+            <Link to="/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>Dashboard</Link>
+            <Link to="/login" style={{ color: '#ffffff', textDecoration: 'none' }}>Login</Link>
+            <Link to="/register" style={{ color: '#ffffff', textDecoration: 'none' }}>Registrarse</Link>
+          </nav>
+        </header>
+      )}
       <main style={{ flex: 1, padding: '24px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -76,7 +64,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
-      <footer style={{ padding: '16px', textAlign: 'center', backgroundColor: '#e2e8f0' }}>
+      <footer style={{ padding: '16px', textAlign: 'center', backgroundColor: 'var(--color-secondary)', color: 'var(--color-text)' }}>
         <p>DeskMatch - Sitio web de búsqueda de espacios</p>
       </footer>
     </div>
