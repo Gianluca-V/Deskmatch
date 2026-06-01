@@ -1,4 +1,5 @@
 using DeskMatch.AuthService.Api;
+using DeskMatch.AuthService.Api.Middleware;
 using DeskMatch.AuthService.Infrastructure.Identity;
 using DeskMatch.BuildingBlocks.Extensions;
 using Microsoft.OpenApi.Models;
@@ -57,6 +58,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthentication();
+app.UseMiddleware<TokenBlacklistMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

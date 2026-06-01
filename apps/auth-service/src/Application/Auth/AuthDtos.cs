@@ -31,4 +31,7 @@ public sealed record UserResponse(
 public sealed record LoginResponse(
     string AccessToken,
     DateTimeOffset ExpiresAt,
-    UserResponse User);
+    UserResponse User,
+    string? RefreshToken = null);
+
+public sealed record RefreshRequest([Required] string RefreshToken);

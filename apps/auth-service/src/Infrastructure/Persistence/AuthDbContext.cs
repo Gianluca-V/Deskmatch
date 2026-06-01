@@ -11,4 +11,33 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Gui
         : base(options)
     {
     }
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+
+            entity.Property(rt => rt.Token)
+                .IsRequired();
+
+            entity.HasIndex(rt => rt.Token)
+                .IsUnique();
+
+            entity.Property(rt => rt.IsUsed)
+                .HasDefaultValue(false);
+
+            entity.Property(rt => rt.IsRevoked)
+                .HasDefaultValue(false);
+
+            entity.HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
 }
