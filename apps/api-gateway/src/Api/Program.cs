@@ -34,6 +34,9 @@ app.UseBuildingBlocksMiddleware();
 
 app.UseMiddleware<CorrelationIdPropagationMiddleware>();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapReverseProxy();
 
 app.MapHealthChecks("/health");

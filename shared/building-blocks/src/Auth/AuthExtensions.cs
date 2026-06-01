@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace DeskMatch.BuildingBlocks.Auth;
 
@@ -10,41 +12,53 @@ public static class AuthExtensions
 {
     public static IServiceCollection AddBuildingBlockAuth(this IServiceCollection services, IConfiguration configuration)
     {
-        var authority = configuration.GetValue<string>("Auth:Authority");
-        var audience = configuration.GetValue<string>("Auth:Audience");
+        var secret = FirstConfiguredValue(configuration, "JWT_SECRET", "Jwt:Secret");
+        var issuer = FirstConfiguredValue(configuration, "JWT_ISSUER", "Jwt:Issuer");
+        var audience = FirstConfiguredValue(configuration, "JWT_AUDIENCE", "Jwt:Audience", "Auth:Audience");
 
-        if (string.IsNullOrEmpty(authority) || string.IsNullOrEmpty(audience))
+        if (string.IsNullOrWhiteSpace(secret) ||
+            string.IsNullOrWhiteSpace(issuer) ||
+            string.IsNullOrWhiteSpace(audience))
         {
             return services;
         }
+
+        JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.RequireHttpsMetadata = false;
-                options.Authority = authority;
-                options.Audience = audience;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = authority,
-                    ValidAudience = audience
+                    ValidIssuer = issuer,
+                    ValidAudience = audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+                    ClockSkew = TimeSpan.FromMinutes(1)
                 };
             });
 
         return services;
     }
 
+    private static string? FirstConfiguredValue(IConfiguration configuration, params string[] keys)
+    {
+        return keys
+            .Select(key => configuration[key])
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+    }
+
     public static IServiceCollection AddBuildingBlockAuthorization(this IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
             .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
-            .AddPolicy("EmployerOnly", policy => policy.RequireRole("Employer"))
-            .AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"))
-            .AddPolicy("EmployerOrEmployee", policy => policy.RequireRole("Employer", "Employee"))
+            .AddPolicy("ManagerOnly", policy => policy.RequireRole("Manager"))
+            .AddPolicy("UserOnly", policy => policy.RequireRole("User"))
+            .AddPolicy("ManagerOrUser", policy => policy.RequireRole("Manager", "User"))
             .AddPolicy("AuthenticatedUser", policy => policy.RequireAuthenticatedUser());
 
         return services;
