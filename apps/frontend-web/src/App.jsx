@@ -1,6 +1,7 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RegisterCompany from './pages/RegisterCompany';
 
 function Home() {
   return (
@@ -39,8 +40,8 @@ function Dashboard() {
 }
 
 function App() {
-  const location = useLocation();
-  const hideNavbar = ['/login', '/register'].includes(location.pathname);
+  const location = useLocation();  
+  const hideNavbar = ['/login', '/register', '/register-company'].includes(location.pathname);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
       {!hideNavbar && (
@@ -51,6 +52,7 @@ function App() {
             <Link to="/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>Dashboard</Link>
             <Link to="/login" style={{ color: '#ffffff', textDecoration: 'none' }}>Login</Link>
             <Link to="/register" style={{ color: '#ffffff', textDecoration: 'none' }}>Registrarse</Link>
+            <Link to="/register-company" style={{ color: '#ffffff', textDecoration: 'none' }}>Registrar Empresa</Link>
           </nav>
         </header>
       )}
@@ -61,6 +63,7 @@ function App() {
           <Route path="/offices/:id" element={<OfficeDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register-company" element={<RegisterCompany />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
