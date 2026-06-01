@@ -194,6 +194,54 @@ public sealed class AuthController : ControllerBase
             user.IsActive));
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<ActionResult<UserResponse>> UpdateMe(UpdateProfileRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Unauthorized(new { message = "Invalid token." });
+        }
+
+        var nameRecalcNeeded = false;
+
+        if (request.FirstName is not null)
+        {
+            user.FirstName = request.FirstName.Trim();
+            nameRecalcNeeded = true;
+        }
+
+        if (request.LastName is not null)
+        {
+            user.LastName = request.LastName.Trim();
+            nameRecalcNeeded = true;
+        }
+
+        if (request.Name is not null)
+            user.Name = request.Name.Trim();
+        else if (nameRecalcNeeded)
+            user.Name = $"{user.FirstName} {user.LastName}".Trim();
+
+        user.UpdatedAt = DateTime.UtcNow;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return IdentityValidationProblem(result);
+        }
+
+        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? AuthRoles.User;
+        return Ok(new UserResponse(
+            user.Id,
+            user.Name,
+            user.Email ?? string.Empty,
+            role,
+            user.FirstName,
+            user.LastName,
+            user.IsActive));
+    }
+
     private ActionResult IdentityValidationProblem(IdentityResult result)
     {
         var errors = result.Errors
