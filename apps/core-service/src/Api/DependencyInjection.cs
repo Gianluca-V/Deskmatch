@@ -25,6 +25,7 @@ public static class DependencyInjection
         // services.AddScoped<ICompanyRepository, CompanyRepository>();
         // services.AddScoped<IReservationRepository, ReservationRepository>();
         // services.AddScoped<IReviewRepository, ReviewRepository>();
+        // services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         // TODO: Register domain services (indexers, etc.)
         // services.AddScoped<OpenSearchOfficeIndexer>();
@@ -41,7 +42,11 @@ public static class DependencyInjection
         // TODO: Register command handlers (Reservations)
         // services.AddScoped<ICommandHandler<CreateReservationCommand, Guid>, CreateReservationCommandHandler>();
         // services.AddScoped<ICommandHandler<UpdateReservationStatusCommand>, UpdateReservationStatusCommandHandler>();
-        // services.AddScoped<ICommandHandler<CancelReservationCommand>, CancelReservationCommandHandler>();
+
+        // TODO: Register command handlers (Payments)
+        // services.AddScoped<ICommandHandler<ProcessDepositCommand, Guid>, ProcessDepositCommandHandler>();
+        // services.AddScoped<ICommandHandler<CreateFinalPaymentCommand, Guid>, CreateFinalPaymentCommandHandler>();
+        // services.AddScoped<ICommandHandler<ProcessFinalPaymentCommand, Guid>, ProcessFinalPaymentCommandHandler>();
 
         // TODO: Register command handlers (Reviews)
         // services.AddScoped<ICommandHandler<CreateReviewCommand, Guid>, CreateReviewCommandHandler>();
@@ -52,8 +57,9 @@ public static class DependencyInjection
         // services.AddScoped<IQueryHandler<GetCompanyByIdQuery, CompanyDto?>, GetCompanyByIdQueryHandler>();
         // services.AddScoped<IQueryHandler<GetReservationByIdQuery, ReservationDto?>, GetReservationByIdQueryHandler>();
         // services.AddScoped<IQueryHandler<GetReviewsByOfficeQuery, IReadOnlyList<ReviewDto>>, GetReviewsByOfficeQueryHandler>();
+        // services.AddScoped<IQueryHandler<GetPaymentsByReservationQuery, IReadOnlyList<PaymentDto>>, GetPaymentsByReservationQueryHandler>();
 
-        // TODO: Register FluentValidation validators
+        // TODO: Register FluentValidation validators for all commands
 
         return services;
     }

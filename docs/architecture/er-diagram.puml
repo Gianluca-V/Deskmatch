@@ -1,0 +1,240 @@
+@startuml DeskMatch-ER-Diagram
+!theme plain
+skinparam linetype ortho
+skinparam defaultFontSize 11
+skinparam backgroundColor #FEFEFE
+title <size:18><b>DeskMatch — Diagrama Entidad-Relación</b></size>\n<size:12>Bases de datos: deskmatch_auth · deskmatch_core · deskmatch_notification</size>
+
+' ═══════════════════════════════════════════
+'  DATABASE: deskmatch_auth (Auth Service)
+'  Schema: auth
+' ═══════════════════════════════════════════
+
+package "deskmatch_auth" as auth_db #E3F2FD {
+  entity "Users" as Users #BBDEFB {
+    == Users (schema: auth) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    Email : VARCHAR(256) <<UK>> <<NOT NULL>>
+    PasswordHash : TEXT <<NOT NULL>>
+    FirstName : VARCHAR(128) <<NOT NULL>>
+    LastName : VARCHAR(128) <<NOT NULL>>
+    Role : userrole <<NOT NULL>> <<DEFAULT 'User'>>
+    IsActive : BOOLEAN <<NOT NULL>> <<DEFAULT TRUE>>
+    RefreshToken : TEXT
+    RefreshTokenExpiryTime : TIMESTAMPTZ
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  entity "RefreshTokens" as RefreshTokens #BBDEFB {
+    == RefreshTokens (schema: auth) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    UserId : UUID <<FK>> <<NOT NULL>>
+    Token : TEXT <<NOT NULL>>
+    ExpiresAt : TIMESTAMPTZ <<NOT NULL>>
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    RevokedAt : TIMESTAMPTZ
+  }
+
+  Users ||--o{ RefreshTokens
+}
+
+' ═══════════════════════════════════════════
+'  DATABASE: deskmatch_core (Core Service)
+'  Schema: core
+' ═══════════════════════════════════════════
+
+package "deskmatch_core" as core_db #E8F5E9 {
+  entity "Companies" as Companies #C8E6C9 {
+    == Companies (schema: core) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    Name : VARCHAR(256) <<NOT NULL>>
+    Description : TEXT
+    LogoUrl : VARCHAR(512)
+    WebsiteUrl : VARCHAR(512)
+    OwnerId : UUID
+    IsActive : BOOLEAN <<NOT NULL>> <<DEFAULT TRUE>>
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  entity "Offices" as Offices #C8E6C9 {
+    == Offices (schema: core) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    CompanyId : UUID <<FK>> <<NOT NULL>>
+    Name : VARCHAR(256) <<NOT NULL>>
+    Description : TEXT
+    Address : VARCHAR(512)
+    City : VARCHAR(128)
+    Country : VARCHAR(128)
+    Latitude : DOUBLE PRECISION
+    Longitude : DOUBLE PRECISION
+    Capacity : INTEGER <<NOT NULL>> <<DEFAULT 1>>
+    PricePerHour : NUMERIC(10,2) <<NOT NULL>> <<DEFAULT 0>>
+    DepositPercentage : NUMERIC(5,2) <<NOT NULL>> <<DEFAULT 30>>
+    PricePerDay : NUMERIC(10,2)
+    PricePerMonth : NUMERIC(10,2)
+    Amenities : JSONB
+    Images : JSONB
+    IsActive : BOOLEAN <<NOT NULL>> <<DEFAULT TRUE>>
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  entity "Reservations" as Reservations #C8E6C9 {
+    == Reservations (schema: core) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    OfficeId : UUID <<FK>> <<NOT NULL>>
+    UserId : UUID <<NOT NULL>>
+    StartTime : TIMESTAMPTZ <<NOT NULL>>
+    EndTime : TIMESTAMPTZ <<NOT NULL>>
+    Status : VARCHAR(32) <<NOT NULL>> <<DEFAULT 'PendingPayment'>>
+    TotalPrice : NUMERIC(10,2)
+    DepositAmount : NUMERIC(10,2)
+    DepositPaid : BOOLEAN <<NOT NULL>> <<DEFAULT FALSE>>
+    FullyPaid : BOOLEAN <<NOT NULL>> <<DEFAULT FALSE>>
+    Notes : TEXT
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  entity "Payments" as Payments #A5D6A7 {
+      == Payments (schema: core) ==
+      * <b>Id</b> : UUID <<PK>>
+      --
+      ReservationId : UUID <<FK>> <<NOT NULL>>
+      UserId : UUID <<NOT NULL>>
+      Amount : NUMERIC(10,2) <<NOT NULL>>
+      PaymentType : VARCHAR(16) <<NOT NULL>> <<CHECK Deposit,Final>>
+      PaymentMethod : VARCHAR(32) <<NOT NULL>> <<DEFAULT 'Stripe'>>
+      Status : VARCHAR(16) <<NOT NULL>> <<DEFAULT 'Pending'>>
+      StripePaymentIntentId : VARCHAR(128)
+      PaidAt : TIMESTAMPTZ
+      CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+  }
+
+  entity "Reviews" as Reviews #C8E6C9 {
+    == Reviews (schema: core) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    OfficeId : UUID <<FK>> <<NOT NULL>>
+    UserId : UUID <<NOT NULL>>
+    Rating : INTEGER <<NOT NULL>> <<CHECK 1..5>>
+    Comment : TEXT
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  Companies ||--o{ Offices
+  Offices  ||--o{ Reservations
+  Reservations ||--o{ Payments
+  Offices  ||--o{ Reviews
+}
+
+' ═══════════════════════════════════════════
+'  DATABASE: deskmatch_notification
+'  Schema: notification
+' ═══════════════════════════════════════════
+
+package "deskmatch_notification" as notif_db #FFF3E0 {
+  entity "EmailTemplates" as EmailTemplates #FFE0B2 {
+    == EmailTemplates (schema: notification) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    Name : VARCHAR(128) <<UK>> <<NOT NULL>>
+    Subject : VARCHAR(256) <<NOT NULL>>
+    Body : TEXT <<NOT NULL>>
+    IsHtml : BOOLEAN <<NOT NULL>> <<DEFAULT TRUE>>
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+    UpdatedAt : TIMESTAMPTZ
+  }
+
+  entity "Notifications" as Notifications #FFE0B2 {
+    == Notifications (schema: notification) ==
+    * <b>Id</b> : UUID <<PK>>
+    --
+    UserId : UUID <<NOT NULL>>
+    Type : VARCHAR(64) <<NOT NULL>>
+    Title : VARCHAR(256) <<NOT NULL>>
+    Message : TEXT <<NOT NULL>>
+    IsRead : BOOLEAN <<NOT NULL>> <<DEFAULT FALSE>>
+    Metadata : JSONB
+    CreatedAt : TIMESTAMPTZ <<NOT NULL>> <<DEFAULT NOW()>>
+  }
+}
+
+' ═══════════════════════════════════════════
+'  CROSS-DATABASE RELATIONSHIPS (virtual/logical FK)
+'  Represented as dotted lines (FK stored as UUID,
+'  referential integrity enforced at application level)
+' ═══════════════════════════════════════════
+
+' UserId references across databases
+Users "1" .. "0..*" Reservations : <<app-level FK (UserId)>>
+Users "1" .. "0..*" Reviews : <<app-level FK (UserId)>>
+Users "1" .. "0..*" Notifications : <<app-level FK (UserId)>>
+Companies "1" .. "0..*" Users : <<app-level FK (OwnerId)>>
+
+' ═══════════════════════════════════════════
+'  ENUM TYPES
+' ═══════════════════════════════════════════
+
+note right of Users
+  <b>userrole</b> (ENUM de PostgreSQL)
+  · Admin
+  · Manager
+  · User
+end note
+
+note right of Reservations
+  <b>ReservationStatus</b> (VARCHAR(32))
+  · PendingPayment
+  · Confirmed
+  · Cancelled
+  · Completed
+end note
+
+note right of Payments
+  <b>PaymentType</b> (VARCHAR(16))
+  · Deposit (seña al reservar)
+  · Final (pago total restante)
+  
+  <b>PaymentStatus</b> (VARCHAR(16))
+  · Pending
+  · Completed
+  · Failed
+  · Refunded
+end note
+
+note right of Notifications
+  <b>NotificationType</b> (VARCHAR(64))
+  Ejemplos: "ReservationCreated",
+  "PaymentReceived", "OfficeApproved"
+end note
+
+' ═══════════════════════════════════════════
+'  LEGEND
+' ═══════════════════════════════════════════
+
+legend right
+  <b>Convenciones</b>
+  |= Símbolo |= Significado |
+  | <b>Negrita</b> | Clave primaria (PK) |
+  | <<PK>> | Primary Key |
+  | <<FK>> | Foreign Key |
+  | <<UK>> | Unique Key |
+  | <<NOT NULL>> | Campo obligatorio |
+  | <<DEFAULT ...>> | Valor por defecto |
+  | <color:#grey>Línea punteada</color> | FK lógico (cross-DB) |
+  | ─── | FK con integridad referencial |
+  | | CASCADE en DELETE |
+endlegend
+
+center footer <size:10>DeskMatch ER Diagram</size>
+
+@enduml

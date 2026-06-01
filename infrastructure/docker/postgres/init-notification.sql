@@ -30,6 +30,24 @@ VALUES
     TRUE
 ),
 (
+    'DepositPaymentConfirmation',
+    'Deposit Payment Received — {{OfficeName}}',
+    '<h1>Deposit Payment Confirmed</h1><p>Hi {{FirstName}},</p><p>Your deposit of <strong>${{DepositAmount}}</strong> for <strong>{{OfficeName}}</strong> has been received. Your reservation is now <strong>Confirmed</strong>.</p><p><strong>Remaining balance:</strong> ${{RemainingBalance}}<br/><strong>Reservation:</strong> {{StartTime}} — {{EndTime}}</p><p>The remaining balance must be paid before the reservation start time.</p><p>Best regards,<br/>The DeskMatch Team</p>',
+    TRUE
+),
+(
+    'FinalPaymentConfirmation',
+    'Final Payment Received — Fully Paid',
+    '<h1>Payment Complete</h1><p>Hi {{FirstName}},</p><p>Your final payment of <strong>${{FinalAmount}}</strong> for <strong>{{OfficeName}}</strong> has been received. Your reservation is now <strong>Fully Paid</strong>.</p><p><strong>Total paid:</strong> ${{TotalPaid}}<br/><strong>Reservation:</strong> {{StartTime}} — {{EndTime}}</p><p>We look forward to seeing you!</p><p>Best regards,<br/>The DeskMatch Team</p>',
+    TRUE
+),
+(
+    'PaymentReminder',
+    'Reminder: Payment Due for {{OfficeName}}',
+    '<h1>Payment Reminder</h1><p>Hi {{FirstName}},</p><p>This is a reminder that you have an outstanding balance of <strong>${{RemainingBalance}}</strong> for your reservation at <strong>{{OfficeName}}</strong>.</p><p><strong>Reservation:</strong> {{StartTime}} — {{EndTime}}</p><p>Please complete your payment before the reservation starts to avoid cancellation.</p><p><a href="{{PaymentUrl}}" style="background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:6px">Pay Now</a></p><p>Best regards,<br/>The DeskMatch Team</p>',
+    TRUE
+),
+(
     'ReservationConfirmation',
     'Your Reservation is Confirmed',
     '<h1>Reservation Confirmed</h1><p>Hi {{FirstName}},</p><p>Your reservation at <strong>{{OfficeName}}</strong> has been confirmed.</p><p><strong>Date:</strong> {{ReservationDate}}<br/><strong>Time:</strong> {{StartTime}} - {{EndTime}}<br/><strong>Address:</strong> {{OfficeAddress}}</p><p>We look forward to seeing you!</p><p>Best regards,<br/>The DeskMatch Team</p>',
