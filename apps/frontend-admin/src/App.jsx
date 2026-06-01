@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Offices from './pages/Offices';
 
 function Sidebar() {
   return (
@@ -45,14 +46,6 @@ function CompanyDetail() {
   );
 }
 
-function Offices() {
-  return (
-    <section>
-      <h1>Oficinas</h1>
-      <p>Gestión de oficinas disponibles.</p>
-    </section>
-  );
-}
 
 function OfficeDetail() {
   return (
