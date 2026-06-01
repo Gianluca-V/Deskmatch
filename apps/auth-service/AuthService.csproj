@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\shared\domain\DeskMatch.Domain.csproj" />
     <ProjectReference Include="..\..\shared\building-blocks\DeskMatch.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\Notification\DeskMatch.SDK.Notification.csproj" />
+    <ProjectReference Include="..\..\shared\sdk\src\Redis\DeskMatch.SDK.Redis.csproj" />
   </ItemGroup>
 
 </Project>
