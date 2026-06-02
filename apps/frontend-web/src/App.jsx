@@ -3,15 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterCompany from './pages/RegisterCompany';
 import RegisterType from './pages/RegisterType';
-
-function Home() {
-  return (
-    <section>
-      <h1>Bienvenido a DeskMatch</h1>
-      <p>Encuentra el espacio de trabajo ideal para ti.</p>
-    </section>
-  );
-}
+import Home from './pages/Home';
 
 function Offices() {
   return (
@@ -42,7 +34,7 @@ function Dashboard() {
 
 function App() {
   const location = useLocation();  
-  const hideNavbar = [ '/login', '/register', '/register/user', '/register/company'].includes(location.pathname);
+  const hideNavbar = ['/', '/login', '/register', '/register/user', '/register/company'].includes(location.pathname);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
       {!hideNavbar && (
@@ -68,8 +60,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
-      <footer style={{ padding: '16px', textAlign: 'center', backgroundColor: 'var(--color-secondary)', color: 'var(--color-text)' }}>
-        <p>DeskMatch - Sitio web de búsqueda de espacios</p>
+      <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
+        <p style={{ fontSize: '13px', margin: 0 }}>DeskMatch - Sitio web de búsqueda de espacios</p>
       </footer>
     </div>
   );
