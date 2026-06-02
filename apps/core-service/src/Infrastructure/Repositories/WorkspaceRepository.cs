@@ -1,4 +1,4 @@
-using DeskMatch.CoreService.Application.Interfaces;
+using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.CoreService.Domain.Workspaces;
 using DeskMatch.CoreService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
