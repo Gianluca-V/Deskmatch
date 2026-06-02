@@ -30,9 +30,15 @@ function Register() {
             <p className="auth-card__subtitle">Crea un usuario administrativo para empezar a gestionar las operaciones de DeskMatch.</p>
           </div>
           <form>
-            <div className="form-group auth-card__field">
-              <label htmlFor="admin-name">Nombre completo</label>
-              <input id="admin-name" type="text" placeholder="Nombre completo" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
+              <div className="form-group auth-card__field">
+                <label htmlFor="admin-first-name">Nombre</label>
+                <input id="admin-first-name" type="text" placeholder="Juan" />
+              </div>
+              <div className="form-group auth-card__field">
+                <label htmlFor="admin-last-name">Apellido</label>
+                <input id="admin-last-name" type="text" placeholder="Pérez" />
+              </div>
             </div>
             <div className="form-group auth-card__field">
               <label htmlFor="admin-email">Correo electrónico</label>

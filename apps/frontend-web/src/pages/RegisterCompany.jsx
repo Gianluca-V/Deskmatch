@@ -30,7 +30,7 @@ function RegisterCompany() {
             <p className="auth-card__subtitle">Completá el formulario para comenzar a publicar tus espacios.</p>
           </div>
           <form>
-            <div className="form-group auth-card__field">
+            <div className="form-group auth-card__field" style={{ marginTop: '24px' }}>
               <label htmlFor="company-name">Nombre de la empresa</label>
               <input id="company-name" type="text" placeholder="Mi Empresa S.A." />
             </div>
