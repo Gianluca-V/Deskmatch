@@ -30,9 +30,15 @@ function Register() {
             <p className="auth-card__subtitle">Completa este breve formulario para comenzar a reservar oficinas rápidamente.</p>
           </div>
           <form>
-            <div className="form-group auth-card__field">
-              <label htmlFor="full-name">Nombre completo</label>
-              <input id="full-name" type="text" placeholder="Tu nombre" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
+              <div className="form-group auth-card__field">
+                <label htmlFor="first-name">Nombre</label>
+                <input id="first-name" type="text" placeholder="Juan" />
+              </div>
+              <div className="form-group auth-card__field">
+                <label htmlFor="last-name">Apellido</label>
+                <input id="last-name" type="text" placeholder="Pérez" />
+              </div>
             </div>
             <div className="form-group auth-card__field">
               <label htmlFor="register-email">Correo electrónico</label>

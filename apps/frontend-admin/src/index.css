@@ -137,9 +137,10 @@ tr:hover td {
 .auth-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
+  padding-top: 60px;
   background: radial-gradient(circle at top left, rgba(58, 149, 223, 0.16), transparent 28%), radial-gradient(circle at center right, rgba(86, 91, 232, 0.08), transparent 26%), var(--color-bg);
 }
 

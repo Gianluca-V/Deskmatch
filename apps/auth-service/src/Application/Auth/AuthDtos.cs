@@ -1,16 +1,23 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace DeskMatch.AuthService.Application.Auth;
 
 public sealed record RegisterRequest(
     string? Name,
-    string Email,
-    string Password,
+    [Required, EmailAddress] string Email,
+    [Required] string Password,
     string? Role,
     string? FirstName = null,
     string? LastName = null);
 
 public sealed record LoginRequest(
-    string Email,
-    string Password);
+    [Required, EmailAddress] string Email,
+    [Required] string Password);
+
+public sealed record UpdateProfileRequest(
+    [MaxLength(256)] string? Name,
+    [MaxLength(128)] string? FirstName,
+    [MaxLength(128)] string? LastName);
 
 public sealed record UserResponse(
     Guid Id,
@@ -24,4 +31,7 @@ public sealed record UserResponse(
 public sealed record LoginResponse(
     string AccessToken,
     DateTimeOffset ExpiresAt,
-    UserResponse User);
+    UserResponse User,
+    string? RefreshToken = null);
+
+public sealed record RefreshRequest([Required] string RefreshToken);
