@@ -168,7 +168,7 @@ function Home() {
           <div className="home-hero__card home-hero__card--1">
             <div className="home-hero__card-icon">🏢</div>
             <p>Oficina en Palermo</p>
-            <span>$450/día</span>
+            <span>$56/hora</span>
           </div>
           <div className="home-hero__card home-hero__card--2">
             <div className="home-hero__card-icon">☕</div>
@@ -178,7 +178,7 @@ function Home() {
           <div className="home-hero__card home-hero__card--3">
             <div className="home-hero__card-icon">🎓</div>
             <p>Sala de reuniones</p>
-            <span>$350/día</span>
+            <span>$44/hora</span>
           </div>
           <div className="home-hero__card home-hero__card--4">
             <div className="home-hero__card-icon">🖥️</div>
@@ -188,7 +188,7 @@ function Home() {
           <div className="home-hero__card home-hero__card--5">
             <div className="home-hero__card-icon">💼</div>
             <p>Escritorio privado</p>
-            <span>$320/día</span>
+            <span>$40/hora</span>
           </div>
         </div>
       </section>
