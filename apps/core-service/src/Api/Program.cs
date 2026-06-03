@@ -1,4 +1,5 @@
 using DeskMatch.BuildingBlocks.Extensions;
+using DeskMatch.SDK.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,18 +10,11 @@ builder.Services.AddBuildingBlocks(builder.Configuration);
 // ─────────────────────────────── Application DI ──
 // TODO: Move registrations to DependencyInjection.cs once implemented
 // builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddStorageSdk(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
-});
 
 builder.Services.AddHealthChecks();
 
@@ -34,7 +28,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
