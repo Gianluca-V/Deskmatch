@@ -37,11 +37,11 @@ _NCrunch_*
 
 # Node.js
 node_modules/
+dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
