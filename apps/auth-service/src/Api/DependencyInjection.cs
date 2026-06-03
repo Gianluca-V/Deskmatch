@@ -1,12 +1,14 @@
 using DeskMatch.AuthService.Application.Auth;
+using DeskMatch.AuthService.Infrastructure.Auth;
 using DeskMatch.AuthService.Infrastructure.Identity;
 using DeskMatch.AuthService.Infrastructure.Persistence;
+using DeskMatch.SDK.Redis;
+using FluentValidation;
+using DeskMatch.AuthService.Application.Auth.Validators;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using FluentValidation;
-using DeskMatch.AuthService.Application.Auth.Validators;
 
 namespace DeskMatch.AuthService.Api;
 
@@ -30,6 +32,9 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddRedisSdk(configuration);
+        services.AddSingleton<ICacheService, CacheService>();
+        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
         return services;
