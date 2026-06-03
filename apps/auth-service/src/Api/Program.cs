@@ -1,7 +1,9 @@
 using DeskMatch.AuthService.Api;
 using DeskMatch.AuthService.Api.Middleware;
 using DeskMatch.AuthService.Infrastructure.Identity;
+using DeskMatch.AuthService.Infrastructure.Persistence;
 using DeskMatch.BuildingBlocks.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +48,12 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 await app.SeedIdentityRolesAsync();
 
