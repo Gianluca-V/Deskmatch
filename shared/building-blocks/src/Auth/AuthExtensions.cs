@@ -16,17 +16,15 @@ public static class AuthExtensions
         var issuer = FirstConfiguredValue(configuration, "JWT_ISSUER", "Jwt:Issuer");
         var audience = FirstConfiguredValue(configuration, "JWT_AUDIENCE", "Jwt:Audience", "Auth:Audience");
 
-        if (string.IsNullOrWhiteSpace(secret) ||
-            string.IsNullOrWhiteSpace(issuer) ||
-            string.IsNullOrWhiteSpace(audience))
-        {
-            return services;
-        }
-
         JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        var authBuilder = services.AddAuthentication();
+
+        if (!string.IsNullOrWhiteSpace(secret) &&
+            !string.IsNullOrWhiteSpace(issuer) &&
+            !string.IsNullOrWhiteSpace(audience))
+        {
+            authBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.RequireHttpsMetadata = false;
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -41,6 +39,7 @@ public static class AuthExtensions
                     ClockSkew = TimeSpan.FromMinutes(1)
                 };
             });
+        }
 
         return services;
     }
