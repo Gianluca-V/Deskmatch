@@ -11,6 +11,7 @@ volumes:
   prometheus-data:
   grafana-data:
   loki-data:
+  minio-data:
 
 services:
   # ────────────────────────────────────────────── INFRASTRUCTURE ──
@@ -172,6 +173,51 @@ services:
       timeout: 5s
       retries: 5
 
+  # ────────────────────────────────────────────── OBJECT STORAGE ──
+  minio:
+    image: minio/minio:latest
+    container_name: deskmatch-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_DOMAIN: minio
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - deskmatch-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: deskmatch-minio-setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-deskmatch}
+      MINIO_ENDPOINT: http://minio:9000
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD
+        mc mb myminio/$$MINIO_BUCKET --ignore-existing
+        mc anonymous set download myminio/$$MINIO_BUCKET
+        echo "MinIO bucket '$$MINIO_BUCKET' ready with anonymous read"
+    networks:
+      - deskmatch-network
+
   # ────────────────────────────────────────────── APPLICATION SERVICES ──
   auth-service:
     build:
@@ -218,6 +264,13 @@ services:
       OpenSearch__User: admin
       OpenSearch__Password: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-DeskMatch123!}
       Redis__ConnectionString: redis:6379,password=,ssl=false,abortConnect=false
+      Storage__Provider: ${STORAGE_PROVIDER:-minio}
+      Storage__Endpoint: ${STORAGE_ENDPOINT:-minio:9000}
+      Storage__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
+      Storage__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      Storage__BucketName: ${MINIO_BUCKET:-deskmatch}
+      Storage__UseSsl: ${STORAGE_USE_SSL:-false}
+      Storage__PublicUrl: ${STORAGE_PUBLIC_URL:-http://localhost:9000}
     depends_on:
       postgres:
         condition: service_healthy
@@ -225,6 +278,10 @@ services:
         condition: service_healthy
       opensearch:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
     networks:
       - deskmatch-network
 
@@ -280,6 +337,22 @@ services:
     networks:
       - deskmatch-network
 
+  # ────────────────────────────────────────────── CLOUDFLARE TUNNEL ──
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: deskmatch-cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    volumes:
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./.cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+    depends_on:
+      frontend-web:
+        condition: service_started
+    networks:
+      - deskmatch-network
+
+
   api-gateway:
     build:
       context: ../../.
@@ -297,6 +370,7 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Auth__Authority: http://auth-service:5001
       Auth__Audience: DeskMatch
+      CORS_ALLOWED_ORIGINS: http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174,https://deskmatch.vespelabs.com
     depends_on:
       - auth-service
       - core-service
@@ -319,8 +393,6 @@ services:
     restart: unless-stopped
     ports:
       - "3001:80"
-    environment:
-      VITE_API_URL: http://api-gateway:5000
     depends_on:
       api-gateway:
         condition: service_healthy
@@ -335,8 +407,6 @@ services:
     restart: unless-stopped
     ports:
       - "3002:80"
-    environment:
-      VITE_API_URL: http://api-gateway:5000
     depends_on:
       api-gateway:
         condition: service_healthy
