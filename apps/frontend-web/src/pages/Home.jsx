@@ -278,7 +278,9 @@ function Home() {
                     <Star key={i} size={16} fill="currentColor" />
                   ))}
                 </div>
-                <p className="home-testimonial__text">"{testimonial.text}"</p>
+                <p className="home-testimonial__text">
+                  &quot;{testimonial.text}&quot;
+                </p>
                 <p className="home-testimonial__author">
                   <strong>{testimonial.name}</strong>
                   <br />
