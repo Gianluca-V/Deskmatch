@@ -1,17 +1,23 @@
+import ImageUpload from './ImageUpload';
+
 const AMENITIES = [
   { key: 'WiFi', label: 'WiFi' },
   { key: 'Coffee', label: 'Café' },
-  { key: 'Parking', label: 'Estacionamiento' },
-  { key: 'MeetingRoom', label: 'Sala de reuniones' },
-  { key: 'Kitchen', label: 'Cocina' },
-  { key: 'Projector', label: 'Proyector' },
-  { key: 'Printer', label: 'Impresora' },
-  { key: 'AirConditioning', label: 'Aire acondicionado' },
-  { key: 'Reception', label: 'Recepción' },
-  { key: 'Access24h', label: 'Acceso 24hs' },
+  { key: 'Parking', label: 'Parking' },
+  { key: 'Meeting Rooms', label: 'Salas de reuniones' },
+  { key: 'Printing', label: 'Impresión' },
+  { key: '24/7 Access', label: 'Acceso 24/7' },
+  { key: 'Cafeteria', label: 'Cafetería' },
+  { key: 'Gym', label: 'Gimnasio' },
+  { key: 'Lounge', label: 'Lounge' },
+  { key: 'Bike Storage', label: 'Guardabicicletas' },
+  { key: 'Phone Booths', label: 'Cabinas telefónicas' },
+  { key: 'Event Space', label: 'Espacio para eventos' },
+  { key: 'Rooftop', label: 'Terraza' },
+  { key: 'Pet Friendly', label: 'Mascotas permitidas' },
 ];
 
-export default function OfficeForm({ form, onChange, onAmenityToggle, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
+export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesChange, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
   return (
     <form onSubmit={onSubmit} noValidate>
 
@@ -103,10 +109,7 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onSubmit, 
 
       <div className="form-section">
         <p className="form-section__title">Imágenes</p>
-        <div className="form-group">
-          <label htmlFor="images">URLs de imágenes (una por línea)</label>
-          <textarea id="images" name="images" value={form.images} onChange={onChange} placeholder={'https://ejemplo.com/foto1.jpg\nhttps://ejemplo.com/foto2.jpg'} />
-        </div>
+        <ImageUpload files={form.images} onChange={onImagesChange} />
       </div>
 
       <div className="form-section">

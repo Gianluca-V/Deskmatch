@@ -82,9 +82,7 @@ export default function OfficeModal({ isOpen, onClose }) {
       pricePerMonth: form.pricePerMonth ? Number(form.pricePerMonth) : undefined,
       depositPercentage: Number(form.depositPercentage),
       amenities: form.amenities,
-      images: form.images
-        ? form.images.split('\n').map((u) => u.trim()).filter(Boolean)
-        : [],
+      images: form.images.map((f) => f.url).filter(Boolean),
     });
   }
 
