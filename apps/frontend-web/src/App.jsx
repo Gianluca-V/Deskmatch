@@ -5,15 +5,8 @@ import Register from './pages/Register';
 import RegisterCompany from './pages/RegisterCompany';
 import RegisterType from './pages/RegisterType';
 import Home from './pages/Home';
+import Offices from './pages/Offices';
 
-function Offices() {
-  return (
-    <section>
-      <h1>Oficinas</h1>
-      <p>Aquí encontrarás tus opciones de oficinas disponibles.</p>
-    </section>
-  );
-}
 
 function OfficeDetail() {
   return (
