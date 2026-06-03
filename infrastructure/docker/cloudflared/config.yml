@@ -1,0 +1,7 @@
+tunnel: deskmatch
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: deskmatch.vespelabs.com
+    service: http://frontend-web:80
+  - service: http_status:404
