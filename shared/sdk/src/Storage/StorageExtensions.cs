@@ -7,7 +7,19 @@ public static class StorageExtensions
 {
     public static IServiceCollection AddStorageSdk(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IStorageService, LocalStorageService>();
+        var provider = configuration.GetValue<string>("Storage:Provider") ?? "local";
+
+        services.Configure<S3StorageOptions>(configuration.GetSection("Storage"));
+
+        if (provider.Equals("minio", StringComparison.OrdinalIgnoreCase) ||
+            provider.Equals("s3", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IStorageService, S3StorageService>();
+        }
+        else
+        {
+            services.AddSingleton<IStorageService, LocalStorageService>();
+        }
 
         return services;
     }
