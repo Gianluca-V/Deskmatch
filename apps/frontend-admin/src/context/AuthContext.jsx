@@ -1,25 +1,43 @@
 import { createContext, useContext, useState } from 'react';
+import api, { STORAGE_KEY } from '../lib/api';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+const loadSession = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
-  const login = (userData) => {
-    setUser(userData);
+export const AuthProvider = ({ children }) => {
+  const [session, setSession] = useState(loadSession);
+
+  const login = (loginResponse) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(loginResponse));
+    setSession(loginResponse);
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch {
+      // limpiar sesión local aunque el endpoint falle
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: session?.user ?? null,
+        session,
         login,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!session?.accessToken,
       }}
     >
       {children}
@@ -29,11 +47,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider');
-  }
-
+  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
   return context;
 };
 
