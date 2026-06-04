@@ -1328,3 +1328,120 @@ label {
   cursor: pointer;
 }
 
+/* ── Image Upload ── */
+.image-upload { width: 100%; }
+
+.image-upload__zone {
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  text-align: center;
+}
+
+.image-upload__zone:hover,
+.image-upload__zone--active {
+  border-color: var(--color-primary);
+  background-color: rgba(58, 149, 223, 0.04);
+}
+
+.image-upload__zone--loading {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.image-upload__icon {
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+
+.image-upload__zone:hover .image-upload__icon,
+.image-upload__zone--active .image-upload__icon {
+  color: var(--color-primary);
+}
+
+.image-upload__text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-muted-strong);
+  margin: 0;
+}
+
+.image-upload__hint {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.image-upload__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.image-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-thumb__remove {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-thumb:hover .image-thumb__remove { opacity: 1; }
+
+.image-thumb--add,
+.image-thumb--loading {
+  background: var(--color-bg);
+  border: 2px dashed var(--color-border);
+  color: var(--color-muted);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+}
+
+.image-thumb--add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: rgba(58, 149, 223, 0.04);
+}
+
+.image-thumb--loading {
+  cursor: default;
+  font-size: 14px;
+}
+
