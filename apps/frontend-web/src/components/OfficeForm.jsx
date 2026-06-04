@@ -1,4 +1,5 @@
 import ImageUpload from './ImageUpload';
+import AddressAutocomplete from './AddressAutocomplete';
 
 const AMENITIES = [
   { key: 'WiFi', label: 'WiFi' },
@@ -17,7 +18,7 @@ const AMENITIES = [
   { key: 'Pet Friendly', label: 'Mascotas permitidas' },
 ];
 
-export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesChange, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
+export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesChange, onLocationSelect, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
   return (
     <form onSubmit={onSubmit} noValidate>
 
@@ -47,7 +48,12 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
         <p className="form-section__title">Ubicación</p>
         <div className="form-group">
           <label htmlFor="address">Dirección *</label>
-          <input id="address" name="address" type="text" value={form.address} onChange={onChange} placeholder="Calle, número, piso" />
+          <AddressAutocomplete
+            value={form.address}
+            onChange={(val) => onChange({ target: { name: 'address', value: val } })}
+            onSelect={onLocationSelect}
+            placeholder="Calle, número, piso o nombre del lugar"
+          />
           {errors.address && <p className="form-error" role="alert">{errors.address}</p>}
         </div>
         <div className="form-row form-row--2">

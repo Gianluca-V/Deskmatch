@@ -8,6 +8,7 @@ using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Infrastructure.Persistence;
 using DeskMatch.CoreService.Infrastructure.Repositories;
 using DeskMatch.Domain.CQRS;
+using DeskMatch.SDK.Geocoding;
 using Microsoft.EntityFrameworkCore;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
@@ -27,6 +28,8 @@ public static class DependencyInjection
 
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
+
+        services.AddGeocodingSdk(configuration);
 
         return services;
     }

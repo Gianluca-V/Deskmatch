@@ -53,6 +53,17 @@ export default function OfficeModal({ isOpen, onClose }) {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   }
 
+  function handleLocationSelect(result) {
+    setForm((prev) => ({
+      ...prev,
+      address: result.displayName,
+      city: result.city ?? prev.city,
+      country: result.country ?? prev.country,
+      latitude: result.latitude,
+      longitude: result.longitude,
+    }));
+  }
+
   function handleAmenityToggle(key) {
     setForm((prev) => ({
       ...prev,
@@ -99,6 +110,7 @@ export default function OfficeModal({ isOpen, onClose }) {
         form={form}
         onChange={handleChange}
         onAmenityToggle={handleAmenityToggle}
+        onLocationSelect={handleLocationSelect}
         onSubmit={handleSubmit}
         onCancel={handleClose}
         errors={errors}

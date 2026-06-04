@@ -1390,6 +1390,50 @@ label {
   cursor: pointer;
 }
 
+/* ── Address Autocomplete ── */
+.address-autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.address-autocomplete__loading {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 4px;
+}
+
+.address-autocomplete__list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(3, 6, 8, 0.1);
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.address-autocomplete__item {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-muted-strong);
+  border-radius: 7px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background-color 0.1s ease;
+}
+
+.address-autocomplete__item:hover {
+  background-color: rgba(58, 149, 223, 0.07);
+  color: var(--color-text);
+}
+
 /* ── Image Upload ── */
 .image-upload { width: 100%; }
 
