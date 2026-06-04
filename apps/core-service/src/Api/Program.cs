@@ -1,5 +1,6 @@
 using DeskMatch.BuildingBlocks.Extensions;
 using DeskMatch.CoreService.Api;
+using DeskMatch.SDK.Geocoding;
 using DeskMatch.SDK.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddBuildingBlocks(builder.Configuration);
 // ─────────────────────────────── Application DI ──
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddStorageSdk(builder.Configuration);
+builder.Services.AddGeocodingSdk(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
