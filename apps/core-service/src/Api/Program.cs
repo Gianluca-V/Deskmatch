@@ -1,4 +1,5 @@
 using DeskMatch.BuildingBlocks.Extensions;
+using DeskMatch.SDK.Geocoding;
 using DeskMatch.SDK.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddBuildingBlocks(builder.Configuration);
 // TODO: Move registrations to DependencyInjection.cs once implemented
 // builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddStorageSdk(builder.Configuration);
+builder.Services.AddGeocodingSdk(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
