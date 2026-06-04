@@ -44,6 +44,17 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHealthChecks();
 
+// Configurar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -55,6 +66,8 @@ using (var scope = app.Services.CreateScope())
 await app.SeedIdentityRolesAsync();
 
 app.UseBuildingBlocksMiddleware();
+
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

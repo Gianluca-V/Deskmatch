@@ -17,7 +17,7 @@ function Login() {
     try {
       const response = await api.post('/api/auth/login', { email, password });
       login(response.data);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Credenciales incorrectas.');
     } finally {
