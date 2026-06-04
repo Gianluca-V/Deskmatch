@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import OfficeForm from './OfficeForm';
 import { useCreateOffice } from '../hooks/useCreateOffice';
@@ -36,8 +36,34 @@ function validate(form) {
   return errors;
 }
 
-export default function OfficeModal({ isOpen, onClose, companyId = '' }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, companyId });
+function fromWorkspace(w, companyId) {
+  if (!w) return { ...EMPTY_FORM, companyId };
+  return {
+    companyId: w.companyId ?? companyId,
+    name: w.name ?? '',
+    description: w.description ?? '',
+    address: w.address ?? '',
+    city: w.city ?? '',
+    country: w.country ?? '',
+    latitude: w.latitude ?? '',
+    longitude: w.longitude ?? '',
+    capacity: w.capacity ?? '',
+    pricePerHour: w.pricePerHour ?? '',
+    pricePerDay: w.pricePerDay ?? '',
+    pricePerMonth: w.pricePerMonth ?? '',
+    depositPercentage: '30',
+    amenities: w.amenities ?? [],
+    images: [],
+  };
+}
+
+export default function OfficeModal({ isOpen, onClose, companyId = '', initialValues = null }) {
+  const isEditing = !!initialValues;
+  const [form, setForm] = useState(() => fromWorkspace(initialValues, companyId));
+
+  useEffect(() => {
+    if (isOpen) setForm(fromWorkspace(initialValues, companyId));
+  }, [isOpen, initialValues, companyId]);
   const [errors, setErrors] = useState({});
 
   const [rollback, setRollback] = useState(null);
@@ -130,7 +156,7 @@ export default function OfficeModal({ isOpen, onClose, companyId = '' }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Nuevo Espacio">
+    <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? 'Editar Espacio' : 'Nuevo Espacio'}>
       <OfficeForm
         form={form}
         onChange={handleChange}

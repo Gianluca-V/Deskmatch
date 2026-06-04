@@ -4,24 +4,30 @@ import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 
 const STATUS_LABELS = {
-  true: 'Activo',
-  false: 'Inactivo',
+  active: 'Activo',
+  inactive: 'Inactivo',
 };
 
 const STATUS_CLASS = {
-  true: 'my-spaces__badge--active',
-  false: 'my-spaces__badge--inactive',
-};
-
-const STATUS_FILTER_MAP = {
-  active: true,
-  inactive: false,
+  active: 'my-spaces__badge--active',
+  inactive: 'my-spaces__badge--inactive',
 };
 
 function MySpaces() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingSpace, setEditingSpace] = useState(null);
+
+  function handleEdit(space) {
+    setEditingSpace(space);
+    setModalOpen(true);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setEditingSpace(null);
+  }
 
   const { data: company } = useMyCompany();
   const companyId = company?.id;
@@ -36,7 +42,9 @@ function MySpaces() {
         space.name.toLowerCase().includes(query) ||
         (space.address ?? '').toLowerCase().includes(query);
       const matchesStatus =
-        statusFilter === 'all' || space.isActive === STATUS_FILTER_MAP[statusFilter];
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && space.isActive) ||
+        (statusFilter === 'inactive' && !space.isActive);
       return matchesQuery && matchesStatus;
     });
   }, [spaces, searchQuery, statusFilter]);
@@ -107,53 +115,51 @@ function MySpaces() {
         </article>
       ) : (
         <section className="my-spaces__grid" aria-label="Listado de espacios">
-          {filteredSpaces.map((space) => (
-            <article key={space.id} className="my-spaces__card">
-              <div className="my-spaces__image" aria-label="Vista previa del espacio">
-                {space.images?.length > 0
-                  ? <img src={space.images[0]} alt={space.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span>🏢</span>
-                }
-              </div>
-
-              <div className="my-spaces__card-body">
-                <div className="my-spaces__card-topline">
-                  <span className={`my-spaces__badge ${STATUS_CLASS[space.isActive]}`}>
-                    {STATUS_LABELS[space.isActive]}
-                  </span>
-                  <span className="my-spaces__price">$ {space.pricePerHour.toLocaleString('es-AR')}/h</span>
+          {filteredSpaces.map((space) => {
+            const status = space.isActive ? 'active' : 'inactive';
+            return (
+              <article key={space.id} className="my-spaces__card">
+                <div className="my-spaces__image" aria-label="Vista previa del espacio" style={{ overflow: 'hidden', height: '280px' }}>
+                  {space.images?.length > 0
+                    ? <img src={space.images[0]} alt={space.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    : <span>🏢</span>
+                  }
                 </div>
 
-                <h2 className="my-spaces__card-title">{space.name}</h2>
-                <p className="my-spaces__address">📍 {space.address ?? '—'} · {space.city}, {space.country}</p>
+                <div className="my-spaces__card-body">
+                  <div className="my-spaces__card-topline">
+                    <span className={`my-spaces__badge ${STATUS_CLASS[status]}`}>
+                      {STATUS_LABELS[status]}
+                    </span>
+                    <span className="my-spaces__price">$ {space.pricePerHour.toLocaleString('es-AR')}/h</span>
+                  </div>
 
-                {space.description && (
-                  <p className="my-spaces__description">{space.description}</p>
-                )}
+                  <h2 className="my-spaces__card-title">{space.name}</h2>
+                  <p className="my-spaces__address">📍 {space.city}, {space.country}</p>
 
-                <div className="my-spaces__meta-grid">
-                  <span>👥 {space.capacity} personas</span>
-                  <span>📅 — reservas</span>
-                  <span>⭐ —</span>
+                  <div className="my-spaces__meta-grid">
+                    <span>👥 {space.capacity} personas</span>
+                    <span>📅 Próximamente</span>
+                    <span>⭐ Próximamente</span>
+                  </div>
+
+                  <div className="my-spaces__actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => handleEdit(space)}>Editar</button>
+                    <button type="button" className="btn btn-primary">Ver reservas</button>
+                  </div>
                 </div>
-
-                <div className="my-spaces__meta-grid" style={{ marginTop: '4px' }}>
-                  {space.pricePerDay && <span>💰 $ {space.pricePerDay.toLocaleString('es-AR')}/día</span>}
-                  {space.pricePerMonth && <span>💰 $ {space.pricePerMonth.toLocaleString('es-AR')}/mes</span>}
-                  {space.amenities?.length > 0 && <span>✨ {space.amenities.length} amenities</span>}
-                </div>
-
-                <div className="my-spaces__actions">
-                  <button type="button" className="btn btn-secondary">Editar</button>
-                  <button type="button" className="btn btn-primary">Ver reservas</button>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </section>
       )}
 
-      <OfficeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} companyId={companyId ?? ''} />
+      <OfficeModal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        companyId={companyId ?? ''}
+        initialValues={editingSpace}
+      />
     </section>
   );
 }
