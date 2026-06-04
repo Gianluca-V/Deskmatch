@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import OfficeModal from '../components/OfficeModal';
+import { useMyCompany } from '../hooks/useMyCompany';
 
 const MOCK_SPACES = [
   { id: 1, name: 'Oficina Central Buenos Aires', address: 'Av. Corrientes 1234, CABA', pricePerHour: 2500, capacity: 10, status: 'active', reservationsThisMonth: 24, rating: 4.8 },
@@ -22,6 +24,8 @@ const STATUS_CLASS = {
 function MySpaces() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const { data: company } = useMyCompany();
 
   useEffect(() => {
     // TODO: Reemplazar MOCK_SPACES por un fetch real a la API del propietario.
@@ -50,7 +54,7 @@ function MySpaces() {
           <h1 className="my-spaces__title">Mis Espacios</h1>
           <p className="my-spaces__subtitle">Gestiona tus oficinas y espacios publicados desde un solo lugar.</p>
         </div>
-        <button type="button" className="btn btn-primary">
+        <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
           Publicar nuevo espacio
         </button>
       </header>
@@ -101,7 +105,7 @@ function MySpaces() {
           <div className="my-spaces__empty-icon">📭</div>
           <h2>No hay espacios para mostrar</h2>
           <p>Intenta cambiar el filtro o publica un nuevo espacio para empezar.</p>
-          <button type="button" className="btn btn-primary">Publicar nuevo espacio</button>
+          <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>Publicar nuevo espacio</button>
         </article>
       ) : (
         <section className="my-spaces__grid" aria-label="Listado de espacios">
@@ -137,6 +141,7 @@ function MySpaces() {
           ))}
         </section>
       )}
+      <OfficeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} companyId={company?.id ?? ''} />
     </section>
   );
 }

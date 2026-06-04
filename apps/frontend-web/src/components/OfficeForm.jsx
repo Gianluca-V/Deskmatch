@@ -26,7 +26,7 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
         <p className="form-section__title">Empresa</p>
         <div className="form-group">
           <label htmlFor="companyId">ID de empresa *</label>
-          <input id="companyId" name="companyId" type="text" value={form.companyId} onChange={onChange} placeholder="UUID de la empresa propietaria" />
+          <input id="companyId" name="companyId" type="text" value={form.companyId} onChange={onChange} placeholder="UUID de la empresa" />
           {errors.companyId && <p className="form-error" role="alert">{errors.companyId}</p>}
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
       {Object.keys(errors).length > 0 && (
         <div className="form-validation-banner" role="alert">
           <span className="form-validation-banner__icon">!</span>
-          <span>Completá los campos requeridos para continuar.</span>
+          <span>Campos incompletos: {Object.values(errors).join(' · ')}</span>
         </div>
       )}
 

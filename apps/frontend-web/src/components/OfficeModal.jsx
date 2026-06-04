@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from './Modal';
 import OfficeForm from './OfficeForm';
 import { useCreateOffice } from '../hooks/useCreateOffice';
+import { uploadImage, deleteImage } from '../api/storage';
 
 const EMPTY_FORM = {
   companyId: '',
@@ -23,7 +24,7 @@ const EMPTY_FORM = {
 
 function validate(form) {
   const errors = {};
-  if (!form.companyId.trim()) errors.companyId = 'La empresa es requerida';
+  if (!form.companyId.trim()) errors.companyId = 'No se encontró empresa asociada a tu cuenta';
   if (!form.name.trim()) errors.name = 'El nombre es requerido';
   if (!form.address.trim()) errors.address = 'La dirección es requerida';
   if (!form.city.trim()) errors.city = 'La ciudad es requerida';
@@ -35,15 +36,22 @@ function validate(form) {
   return errors;
 }
 
-export default function OfficeModal({ isOpen, onClose }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+export default function OfficeModal({ isOpen, onClose, companyId = '' }) {
+  const [form, setForm] = useState({ ...EMPTY_FORM, companyId });
   const [errors, setErrors] = useState({});
+
+  const [rollback, setRollback] = useState(null);
 
   const { mutate, isPending, isError, error } = useCreateOffice({
     onSuccess: () => {
-      setForm(EMPTY_FORM);
+      setForm({ ...EMPTY_FORM, companyId });
       setErrors({});
+      setRollback(null);
       onClose();
+    },
+    onError: () => {
+      rollback?.();
+      setRollback(null);
     },
   });
 
@@ -51,6 +59,10 @@ export default function OfficeModal({ isOpen, onClose }) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  }
+
+  function handleImagesChange(images) {
+    setForm((prev) => ({ ...prev, images }));
   }
 
   function handleLocationSelect(result) {
@@ -73,10 +85,23 @@ export default function OfficeModal({ isOpen, onClose }) {
     }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate(form);
     if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    const imageUrls = form.images.length
+      ? await Promise.all(form.images.map((f) => uploadImage(f.file)))
+      : [];
+
+    setRollback(() => () => {
+      imageUrls.forEach((url) => {
+        try {
+          const parts = new URL(url).pathname.split('/').slice(-2);
+          if (parts.length === 2) deleteImage(parts[0], parts[1]);
+        } catch { /* ignorar */ }
+      });
+    });
 
     mutate({
       companyId: form.companyId.trim(),
@@ -92,13 +117,13 @@ export default function OfficeModal({ isOpen, onClose }) {
       pricePerDay: form.pricePerDay ? Number(form.pricePerDay) : undefined,
       pricePerMonth: form.pricePerMonth ? Number(form.pricePerMonth) : undefined,
       amenities: form.amenities,
-      images: form.images.map((f) => f.url).filter(Boolean),
+      images: imageUrls,
     });
   }
 
   function handleClose() {
     if (!isPending) {
-      setForm(EMPTY_FORM);
+      setForm({ ...EMPTY_FORM, companyId });
       setErrors({});
       onClose();
     }
@@ -110,6 +135,7 @@ export default function OfficeModal({ isOpen, onClose }) {
         form={form}
         onChange={handleChange}
         onAmenityToggle={handleAmenityToggle}
+        onImagesChange={handleImagesChange}
         onLocationSelect={handleLocationSelect}
         onSubmit={handleSubmit}
         onCancel={handleClose}

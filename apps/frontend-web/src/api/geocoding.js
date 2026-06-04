@@ -1,4 +1,4 @@
-import client from './client';
+import api from '../lib/api';
 
 export const geocode = (q) =>
-  client.get('/api/geocode', { params: { q } }).then((r) => r.data);
+  api.get('/api/geocode', { params: { q } }).then((r) => r.data);
