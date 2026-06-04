@@ -1,50 +1,47 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import OfficeModal from '../components/OfficeModal';
 import { useMyCompany } from '../hooks/useMyCompany';
-
-const MOCK_SPACES = [
-  { id: 1, name: 'Oficina Central Buenos Aires', address: 'Av. Corrientes 1234, CABA', pricePerHour: 2500, capacity: 10, status: 'active', reservationsThisMonth: 24, rating: 4.8 },
-  { id: 2, name: 'Sala de Reuniones Palermo', address: 'Thames 456, Palermo', pricePerHour: 1800, capacity: 6, status: 'active', reservationsThisMonth: 18, rating: 4.6 },
-  { id: 3, name: 'Coworking Microcentro', address: 'Florida 789, Microcentro', pricePerHour: 1200, capacity: 20, status: 'inactive', reservationsThisMonth: 0, rating: 4.2 },
-  { id: 4, name: 'Espacio Creativo Belgrano', address: 'Cabildo 321, Belgrano', pricePerHour: 2000, capacity: 8, status: 'draft', reservationsThisMonth: 0, rating: 0 },
-];
+import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 
 const STATUS_LABELS = {
-  active: 'Activo',
-  inactive: 'Inactivo',
-  draft: 'Borrador',
+  true: 'Activo',
+  false: 'Inactivo',
 };
 
 const STATUS_CLASS = {
-  active: 'my-spaces__badge--active',
-  inactive: 'my-spaces__badge--inactive',
-  draft: 'my-spaces__badge--draft',
+  true: 'my-spaces__badge--active',
+  false: 'my-spaces__badge--inactive',
+};
+
+const STATUS_FILTER_MAP = {
+  active: true,
+  inactive: false,
 };
 
 function MySpaces() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const { data: company } = useMyCompany();
 
-  useEffect(() => {
-    // TODO: Reemplazar MOCK_SPACES por un fetch real a la API del propietario.
-  }, []);
+  const { data: company } = useMyCompany();
+  const companyId = company?.id;
+
+  const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
 
   const filteredSpaces = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-
-    return MOCK_SPACES.filter((space) => {
+    return spaces.filter((space) => {
       const matchesQuery =
         !query ||
         space.name.toLowerCase().includes(query) ||
-        space.address.toLowerCase().includes(query);
-
-      const matchesStatus = statusFilter === 'all' || space.status === statusFilter;
-
+        (space.address ?? '').toLowerCase().includes(query);
+      const matchesStatus =
+        statusFilter === 'all' || space.isActive === STATUS_FILTER_MAP[statusFilter];
       return matchesQuery && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [spaces, searchQuery, statusFilter]);
+
+  const totalActive = spaces.filter((s) => s.isActive).length;
 
   return (
     <section className="my-spaces page-container">
@@ -62,19 +59,19 @@ function MySpaces() {
       <section className="my-spaces__metrics" aria-label="Resumen de espacios">
         <article className="my-spaces__metric-card">
           <p>Total de espacios</p>
-          <strong>{MOCK_SPACES.length}</strong>
+          <strong>{spaces.length}</strong>
         </article>
         <article className="my-spaces__metric-card">
           <p>Espacios activos</p>
-          <strong>{MOCK_SPACES.filter((space) => space.status === 'active').length}</strong>
+          <strong>{totalActive}</strong>
         </article>
         <article className="my-spaces__metric-card">
           <p>Reservas este mes</p>
-          <strong>{MOCK_SPACES.reduce((sum, space) => sum + space.reservationsThisMonth, 0)}</strong>
+          <strong>—</strong>
         </article>
         <article className="my-spaces__metric-card">
           <p>Ingresos del mes</p>
-          <strong>$ {MOCK_SPACES.reduce((sum, space) => sum + space.pricePerHour * space.reservationsThisMonth, 0).toLocaleString('es-AR')}</strong>
+          <strong>—</strong>
         </article>
       </section>
 
@@ -95,12 +92,13 @@ function MySpaces() {
             <option value="all">Todos</option>
             <option value="active">Activo</option>
             <option value="inactive">Inactivo</option>
-            <option value="draft">Borrador</option>
           </select>
         </label>
       </section>
 
-      {filteredSpaces.length === 0 ? (
+      {isLoading ? (
+        <p style={{ textAlign: 'center', color: 'var(--color-muted)', marginTop: '48px' }}>Cargando espacios...</p>
+      ) : filteredSpaces.length === 0 ? (
         <article className="my-spaces__empty">
           <div className="my-spaces__empty-icon">📭</div>
           <h2>No hay espacios para mostrar</h2>
@@ -112,24 +110,37 @@ function MySpaces() {
           {filteredSpaces.map((space) => (
             <article key={space.id} className="my-spaces__card">
               <div className="my-spaces__image" aria-label="Vista previa del espacio">
-                <span>🏢</span>
+                {space.images?.length > 0
+                  ? <img src={space.images[0]} alt={space.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span>🏢</span>
+                }
               </div>
 
               <div className="my-spaces__card-body">
                 <div className="my-spaces__card-topline">
-                  <span className={`my-spaces__badge ${STATUS_CLASS[space.status]}`}>
-                    {STATUS_LABELS[space.status]}
+                  <span className={`my-spaces__badge ${STATUS_CLASS[space.isActive]}`}>
+                    {STATUS_LABELS[space.isActive]}
                   </span>
                   <span className="my-spaces__price">$ {space.pricePerHour.toLocaleString('es-AR')}/h</span>
                 </div>
 
                 <h2 className="my-spaces__card-title">{space.name}</h2>
-                <p className="my-spaces__address">📍 {space.address}</p>
+                <p className="my-spaces__address">📍 {space.address ?? '—'} · {space.city}, {space.country}</p>
+
+                {space.description && (
+                  <p className="my-spaces__description">{space.description}</p>
+                )}
 
                 <div className="my-spaces__meta-grid">
                   <span>👥 {space.capacity} personas</span>
-                  <span>📅 {space.reservationsThisMonth} reservas</span>
-                  <span>⭐ {space.rating.toFixed(1)}</span>
+                  <span>📅 — reservas</span>
+                  <span>⭐ —</span>
+                </div>
+
+                <div className="my-spaces__meta-grid" style={{ marginTop: '4px' }}>
+                  {space.pricePerDay && <span>💰 $ {space.pricePerDay.toLocaleString('es-AR')}/día</span>}
+                  {space.pricePerMonth && <span>💰 $ {space.pricePerMonth.toLocaleString('es-AR')}/mes</span>}
+                  {space.amenities?.length > 0 && <span>✨ {space.amenities.length} amenities</span>}
                 </div>
 
                 <div className="my-spaces__actions">
@@ -141,7 +152,8 @@ function MySpaces() {
           ))}
         </section>
       )}
-      <OfficeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} companyId={company?.id ?? ''} />
+
+      <OfficeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} companyId={companyId ?? ''} />
     </section>
   );
 }

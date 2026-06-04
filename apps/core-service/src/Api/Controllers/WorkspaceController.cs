@@ -62,6 +62,18 @@ public sealed class WorkspaceController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id }, ToResponse(workspace!));
     }
 
+    /// <summary>Lista los workspaces de una empresa.</summary>
+    /// <response code="200">Lista de workspaces de la empresa.</response>
+    [HttpGet("company/{companyId:guid}")]
+    [ProducesResponseType(typeof(IReadOnlyList<WorkspaceResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<WorkspaceResponse>>> GetByCompany(
+        Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        var workspaces = await _repository.GetByCompanyIdAsync(companyId, cancellationToken);
+        return Ok(workspaces.Select(ToResponse).ToList());
+    }
+
     /// <summary>Obtiene un workspace por ID.</summary>
     /// <response code="200">Workspace encontrado.</response>
     /// <response code="404">Workspace no encontrado.</response>

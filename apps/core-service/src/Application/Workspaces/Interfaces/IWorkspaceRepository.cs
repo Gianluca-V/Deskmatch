@@ -5,6 +5,7 @@ namespace DeskMatch.CoreService.Application.Workspaces.Interfaces;
 
 public interface IWorkspaceRepository : IRepository<Workspace, Guid>
 {
+    Task<IReadOnlyList<Workspace>> GetByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<Workspace> Items, int TotalCount)> GetPagedAsync(
