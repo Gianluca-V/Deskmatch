@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Search, MapPin, Calendar, Users, Zap, Shield, ArrowRight, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import CounterStat from '../components/CounterStat';
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -195,22 +196,10 @@ function Home() {
 
       {/* Stats */}
       <section className="home-stats">
-        <div className="home-stats__item">
-          <h3>500+</h3>
-          <p>Espacios disponibles</p>
-        </div>
-        <div className="home-stats__item">
-          <h3>2,000+</h3>
-          <p>Usuarios activos</p>
-        </div>
-        <div className="home-stats__item">
-          <h3>50+</h3>
-          <p>Ciudades</p>
-        </div>
-        <div className="home-stats__item">
-          <h3>4.9★</h3>
-          <p>Calificación promedio</p>
-        </div>
+        <CounterStat targetValue={500} label="Espacios disponibles" suffix="+" />
+        <CounterStat targetValue={2000} label="Usuarios activos" suffix="+" />
+        <CounterStat targetValue={50} label="Ciudades" suffix="+" />
+        <CounterStat targetValue={4.9} label="Calificación promedio" suffix="★" />
       </section>
 
       {/* Features Grid */}

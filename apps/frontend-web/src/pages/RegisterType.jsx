@@ -45,6 +45,7 @@ function RegisterType() {
         </aside>
 
         <div className="reg-type__body">
+            <Link to="/" style={{ display: 'inline-block', marginBottom: '-5px', marginLeft: '30px', marginTop: '28px', color: 'var(--color-primary)', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}> Volver a inicio</Link>
             <div className="reg-type__header">
             <p className="reg-type__label">Registro fácil</p>
             <h1 className="reg-type__heading">¿Cómo querés registrarte?</h1>
