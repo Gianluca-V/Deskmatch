@@ -1,5 +1,6 @@
 using DeskMatch.BuildingBlocks.Extensions;
-using DeskMatch.CoreService.Api;
+using DeskMatch.SDK.Geocoding;
+using DeskMatch.SDK.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,37 +10,13 @@ builder.Services.AddBuildingBlocks(builder.Configuration);
 
 // ─────────────────────────────── Application DI ──
 // TODO: Move registrations to DependencyInjection.cs once implemented
- builder.Services.AddApplicationServices(builder.Configuration);
+// builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddStorageSdk(builder.Configuration);
+builder.Services.AddGeocodingSdk(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Ingresá el token JWT así: Bearer {token}"
-    });
-
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddHealthChecks();
 
@@ -53,7 +30,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
