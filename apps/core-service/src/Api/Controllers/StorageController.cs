@@ -3,6 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DeskMatch.CoreService.Api.Controllers;
 
+public class UploadRequest
+{
+    public IFormFile File { get; set; } = null!;
+    public string Container { get; set; } = "uploads";
+}
+
 [ApiController]
 [Route("api/storage")]
 public class StorageController : ControllerBase
@@ -16,19 +22,18 @@ public class StorageController : ControllerBase
 
     [HttpPost("upload")]
     [RequestSizeLimit(10_485_760)]
-    public async Task<IActionResult> Upload(
-        [FromForm] IFormFile file,
-        [FromForm] string container = "uploads")
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Upload([FromForm] UploadRequest request)
     {
-        if (file is null || file.Length == 0)
+        if (request.File is null || request.File.Length == 0)
             return BadRequest(new { error = "No file provided" });
 
-        var fileName = $"{Guid.NewGuid():N}_{file.FileName}";
+        var fileName = $"{Guid.NewGuid():N}_{request.File.FileName}";
 
-        await using var stream = file.OpenReadStream();
-        var url = await _storage.UploadAsync(container, fileName, stream, file.ContentType);
+        await using var stream = request.File.OpenReadStream();
+        var url = await _storage.UploadAsync(request.Container, fileName, stream, request.File.ContentType);
 
-        return Ok(new { url, fileName, container });
+        return Ok(new { url, fileName, container = request.Container });
     }
 
     [HttpGet("{container}/{fileName}")]
