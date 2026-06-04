@@ -18,7 +18,7 @@ const EMPTY_FORM = {
   pricePerMonth: '',
   depositPercentage: '30',
   amenities: [],
-  images: '',
+  images: [],
 };
 
 function validate(form) {
@@ -80,7 +80,6 @@ export default function OfficeModal({ isOpen, onClose }) {
       pricePerHour: Number(form.pricePerHour),
       pricePerDay: form.pricePerDay ? Number(form.pricePerDay) : undefined,
       pricePerMonth: form.pricePerMonth ? Number(form.pricePerMonth) : undefined,
-      depositPercentage: Number(form.depositPercentage),
       amenities: form.amenities,
       images: form.images.map((f) => f.url).filter(Boolean),
     });

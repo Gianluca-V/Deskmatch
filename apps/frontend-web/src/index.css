@@ -1338,6 +1338,33 @@ label {
   margin-bottom: 16px;
 }
 
+.form-validation-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(229, 62, 62, 0.06);
+  border: 1px solid rgba(229, 62, 62, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #c53030;
+}
+
+.form-validation-banner__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e53e3e;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* ── Amenities ── */
 .amenities-grid {
   display: grid;

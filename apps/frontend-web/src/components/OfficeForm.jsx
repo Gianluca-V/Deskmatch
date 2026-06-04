@@ -124,6 +124,13 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
         </div>
       </div>
 
+      {Object.keys(errors).length > 0 && (
+        <div className="form-validation-banner" role="alert">
+          <span className="form-validation-banner__icon">!</span>
+          <span>Completá los campos requeridos para continuar.</span>
+        </div>
+      )}
+
       {isError && (
         <p className="form-api-error" role="alert">
           {errorMessage ?? 'Ocurrió un error. Intentá de nuevo.'}
