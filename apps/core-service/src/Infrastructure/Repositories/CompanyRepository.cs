@@ -17,6 +17,9 @@ public class CompanyRepository : ICompanyRepository
     public async Task<Company?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => await _context.Companies.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
+    public async Task<Company?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
+        => await _context.Companies.FirstOrDefaultAsync(c => c.OwnerId == ownerId, cancellationToken);
+
     public async Task<IReadOnlyList<Company>> GetAllAsync(CancellationToken cancellationToken = default)
         => await _context.Companies.ToListAsync(cancellationToken);
 

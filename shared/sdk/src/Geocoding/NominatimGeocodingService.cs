@@ -25,7 +25,7 @@ public sealed class NominatimGeocodingService : IGeocodingService, IDisposable
             return cached;
 
         var results = await RequestAsync<NominatimResponse[]>(
-            $"/search?q={Uri.EscapeDataString(query)}&format=json&limit=5&addressdetails=1",
+            $"/search?q={Uri.EscapeDataString(query)}&format=json&limit=5&addressdetails=1&countrycodes=ar",
             ct
         );
 
@@ -93,12 +93,14 @@ public sealed class NominatimGeocodingService : IGeocodingService, IDisposable
     {
         public string Lat { get; set; } = "";
         public string Lon { get; set; } = "";
+        [JsonPropertyName("display_name")]
         public string? DisplayName { get; set; }
         public NominatimAddress? Address { get; set; }
     }
 
     private sealed class NominatimReverseResponse
     {
+        [JsonPropertyName("display_name")]
         public string? DisplayName { get; set; }
         public NominatimAddress? Address { get; set; }
     }

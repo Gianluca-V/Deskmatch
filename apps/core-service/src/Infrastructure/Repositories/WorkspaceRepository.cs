@@ -20,6 +20,9 @@ public class WorkspaceRepository : IWorkspaceRepository
     public async Task<IReadOnlyList<Workspace>> GetAllAsync(CancellationToken cancellationToken = default)
         => await _context.Workspaces.ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Workspace>> GetByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default)
+        => await _context.Workspaces.Where(w => w.CompanyId == companyId).ToListAsync(cancellationToken);
+
     public async Task<Workspace> AddAsync(Workspace entity, CancellationToken cancellationToken = default)
     {
         await _context.Workspaces.AddAsync(entity, cancellationToken);

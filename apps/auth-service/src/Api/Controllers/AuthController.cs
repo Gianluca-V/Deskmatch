@@ -3,7 +3,6 @@ using DeskMatch.AuthService.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace DeskMatch.AuthService.Api.Controllers;
 
@@ -15,21 +14,15 @@ public sealed class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly ITokenBlacklistService _blacklist;
-    private readonly IRefreshTokenService _refreshTokenService;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IJwtTokenService jwtTokenService,
-        ITokenBlacklistService blacklist,
-        IRefreshTokenService refreshTokenService)
+        IJwtTokenService jwtTokenService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
-        _blacklist = blacklist;
-        _refreshTokenService = refreshTokenService;
     }
 
     /// <summary>Registra un nuevo usuario.</summary>
@@ -171,10 +164,7 @@ public sealed class AuthController : ControllerBase
             user.LastName,
             user.IsActive);
 
-        var loginResponse = _jwtTokenService.CreateToken(user, role) with { User = userResponse };
-        var refreshToken = await _refreshTokenService.GenerateAsync(user);
-
-        return Ok(loginResponse with { RefreshToken = refreshToken.Token });
+        return Ok(_jwtTokenService.CreateToken(user, role) with { User = userResponse });
     }
 
     /// <summary>Devuelve los datos del usuario autenticado.</summary>
@@ -202,105 +192,6 @@ public sealed class AuthController : ControllerBase
             user.FirstName,
             user.LastName,
             user.IsActive));
-    }
-
-    [HttpPut("me")]
-    [Authorize]
-    public async Task<ActionResult<UserResponse>> UpdateMe(UpdateProfileRequest request)
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Invalid token." });
-        }
-
-        var nameRecalcNeeded = false;
-
-        if (request.FirstName is not null)
-        {
-            user.FirstName = request.FirstName.Trim();
-            nameRecalcNeeded = true;
-        }
-
-        if (request.LastName is not null)
-        {
-            user.LastName = request.LastName.Trim();
-            nameRecalcNeeded = true;
-        }
-
-        if (request.Name is not null)
-            user.Name = request.Name.Trim();
-        else if (nameRecalcNeeded)
-            user.Name = $"{user.FirstName} {user.LastName}".Trim();
-
-        user.UpdatedAt = DateTime.UtcNow;
-
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return IdentityValidationProblem(result);
-        }
-
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? AuthRoles.User;
-        return Ok(new UserResponse(
-            user.Id,
-            user.Name,
-            user.Email ?? string.Empty,
-            role,
-            user.FirstName,
-            user.LastName,
-            user.IsActive));
-    }
-
-    [HttpPost("refresh")]
-    [AllowAnonymous]
-    public async Task<ActionResult<LoginResponse>> Refresh(RefreshRequest request)
-    {
-        var existing = await _refreshTokenService.FindValidAsync(request.RefreshToken);
-        if (existing is null)
-            return Unauthorized(new { message = "Invalid or expired refresh token." });
-
-        if (!existing.User.IsActive)
-            return Unauthorized(new { message = "User account is inactive." });
-
-        await _refreshTokenService.MarkUsedAsync(existing);
-
-        var role = (await _userManager.GetRolesAsync(existing.User)).FirstOrDefault() ?? AuthRoles.User;
-        var userResponse = new UserResponse(
-            existing.User.Id,
-            existing.User.Name,
-            existing.User.Email ?? string.Empty,
-            role,
-            existing.User.FirstName,
-            existing.User.LastName,
-            existing.User.IsActive);
-
-        var loginResponse = _jwtTokenService.CreateToken(existing.User, role) with { User = userResponse };
-        var newRefreshToken = await _refreshTokenService.GenerateAsync(existing.User);
-
-        return Ok(loginResponse with { RefreshToken = newRefreshToken.Token });
-    }
-
-    [HttpPost("logout")]
-    [Authorize]
-    public async Task<IActionResult> Logout()
-    {
-        var jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-        if (string.IsNullOrEmpty(jti))
-            return NoContent();
-
-        var expClaim = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
-        var expiresIn = TimeSpan.FromMinutes(60);
-
-        if (long.TryParse(expClaim, out var expUnix))
-        {
-            var remaining = DateTimeOffset.FromUnixTimeSeconds(expUnix) - DateTimeOffset.UtcNow;
-            if (remaining > TimeSpan.Zero)
-                expiresIn = remaining;
-        }
-
-        await _blacklist.BlacklistAsync(jti, expiresIn);
-        return NoContent();
     }
 
     private ActionResult IdentityValidationProblem(IdentityResult result)

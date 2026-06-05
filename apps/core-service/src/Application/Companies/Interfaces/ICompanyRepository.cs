@@ -5,5 +5,6 @@ namespace DeskMatch.CoreService.Application.Companies.Interfaces;
 
 public interface ICompanyRepository : IRepository<Company, Guid>
 {
+    Task<Company?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

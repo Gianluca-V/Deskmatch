@@ -27,13 +27,12 @@ public class Workspace : AggregateRoot<Guid>
     public List<string>? Amenities { get; set; }
     public List<string>? Images { get; set; }
     public double? Rating { get; set; }
-    public int ReviewCount { get; set; }
+    public int ReviewCount { get; set; } = 0;
     public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
-    public void MarkAsUpdated()
-    {
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public void MarkAsUpdated() => UpdatedAt = DateTime.UtcNow;
 
     public void MarkAsDeleted()
     {

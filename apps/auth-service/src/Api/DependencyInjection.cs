@@ -3,12 +3,12 @@ using DeskMatch.AuthService.Infrastructure.Auth;
 using DeskMatch.AuthService.Infrastructure.Identity;
 using DeskMatch.AuthService.Infrastructure.Persistence;
 using DeskMatch.SDK.Redis;
+using FluentValidation;
+using DeskMatch.AuthService.Application.Auth.Validators;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using FluentValidation;
-using DeskMatch.AuthService.Application.Auth.Validators;
 
 namespace DeskMatch.AuthService.Api;
 
@@ -19,7 +19,7 @@ public static class DependencyInjection
         services.AddDbContext<AuthDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-        services.AddIdentityCore<ApplicationUser>(options =>
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireDigit = true;
@@ -28,17 +28,14 @@ public static class DependencyInjection
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
             })
-            .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AuthDbContext>()
-            .AddSignInManager()
             .AddDefaultTokenProviders();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-
         services.AddRedisSdk(configuration);
         services.AddSingleton<ICacheService, CacheService>();
-        services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+        services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
+        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 

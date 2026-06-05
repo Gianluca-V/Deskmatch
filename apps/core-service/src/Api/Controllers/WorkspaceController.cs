@@ -1,3 +1,5 @@
+using DeskMatch.BuildingBlocks.Exceptions;
+using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Dtos;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
@@ -17,17 +19,36 @@ public sealed class WorkspaceController : ControllerBase
     private readonly ICommandHandler<UpdateWorkspaceCommand> _updateHandler;
     private readonly ICommandHandler<DeleteWorkspaceCommand> _deleteHandler;
     private readonly IWorkspaceRepository _repository;
+    private readonly ICompanyRepository _companyRepository;
 
     public WorkspaceController(
         ICommandHandler<CreateWorkspaceCommand, Guid> createHandler,
         ICommandHandler<UpdateWorkspaceCommand> updateHandler,
         ICommandHandler<DeleteWorkspaceCommand> deleteHandler,
-        IWorkspaceRepository repository)
+        IWorkspaceRepository repository,
+        ICompanyRepository companyRepository)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
         _repository = repository;
+        _companyRepository = companyRepository;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var sub = User.FindFirst("sub")?.Value
+               ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+    }
+
+    private async Task ValidateCompanyOwnership(Guid companyId, CancellationToken ct)
+    {
+        var company = await _companyRepository.GetByIdAsync(companyId, ct);
+        if (company is null)
+            throw new NotFoundException("Company", companyId);
+        if (company.OwnerId != GetCurrentUserId())
+            throw new ForbiddenException("No tenés permiso para crear espacios a nombre de esta empresa.");
     }
 
     /// <summary>Crea un nuevo workspace.</summary>
@@ -40,6 +61,8 @@ public sealed class WorkspaceController : ControllerBase
         CreateWorkspaceRequest request,
         CancellationToken cancellationToken)
     {
+        await ValidateCompanyOwnership(request.CompanyId, cancellationToken);
+
         var command = new CreateWorkspaceCommand(
             request.CompanyId,
             request.Name,
@@ -60,6 +83,18 @@ public sealed class WorkspaceController : ControllerBase
         var workspace = await _repository.GetByIdAsync(id, cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id }, ToResponse(workspace!));
+    }
+
+    /// <summary>Lista los workspaces de una empresa.</summary>
+    /// <response code="200">Lista de workspaces de la empresa.</response>
+    [HttpGet("company/{companyId:guid}")]
+    [ProducesResponseType(typeof(IReadOnlyList<WorkspaceResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<WorkspaceResponse>>> GetByCompany(
+        Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        var workspaces = await _repository.GetByCompanyIdAsync(companyId, cancellationToken);
+        return Ok(workspaces.Select(ToResponse).ToList());
     }
 
     /// <summary>Obtiene un workspace por ID.</summary>
@@ -139,6 +174,8 @@ public sealed class WorkspaceController : ControllerBase
         var exists = await _repository.ExistsAsync(id, cancellationToken);
         if (!exists) return NotFound();
 
+        await ValidateCompanyOwnership(request.CompanyId, cancellationToken);
+
         var command = new UpdateWorkspaceCommand(
             id,
             request.CompanyId,
@@ -162,19 +199,24 @@ public sealed class WorkspaceController : ControllerBase
         return Ok(ToResponse(workspace!));
     }
 
-    /// <summary>Elimina (soft-delete) un workspace. Solo Admin.</summary>
+    /// <summary>Elimina (soft-delete) un workspace. Admin puede eliminar cualquiera; Manager solo los suyos.</summary>
     /// <response code="204">Workspace desactivado correctamente.</response>
+    /// <response code="403">Sin permiso para eliminar este workspace.</response>
     /// <response code="404">Workspace no encontrado.</response>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var exists = await _repository.ExistsAsync(id, cancellationToken);
-        if (!exists) return NotFound();
+        var workspace = await _repository.GetByIdAsync(id, cancellationToken);
+        if (workspace is null) return NotFound();
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin)
+            await ValidateCompanyOwnership(workspace.CompanyId, cancellationToken);
 
         var command = new DeleteWorkspaceCommand(id);
         await _deleteHandler.HandleAsync(command, cancellationToken);
