@@ -35,6 +35,20 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'deskmatch' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'deskmatch123!' }}
+          POSTGRES_DB: deskmatch_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     strategy:
       matrix:
         project:
@@ -88,6 +102,11 @@ jobs:
         run: dotnet build "${{ matrix.project.path }}/${{ matrix.project.csproj }}" --configuration Release --no-restore
 
       - name: Test
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER || 'DeskMatch' }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE || 'DeskMatch' }}
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=deskmatch_test;Username=${{ secrets.POSTGRES_USER || 'deskmatch' }};Password=${{ secrets.POSTGRES_PASSWORD || 'deskmatch123!' }}
         run: dotnet test "${{ matrix.project.path }}/${{ matrix.project.csproj }}" --configuration Release --no-build --verbosity normal || echo "No tests found for ${{ matrix.project.name }}"
 
   docker-build:
