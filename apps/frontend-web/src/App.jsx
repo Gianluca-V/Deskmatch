@@ -6,6 +6,7 @@ import RegisterCompany from './pages/RegisterCompany';
 import RegisterType from './pages/RegisterType';
 import Home from './pages/Home';
 import Offices from './pages/Offices';
+import MySpaces from './pages/MySpaces';
 
 
 function OfficeDetail() {
@@ -42,6 +43,7 @@ function App() {
             <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>Home</Link>
             <Link to="/offices" style={{ color: '#ffffff', textDecoration: 'none' }}>Oficinas</Link>
             <Link to="/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>Dashboard</Link>
+            <Link to="/my-spaces" style={{ color: '#ffffff', textDecoration: 'none' }}>Mis Espacios</Link>
             <Link to="/login" style={{ color: '#ffffff', textDecoration: 'none' }}>Login</Link>
             <Link to="/register" style={{ color: '#ffffff', textDecoration: 'none' }}>Registrarse</Link>
           </nav>
@@ -57,6 +59,7 @@ function App() {
           <Route path="/register/user" element={<Register />} />
           <Route path="/register/company" element={<RegisterCompany />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/my-spaces" element={<MySpaces />} />
         </Routes>
       </main>
       <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
