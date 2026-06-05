@@ -26,7 +26,7 @@ export default function ImageUpload({ files = [], onChange }) {
   }
 
   function remove(index) {
-    URL.revokeObjectURL(files[index].preview);
+    if (files[index].file) URL.revokeObjectURL(files[index].preview);
     onChange(files.filter((_, i) => i !== index));
     setError('');
   }
@@ -48,7 +48,7 @@ export default function ImageUpload({ files = [], onChange }) {
         <div className="image-upload__grid">
           {files.map((f, i) => (
             <div key={f.preview} className="image-thumb">
-              <img src={f.preview} alt={f.file.name} className="image-thumb__img" />
+              <img src={f.preview} alt={f.file?.name ?? 'imagen'} className="image-thumb__img" />
               <button
                 type="button"
                 className="image-thumb__remove"

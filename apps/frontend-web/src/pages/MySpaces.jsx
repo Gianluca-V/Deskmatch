@@ -30,7 +30,7 @@ function MySpaces() {
   }
 
   const { data: company } = useMyCompany();
-  const companyId = company?.id;
+  const companyId = company?.id ?? 'f201ad9c-3d35-49df-8928-8916642a4a9d';
 
   const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
 

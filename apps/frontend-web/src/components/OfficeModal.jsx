@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import OfficeForm from './OfficeForm';
 import { useCreateOffice } from '../hooks/useCreateOffice';
+import { useUpdateOffice } from '../hooks/useUpdateOffice';
 import { uploadImage, deleteImage } from '../api/storage';
 
 const EMPTY_FORM = {
@@ -53,7 +54,9 @@ function fromWorkspace(w, companyId) {
     pricePerMonth: w.pricePerMonth ?? '',
     depositPercentage: '30',
     amenities: w.amenities ?? [],
-    images: [],
+    images: Array.isArray(w.images)
+      ? w.images.filter(Boolean).map((url) => ({ url, preview: url, file: null }))
+      : [],
   };
 }
 
@@ -68,18 +71,31 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
 
   const [rollback, setRollback] = useState(null);
 
-  const { mutate, isPending, isError, error } = useCreateOffice({
-    onSuccess: () => {
-      setForm({ ...EMPTY_FORM, companyId });
-      setErrors({});
-      setRollback(null);
-      onClose();
-    },
-    onError: () => {
-      rollback?.();
-      setRollback(null);
-    },
+  const onMutationSuccess = () => {
+    setForm({ ...EMPTY_FORM, companyId });
+    setErrors({});
+    setRollback(null);
+    onClose();
+  };
+
+  const onMutationError = () => {
+    rollback?.();
+    setRollback(null);
+  };
+
+  const { mutate: create, isPending: isCreating, isError: isCreateError, error: createError } = useCreateOffice({
+    onSuccess: onMutationSuccess,
+    onError: onMutationError,
   });
+
+  const { mutate: update, isPending: isUpdating, isError: isUpdateError, error: updateError } = useUpdateOffice({
+    onSuccess: onMutationSuccess,
+    onError: onMutationError,
+  });
+
+  const isPending = isCreating || isUpdating;
+  const isError = isCreateError || isUpdateError;
+  const error = createError || updateError;
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -116,12 +132,14 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
     const errs = validate(form);
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    const imageUrls = form.images.length
-      ? await Promise.all(form.images.map((f) => uploadImage(f.file)))
+    const existingUrls = form.images.filter((f) => !f.file).map((f) => f.url);
+    const newUrls = form.images.filter((f) => f.file).length
+      ? await Promise.all(form.images.filter((f) => f.file).map((f) => uploadImage(f.file)))
       : [];
+    const imageUrls = [...existingUrls, ...newUrls];
 
     setRollback(() => () => {
-      imageUrls.forEach((url) => {
+      newUrls.forEach((url) => {
         try {
           const parts = new URL(url).pathname.split('/').slice(-2);
           if (parts.length === 2) deleteImage(parts[0], parts[1]);
@@ -129,7 +147,7 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
       });
     });
 
-    mutate({
+    const payload = {
       companyId: form.companyId.trim(),
       name: form.name.trim(),
       description: form.description.trim() || undefined,
@@ -144,7 +162,13 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
       pricePerMonth: form.pricePerMonth ? Number(form.pricePerMonth) : undefined,
       amenities: form.amenities,
       images: imageUrls,
-    });
+    };
+
+    if (isEditing) {
+      update({ id: initialValues.id, ...payload });
+    } else {
+      create(payload);
+    }
   }
 
   function handleClose() {
