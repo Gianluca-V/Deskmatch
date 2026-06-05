@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS core."Workspaces" (
     "PricePerDay" NUMERIC(10,2),
     "PricePerMonth" NUMERIC(10,2),
     "DepositPercentage" NUMERIC(5,2) NOT NULL DEFAULT 30.00,
-    "Amenities" JSONB,
-    "Images" JSONB,
+    "Amenities" TEXT[],
+    "Images" TEXT[],
     "Rating" NUMERIC(3,2),
     "ReviewCount" INTEGER NOT NULL DEFAULT 0,
     "IsActive" BOOLEAN NOT NULL DEFAULT TRUE,
@@ -101,7 +101,7 @@ VALUES
     50,
     25.00,
     30.00,
-    '["WiFi", "Meeting Rooms", "Coffee", "Printing", "Parking"]'
+    '{WiFi, "Meeting Rooms", Coffee, Printing, Parking}'
 ),
 (
     'c3d4e5f6-a7b8-9012-cdef-123456789012',
@@ -116,7 +116,7 @@ VALUES
     120,
     35.00,
     30.00,
-    '["WiFi", "Meeting Rooms", "Coffee", "Event Space", "Gym", "Cafeteria"]'
+    '{WiFi, "Meeting Rooms", Coffee, "Event Space", Gym, Cafeteria}'
 ),
 (
     'd4e5f6a7-b8c9-0123-defa-234567890123',
@@ -131,6 +131,6 @@ VALUES
     30,
     20.00,
     30.00,
-    '["WiFi", "Coffee", "Lounge", "Rooftop", "Bike Storage"]'
+    '{WiFi, Coffee, Lounge, Rooftop, "Bike Storage"}'
 )
 ON CONFLICT ("Id") DO NOTHING;
