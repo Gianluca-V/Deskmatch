@@ -199,19 +199,24 @@ public sealed class WorkspaceController : ControllerBase
         return Ok(ToResponse(workspace!));
     }
 
-    /// <summary>Elimina (soft-delete) un workspace. Solo Admin.</summary>
+    /// <summary>Elimina (soft-delete) un workspace. Admin puede eliminar cualquiera; Manager solo los suyos.</summary>
     /// <response code="204">Workspace desactivado correctamente.</response>
+    /// <response code="403">Sin permiso para eliminar este workspace.</response>
     /// <response code="404">Workspace no encontrado.</response>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var exists = await _repository.ExistsAsync(id, cancellationToken);
-        if (!exists) return NotFound();
+        var workspace = await _repository.GetByIdAsync(id, cancellationToken);
+        if (workspace is null) return NotFound();
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin)
+            await ValidateCompanyOwnership(workspace.CompanyId, cancellationToken);
 
         var command = new DeleteWorkspaceCommand(id);
         await _deleteHandler.HandleAsync(command, cancellationToken);

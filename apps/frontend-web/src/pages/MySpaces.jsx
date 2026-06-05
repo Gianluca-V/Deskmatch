@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import OfficeModal from '../components/OfficeModal';
 import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
+import { useDeleteOffice } from '../hooks/useDeleteOffice';
+import { useAuth } from '../context/AuthContext';
 
 const STATUS_LABELS = {
   active: 'Activo',
@@ -29,10 +31,14 @@ function MySpaces() {
     setEditingSpace(null);
   }
 
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+  const canDelete = isAdmin || user?.role === 'Manager';
   const { data: company } = useMyCompany();
   const companyId = company?.id ?? 'f201ad9c-3d35-49df-8928-8916642a4a9d';
 
   const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
+  const { mutate: deleteSpace } = useDeleteOffice();
 
   const filteredSpaces = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -145,6 +151,9 @@ function MySpaces() {
 
                   <div className="my-spaces__actions">
                     <button type="button" className="btn btn-secondary" onClick={() => handleEdit(space)}>Editar</button>
+                    {canDelete && (
+                      <button type="button" className="btn btn-danger" onClick={() => { if (window.confirm('¿Eliminar este espacio?')) deleteSpace(space.id); }}>Eliminar</button>
+                    )}
                     <button type="button" className="btn btn-primary">Ver reservas</button>
                   </div>
                 </div>

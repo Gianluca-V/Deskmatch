@@ -11,3 +11,6 @@ export const getWorkspacesByCompany = (companyId) =>
 
 export const updateOffice = (id, data) =>
   api.put(`/api/workspaces/${id}`, data).then((r) => r.data);
+
+export const deleteOffice = (id) =>
+  api.delete(`/api/workspaces/${id}`);

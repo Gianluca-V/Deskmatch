@@ -29,6 +29,8 @@ public static class DependencyInjection
 
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
