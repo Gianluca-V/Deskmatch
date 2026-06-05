@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using DeskMatch.AuthService.Application.Auth.Validators;
 
 namespace DeskMatch.AuthService.Api;
 
@@ -37,6 +39,8 @@ public static class DependencyInjection
         services.AddRedisSdk(configuration);
         services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+
+        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
         return services;
     }

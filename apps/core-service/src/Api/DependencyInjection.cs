@@ -1,8 +1,17 @@
-// Register your application services here.
-// Called from Program.cs via: builder.Services.AddApplicationServices(builder.Configuration);
+
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using DeskMatch.CoreService.Application.Companies.Commands;
+using DeskMatch.CoreService.Application.Companies.Handlers;
+using DeskMatch.CoreService.Application.Companies.Interfaces;
+using DeskMatch.CoreService.Infrastructure.Persistence;
+using DeskMatch.CoreService.Infrastructure.Repositories;
+using DeskMatch.Domain.CQRS;
+using Microsoft.EntityFrameworkCore;
+using DeskMatch.CoreService.Application.Workspaces.Interfaces;
+using DeskMatch.CoreService.Application.Workspaces.Commands;
+using DeskMatch.CoreService.Application.Workspaces.Handlers;
 
 namespace DeskMatch.CoreService.Api;
 
@@ -10,56 +19,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // TODO: Add DbContext (Npgsql)
-        // services.AddDbContext<CoreDbContext>(options =>
-        //     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-        // services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CoreDbContext>());
+        services.AddDbContext<CoreDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-        // TODO: Add SDKs
-        // services.AddOpenSearchSdk(configuration);
-        // services.AddRedisSdk(configuration);
-        // services.AddNotificationSdk(configuration);
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<ICommandHandler<CreateCompanyCommand, Guid>, CreateCompanyCommandHandler>();
 
-        // TODO: Register repositories
-        // services.AddScoped<IOfficeRepository, OfficeRepository>();
-        // services.AddScoped<ICompanyRepository, CompanyRepository>();
-        // services.AddScoped<IReservationRepository, ReservationRepository>();
-        // services.AddScoped<IReviewRepository, ReviewRepository>();
-        // services.AddScoped<IPaymentRepository, PaymentRepository>();
-
-        // TODO: Register domain services (indexers, etc.)
-        // services.AddScoped<OpenSearchOfficeIndexer>();
-
-        // TODO: Register command handlers (Offices)
-        // services.AddScoped<ICommandHandler<CreateOfficeCommand, Guid>, CreateOfficeCommandHandler>();
-        // services.AddScoped<ICommandHandler<UpdateOfficeCommand>, UpdateOfficeCommandHandler>();
-        // services.AddScoped<ICommandHandler<DeleteOfficeCommand>, DeleteOfficeCommandHandler>();
-
-        // TODO: Register command handlers (Companies)
-        // services.AddScoped<ICommandHandler<CreateCompanyCommand, Guid>, CreateCompanyCommandHandler>();
-        // services.AddScoped<ICommandHandler<UpdateCompanyCommand>, UpdateCompanyCommandHandler>();
-
-        // TODO: Register command handlers (Reservations)
-        // services.AddScoped<ICommandHandler<CreateReservationCommand, Guid>, CreateReservationCommandHandler>();
-        // services.AddScoped<ICommandHandler<UpdateReservationStatusCommand>, UpdateReservationStatusCommandHandler>();
-
-        // TODO: Register command handlers (Payments)
-        // services.AddScoped<ICommandHandler<ProcessDepositCommand, Guid>, ProcessDepositCommandHandler>();
-        // services.AddScoped<ICommandHandler<CreateFinalPaymentCommand, Guid>, CreateFinalPaymentCommandHandler>();
-        // services.AddScoped<ICommandHandler<ProcessFinalPaymentCommand, Guid>, ProcessFinalPaymentCommandHandler>();
-
-        // TODO: Register command handlers (Reviews)
-        // services.AddScoped<ICommandHandler<CreateReviewCommand, Guid>, CreateReviewCommandHandler>();
-
-        // TODO: Register query handlers
-        // services.AddScoped<IQueryHandler<GetOfficeByIdQuery, OfficeDto?>, GetOfficeByIdQueryHandler>();
-        // services.AddScoped<IQueryHandler<GetAllOfficesQuery, GetAllOfficesResult>, GetAllOfficesQueryHandler>();
-        // services.AddScoped<IQueryHandler<GetCompanyByIdQuery, CompanyDto?>, GetCompanyByIdQueryHandler>();
-        // services.AddScoped<IQueryHandler<GetReservationByIdQuery, ReservationDto?>, GetReservationByIdQueryHandler>();
-        // services.AddScoped<IQueryHandler<GetReviewsByOfficeQuery, IReadOnlyList<ReviewDto>>, GetReviewsByOfficeQueryHandler>();
-        // services.AddScoped<IQueryHandler<GetPaymentsByReservationQuery, IReadOnlyList<PaymentDto>>, GetPaymentsByReservationQueryHandler>();
-
-        // TODO: Register FluentValidation validators for all commands
+        services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+        services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
 
         return services;
     }
