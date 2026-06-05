@@ -17,7 +17,7 @@ function Login() {
     try {
       const response = await api.post('/api/auth/login', { email, password });
       login(response.data);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Credenciales incorrectas.');
     } finally {
@@ -28,6 +28,7 @@ function Login() {
   return (
     <div style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '440px', backgroundColor: 'var(--color-surface)', padding: '32px', borderRadius: '24px', boxShadow: '0 24px 60px rgba(3, 6, 8, 0.08)', border: '1px solid rgba(58, 149, 223, 0.12)' }}>
+        <Link to="/" style={{ display: 'inline-block', marginBottom: '16px', color: 'var(--color-primary)', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}> Volver a inicio</Link>
         <h1 style={{ marginBottom: '16px', color: 'var(--color-text)' }}>Iniciar sesión</h1>
         <p style={{ marginBottom: '24px', color: 'var(--color-muted)' }}>Introduce tu correo electrónico y contraseña para acceder.</p>
         {error && (

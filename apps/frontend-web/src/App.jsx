@@ -1,4 +1,5 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterCompany from './pages/RegisterCompany';
@@ -35,6 +36,11 @@ function Dashboard() {
 function App() {
   const location = useLocation();  
   const hideNavbar = ['/', '/login', '/register', '/register/user', '/register/company'].includes(location.pathname);
+  
+  const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated } = useAuth();
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
       {!hideNavbar && (
@@ -57,7 +63,7 @@ function App() {
           <Route path="/register" element={<RegisterType />} />
           <Route path="/register/user" element={<Register />} />
           <Route path="/register/company" element={<RegisterCompany />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         </Routes>
       </main>
       <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>

@@ -7,15 +7,58 @@ function Register() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  const getErrorMessage = (error) => {
+    if (typeof error === 'string') {
+      const lowerError = error.toLowerCase();
+
+      if (lowerError.includes('passwordrequiresnonalphanumeric') ||
+          lowerError.includes('non alphanumeric')) {
+        return 'La contraseña debe incluir al menos un carácter especial como: ! @ # $ % ^ & *';
+      }
+      if (lowerError.includes('passwordrequiresupper') ||
+          lowerError.includes('uppercase')) {
+        return 'La contraseña debe incluir al menos una letra mayúscula';
+      }
+      if (lowerError.includes('passwordrequireslower') ||
+          lowerError.includes('lowercase')) {
+        return 'La contraseña debe incluir al menos una letra minúscula';
+      }
+      if (lowerError.includes('passwordrequiresdigit') ||
+          lowerError.includes('digit')) {
+        return 'La contraseña debe incluir al menos un número';
+      }
+      if (lowerError.includes('email')) {
+        return 'El correo electrónico es inválido o ya está registrado';
+      }
+    }
+
+    return error || 'Error al crear la cuenta';
+  };
 
   const handleRegister = async () => {
     setError('');
+    setSuccess('');
     setLoading(true);
+
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+      setError('Todos los campos son requeridos');
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await api.post('/api/auth/register', {
+      const response = await api.post('/api/auth/register', {
         firstName,
         lastName,
         name: `${firstName} ${lastName}`.trim(),
@@ -23,12 +66,39 @@ function Register() {
         password,
         role: 'User',
       });
-      navigate('/login');
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccess('¡Cuenta creada exitosamente! Redirigiendo...');
+        setTimeout(() => navigate('/login'), 2000);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'No se pudo crear la cuenta. Revisá los datos e intentá de nuevo.');
+      const data = err.response?.data;
+      const status = err.response?.status;
+
+      if (status === 409) {
+        setError('El correo electrónico ya está registrado. Intenta con otro.');
+      } else if (status === 400 && data?.errors) {
+        const errorMessages = Object.entries(data.errors)
+          .map(([, messages]) => {
+            if (Array.isArray(messages) && messages.length > 0) {
+              return getErrorMessage(messages[0]);
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        setError(errorMessages.length > 0 ? errorMessages[0] : 'Error al crear la cuenta');
+      } else {
+        setError(data?.message || 'No se pudo crear la cuenta. Revisá los datos e intentá de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleRegister();
   };
 
   return (
@@ -64,7 +134,12 @@ function Register() {
               {error}
             </div>
           )}
-          <form>
+          {success && (
+            <div style={{ margin: '0 0 16px', color: '#16a34a', fontSize: '14px', backgroundColor: '#f0fdf4', padding: '10px 14px', borderRadius: '8px' }}>
+              ✓ {success}
+            </div>
+          )}
+          <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
               <div className="form-group auth-card__field">
                 <label htmlFor="first-name">Nombre</label>
@@ -74,6 +149,8 @@ function Register() {
                   placeholder="Juan"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
               <div className="form-group auth-card__field">
@@ -84,6 +161,8 @@ function Register() {
                   placeholder="Pérez"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
             </div>
@@ -95,6 +174,8 @@ function Register() {
                 placeholder="usuario@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
               />
             </div>
             <div className="form-group auth-card__field">
@@ -102,16 +183,17 @@ function Register() {
               <input
                 id="register-password"
                 type="password"
-                placeholder="********"
+                placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
               />
             </div>
             <button
-              type="button"
+              type="submit"
               className="btn btn-primary"
               style={{ width: '100%' }}
-              onClick={handleRegister}
               disabled={loading}
             >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}

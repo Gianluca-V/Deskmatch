@@ -370,7 +370,7 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Auth__Authority: http://auth-service:5001
       Auth__Audience: DeskMatch
-      CORS_ALLOWED_ORIGINS: http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174,https://deskmatch.vespelabs.com
+      CORS_ALLOWED_ORIGINS: http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174,https://deskmatch.vespelabs.com,http://192.168.1.58:3001,http://192.168.1.58:3002
     depends_on:
       - auth-service
       - core-service
