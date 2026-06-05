@@ -48,6 +48,7 @@ pnpm-lock.yaml
 # Docker
 docker-compose.override.yml
 .docker/
+.cloudflared/
 
 # Environment
 .env

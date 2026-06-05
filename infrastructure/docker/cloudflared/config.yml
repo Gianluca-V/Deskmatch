@@ -1,5 +1,5 @@
 tunnel: deskmatch
-credentials-file: /etc/cloudflared/credentials.json
+credentials-file: /run/secrets/tunnel-credentials
 
 ingress:
   - hostname: deskmatch.vespelabs.com

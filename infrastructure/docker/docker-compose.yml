@@ -345,7 +345,8 @@ services:
     command: tunnel run
     volumes:
       - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
-      - ./.cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+    secrets:
+      - tunnel-credentials
     depends_on:
       frontend-web:
         condition: service_started
@@ -413,3 +414,7 @@ services:
     networks:
       - deskmatch-network
 
+
+secrets:
+  tunnel-credentials:
+    file: ./.cloudflared/credentials.json
