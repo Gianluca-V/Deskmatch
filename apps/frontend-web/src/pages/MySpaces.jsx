@@ -35,7 +35,7 @@ function MySpaces() {
   const isAdmin = user?.role === 'Admin';
   const canDelete = isAdmin || user?.role === 'Manager';
   const { data: company } = useMyCompany();
-  const companyId = company?.id ?? 'f201ad9c-3d35-49df-8928-8916642a4a9d';
+  const companyId = company?.id;
 
   const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
   const { mutate: deleteSpace } = useDeleteOffice();

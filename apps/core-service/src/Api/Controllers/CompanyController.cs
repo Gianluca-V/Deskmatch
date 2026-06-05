@@ -47,6 +47,25 @@ public sealed class CompanyController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id }, ToResponse(company!));
     }
 
+    /// <summary>Obtiene la empresa del usuario autenticado.</summary>
+    /// <response code="200">Empresa encontrada.</response>
+    /// <response code="404">El usuario no tiene empresa.</response>
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(CompanyResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CompanyResponse>> GetMyCompany(CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst("sub")?.Value
+               ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(sub, out var userId))
+            return Unauthorized();
+
+        var company = await _repository.GetByOwnerIdAsync(userId, cancellationToken);
+        if (company is null) return NotFound();
+        return Ok(ToResponse(company));
+    }
+
     /// <summary>Obtiene una empresa por ID.</summary>
     /// <response code="200">Empresa encontrada.</response>
     /// <response code="404">Empresa no encontrada.</response>
