@@ -1,7 +1,6 @@
 namespace DeskMatch.CoreService.Application.Workspaces.Dtos;
 
-public sealed record WorkspaceResponse(
-    Guid Id,
+public sealed record UpdateWorkspaceRequest(
     Guid CompanyId,
     string Name,
     string? Description,
@@ -15,8 +14,4 @@ public sealed record WorkspaceResponse(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images,
-    double? Rating,
-    int ReviewCount,
-    bool IsActive,
-    DateTime CreatedAt);
+    List<string>? Images);

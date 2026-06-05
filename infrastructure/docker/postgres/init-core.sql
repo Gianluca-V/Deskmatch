@@ -1,6 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS "Companies" (
+CREATE SCHEMA IF NOT EXISTS core;
+
+CREATE TABLE IF NOT EXISTS core."Companies" (
     "Id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "Name" VARCHAR(256) NOT NULL,
     "Description" TEXT,
@@ -12,9 +14,9 @@ CREATE TABLE IF NOT EXISTS "Companies" (
     "UpdatedAt" TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS "Offices" (
+CREATE TABLE IF NOT EXISTS core."Workspaces" (
     "Id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "CompanyId" UUID NOT NULL REFERENCES "Companies"("Id") ON DELETE CASCADE,
+    "CompanyId" UUID NOT NULL REFERENCES core."Companies"("Id") ON DELETE CASCADE,
     "Name" VARCHAR(256) NOT NULL,
     "Description" TEXT,
     "Address" VARCHAR(512),
@@ -26,16 +28,18 @@ CREATE TABLE IF NOT EXISTS "Offices" (
     "PricePerHour" NUMERIC(10,2) NOT NULL DEFAULT 0,
     "PricePerDay" NUMERIC(10,2),
     "PricePerMonth" NUMERIC(10,2),
-    "Amenities" JSONB,
-    "Images" JSONB,
+    "Amenities" TEXT[],
+    "Images" TEXT[],
+    "Rating" NUMERIC(3,2),
+    "ReviewCount" INTEGER NOT NULL DEFAULT 0,
     "IsActive" BOOLEAN NOT NULL DEFAULT TRUE,
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "UpdatedAt" TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS "Reservations" (
+CREATE TABLE IF NOT EXISTS core."Reservations" (
     "Id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "OfficeId" UUID NOT NULL REFERENCES "Offices"("Id") ON DELETE CASCADE,
+    "WorkspaceId" UUID NOT NULL REFERENCES core."Workspaces"("Id") ON DELETE CASCADE,
     "UserId" UUID NOT NULL,
     "StartTime" TIMESTAMPTZ NOT NULL,
     "EndTime" TIMESTAMPTZ NOT NULL,
@@ -46,9 +50,9 @@ CREATE TABLE IF NOT EXISTS "Reservations" (
     "UpdatedAt" TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS "Reviews" (
+CREATE TABLE IF NOT EXISTS core."Reviews" (
     "Id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "OfficeId" UUID NOT NULL REFERENCES "Offices"("Id") ON DELETE CASCADE,
+    "WorkspaceId" UUID NOT NULL REFERENCES core."Workspaces"("Id") ON DELETE CASCADE,
     "UserId" UUID NOT NULL,
     "Rating" INTEGER NOT NULL CHECK ("Rating" >= 1 AND "Rating" <= 5),
     "Comment" TEXT,
@@ -56,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "Reviews" (
     "UpdatedAt" TIMESTAMPTZ
 );
 
-INSERT INTO "Companies" ("Id", "Name", "Description", "WebsiteUrl")
+INSERT INTO core."Companies" ("Id", "Name", "Description", "WebsiteUrl")
 VALUES (
     'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     'DeskMatch Co.',
@@ -65,7 +69,7 @@ VALUES (
 )
 ON CONFLICT ("Id") DO NOTHING;
 
-INSERT INTO "Offices" ("Id", "CompanyId", "Name", "Description", "Address", "City", "Country", "Latitude", "Longitude", "Capacity", "PricePerHour", "Amenities")
+INSERT INTO core."Workspaces" ("Id", "CompanyId", "Name", "Description", "Address", "City", "Country", "Latitude", "Longitude", "Capacity", "PricePerHour", "Amenities")
 VALUES
 (
     'b2c3d4e5-f6a7-8901-bcde-f12345678901',
@@ -79,7 +83,7 @@ VALUES
     -74.0060,
     50,
     25.00,
-    '["WiFi", "Meeting Rooms", "Coffee", "Printing", "Parking"]'
+    ARRAY['WiFi', 'Meeting Rooms', 'Coffee', 'Printing', 'Parking']
 ),
 (
     'c3d4e5f6-a7b8-9012-cdef-123456789012',
@@ -93,7 +97,7 @@ VALUES
     -122.4194,
     120,
     35.00,
-    '["WiFi", "Meeting Rooms", "Coffee", "Event Space", "Gym", "Cafeteria"]'
+    ARRAY['WiFi', 'Meeting Rooms', 'Coffee', 'Event Space', 'Gym', 'Cafeteria']
 ),
 (
     'd4e5f6a7-b8c9-0123-defa-234567890123',
@@ -107,6 +111,6 @@ VALUES
     -0.1278,
     30,
     20.00,
-    '["WiFi", "Coffee", "Lounge", "Rooftop", "Bike Storage"]'
+    ARRAY['WiFi', 'Coffee', 'Lounge', 'Rooftop', 'Bike Storage']
 )
 ON CONFLICT ("Id") DO NOTHING;

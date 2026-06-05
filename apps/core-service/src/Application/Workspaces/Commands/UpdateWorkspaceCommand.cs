@@ -1,6 +1,8 @@
-namespace DeskMatch.CoreService.Application.Workspaces.Dtos;
+using DeskMatch.Domain.CQRS;
 
-public sealed record WorkspaceResponse(
+namespace DeskMatch.CoreService.Application.Workspaces.Commands;
+
+public sealed record UpdateWorkspaceCommand(
     Guid Id,
     Guid CompanyId,
     string Name,
@@ -15,8 +17,4 @@ public sealed record WorkspaceResponse(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images,
-    double? Rating,
-    int ReviewCount,
-    bool IsActive,
-    DateTime CreatedAt);
+    List<string>? Images) : ICommand;
