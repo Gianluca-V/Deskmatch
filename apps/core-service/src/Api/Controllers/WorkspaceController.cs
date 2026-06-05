@@ -1,3 +1,5 @@
+using DeskMatch.BuildingBlocks.Exceptions;
+using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Dtos;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
@@ -17,17 +19,36 @@ public sealed class WorkspaceController : ControllerBase
     private readonly ICommandHandler<UpdateWorkspaceCommand> _updateHandler;
     private readonly ICommandHandler<DeleteWorkspaceCommand> _deleteHandler;
     private readonly IWorkspaceRepository _repository;
+    private readonly ICompanyRepository _companyRepository;
 
     public WorkspaceController(
         ICommandHandler<CreateWorkspaceCommand, Guid> createHandler,
         ICommandHandler<UpdateWorkspaceCommand> updateHandler,
         ICommandHandler<DeleteWorkspaceCommand> deleteHandler,
-        IWorkspaceRepository repository)
+        IWorkspaceRepository repository,
+        ICompanyRepository companyRepository)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
         _repository = repository;
+        _companyRepository = companyRepository;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var sub = User.FindFirst("sub")?.Value
+               ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+    }
+
+    private async Task ValidateCompanyOwnership(Guid companyId, CancellationToken ct)
+    {
+        var company = await _companyRepository.GetByIdAsync(companyId, ct);
+        if (company is null)
+            throw new NotFoundException("Company", companyId);
+        if (company.OwnerId != GetCurrentUserId())
+            throw new ForbiddenException("No tenés permiso para crear espacios a nombre de esta empresa.");
     }
 
     /// <summary>Crea un nuevo workspace.</summary>
@@ -40,6 +61,8 @@ public sealed class WorkspaceController : ControllerBase
         CreateWorkspaceRequest request,
         CancellationToken cancellationToken)
     {
+        await ValidateCompanyOwnership(request.CompanyId, cancellationToken);
+
         var command = new CreateWorkspaceCommand(
             request.CompanyId,
             request.Name,
@@ -150,6 +173,8 @@ public sealed class WorkspaceController : ControllerBase
     {
         var exists = await _repository.ExistsAsync(id, cancellationToken);
         if (!exists) return NotFound();
+
+        await ValidateCompanyOwnership(request.CompanyId, cancellationToken);
 
         var command = new UpdateWorkspaceCommand(
             id,

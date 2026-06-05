@@ -22,14 +22,16 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
   return (
     <form onSubmit={onSubmit} noValidate>
 
-      <div className="form-section">
-        <p className="form-section__title">Empresa</p>
-        <div className="form-group">
-          <label htmlFor="companyId">ID de empresa *</label>
-          <input id="companyId" name="companyId" type="text" value={form.companyId} onChange={onChange} placeholder="UUID de la empresa" />
-          {errors.companyId && <p className="form-error" role="alert">{errors.companyId}</p>}
+      {!form.companyId && (
+        <div className="form-section">
+          <p className="form-section__title">Empresa</p>
+          <div className="form-group">
+            <label htmlFor="companyId">ID de empresa *</label>
+            <input id="companyId" name="companyId" type="text" value={form.companyId} onChange={onChange} placeholder="UUID de la empresa" />
+            {errors.companyId && <p className="form-error" role="alert">{errors.companyId}</p>}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="form-section">
         <p className="form-section__title">Información básica</p>
