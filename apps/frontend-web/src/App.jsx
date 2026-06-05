@@ -59,7 +59,7 @@ function App() {
           <Route path="/register/user" element={<Register />} />
           <Route path="/register/company" element={<RegisterCompany />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/my-spaces" element={<MySpaces />} />
+          <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
         </Routes>
       </main>
       <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
