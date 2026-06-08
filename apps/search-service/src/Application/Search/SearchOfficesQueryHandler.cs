@@ -92,14 +92,29 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
         var searchRequest = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(searchRequest);
 
-        var root = JsonSerializer.Deserialize<JsonElement>(stringResponse.Body);
+        _logger.LogInformation("LowLevel response body (first 500 chars): {Body}",
+            stringResponse.Body?.Substring(0, Math.Min(500, stringResponse.Body?.Length ?? 0)));
 
+        return ParseResponse(stringResponse.Body, query.Page, query.PageSize);
+    }
+
+    private SearchOfficesResponse ParseResponse(string? body, int page, int pageSize)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return new SearchOfficesResponse(new List<OfficeResult>().AsReadOnly(), page, pageSize, 0, 0);
+
+        var root = JsonSerializer.Deserialize<JsonElement>(body);
         var hits = root.GetProperty("hits");
-        var total = hits.GetProperty("total").GetProperty("value").GetInt64();
-        var hitsList = hits.GetProperty("hits");
+        var totalObj = hits.GetProperty("total");
 
+        long total = totalObj.ValueKind == JsonValueKind.Object
+            ? totalObj.GetProperty("value").GetInt64()
+            : totalObj.GetInt64();
+
+        var hitsArray = hits.GetProperty("hits");
         var items = new List<OfficeResult>();
-        foreach (var hit in hitsList.EnumerateArray())
+
+        foreach (var hit in hitsArray.EnumerateArray())
         {
             var source = hit.GetProperty("_source");
             var doc = JsonSerializer.Deserialize<WorkspaceDocument>(source.GetRawText(), JsonOptions);
@@ -107,16 +122,8 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
                 items.Add(MapToResult(doc));
         }
 
-        var totalPages = total > 0
-            ? (int)Math.Ceiling(total / (double)query.PageSize)
-            : 0;
-
-        return new SearchOfficesResponse(
-            items.AsReadOnly(),
-            query.Page,
-            query.PageSize,
-            total,
-            totalPages);
+        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
+        return new SearchOfficesResponse(items.AsReadOnly(), page, pageSize, total, totalPages);
     }
 
     private static OfficeResult MapToResult(WorkspaceDocument doc) => new(
