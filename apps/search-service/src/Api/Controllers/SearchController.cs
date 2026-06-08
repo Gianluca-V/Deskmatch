@@ -1,6 +1,7 @@
 using DeskMatch.Domain.CQRS;
 using DeskMatch.SearchService.Application.Search;
 using Microsoft.AspNetCore.Mvc;
+using OpenSearch.Client;
 
 namespace DeskMatch.SearchService.Api.Controllers;
 
@@ -10,10 +11,33 @@ namespace DeskMatch.SearchService.Api.Controllers;
 public sealed class SearchController : ControllerBase
 {
     private readonly IQueryHandler<SearchOfficesQuery, SearchOfficesResponse> _searchHandler;
+    private readonly IOpenSearchClient _openSearch;
 
-    public SearchController(IQueryHandler<SearchOfficesQuery, SearchOfficesResponse> searchHandler)
+    public SearchController(
+        IQueryHandler<SearchOfficesQuery, SearchOfficesResponse> searchHandler,
+        IOpenSearchClient openSearch)
     {
         _searchHandler = searchHandler;
+        _openSearch = openSearch;
+    }
+
+    [HttpGet("ping")]
+    public async Task<IActionResult> Ping()
+    {
+        var ping = await _openSearch.PingAsync();
+        var search = await _openSearch.SearchAsync<object>(s => s
+            .Index("offices")
+            .Query(q => q.MatchAll())
+            .Size(3));
+
+        return Ok(new
+        {
+            ping = ping.IsValid,
+            cluster = ping.ClusterName,
+            totalHits = search.Total,
+            isValid = search.IsValid,
+            firstHit = search.Hits?.FirstOrDefault()?.Source
+        });
     }
 
     [HttpGet("offices")]
