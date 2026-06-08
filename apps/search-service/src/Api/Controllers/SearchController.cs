@@ -33,7 +33,6 @@ public sealed class SearchController : ControllerBase
         return Ok(new
         {
             ping = ping.IsValid,
-            cluster = ping.ClusterName,
             totalHits = search.Total,
             isValid = search.IsValid,
             firstHit = search.Hits?.FirstOrDefault()?.Source
