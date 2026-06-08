@@ -15,9 +15,9 @@
     ]
   },
   "variable": [
-    { "key": "authUrl", "value": "http://localhost:5001" },
-    { "key": "coreUrl", "value": "http://localhost:5002" },
-    { "key": "searchUrl", "value": "http://localhost:5004" },
+    { "key": "authUrl", "value": "https://deskmatch.vespelabs.com" },
+    { "key": "coreUrl", "value": "https://deskmatch.vespelabs.com" },
+    { "key": "searchUrl", "value": "https://deskmatch.vespelabs.com" },
     { "key": "accessToken", "value": "" },
     { "key": "companyId", "value": "" },
     { "key": "workspaceId", "value": "" },
@@ -76,6 +76,8 @@
                   "    var json = pm.response.json();",
                   "    pm.expect(json.accessToken).to.be.a('string').and.not.empty;",
                   "    pm.environment.set('accessToken', json.accessToken);",
+                  "    pm.environment.set('loginResponse', JSON.stringify(json));",
+                  "    pm.environment.set('ownerId', json.user.id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -137,7 +139,12 @@
                   "    var json = pm.response.json();",
                   "    pm.expect(json.id).to.be.a('string').and.not.empty;",
                   "    pm.environment.set('companyId', json.id);",
-                  "});"
+                  "});",
+                  "",
+                  "var loginData = JSON.parse(pm.environment.get('loginResponse') || '{}');",
+                  "if (loginData.user && loginData.user.id) {",
+                  "    pm.environment.set('ownerId', loginData.user.id);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -148,7 +155,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"DeskMatch Test Company\",\n  \"description\": \"Test company for API tests\"\n}"
+              "raw": "{\n  \"name\": \"DeskMatch Test Company\",\n  \"description\": \"Test company for API tests\",\n  \"ownerId\": \"{{ownerId}}\"\n}"
             },
             "url": { "raw": "{{coreUrl}}/api/companies", "host": ["{{coreUrl}}"], "path": ["api", "companies"] }
           }
