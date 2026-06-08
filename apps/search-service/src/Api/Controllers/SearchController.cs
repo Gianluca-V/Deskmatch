@@ -88,7 +88,8 @@ public sealed class SearchController : ControllerBase
                         .Location(lat.Value, lon.Value)));
 
                 return b;
-            }))
+            });
+            })
             .Sort(sort =>
             {
                 sort.Field("_score", SortOrder.Descending);
