@@ -35,66 +35,15 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
             .Index("offices")
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
-            .Query(q => q.Bool(b =>
-            {
-                if (!string.IsNullOrWhiteSpace(query.Text))
-                {
-                    b.Must(mu => mu.MultiMatch(mm => mm
-                        .Fields(new[] { "name^3", "description^2", "address" })
-                        .Query(query.Text)));
-                }
-
-                if (!string.IsNullOrWhiteSpace(query.City))
-                    b.Filter(f => f.Term("city", query.City));
-
-                if (!string.IsNullOrWhiteSpace(query.Country))
-                    b.Filter(f => f.Term("country", query.Country));
-
-                if (query.MinPrice.HasValue || query.MaxPrice.HasValue)
-                    b.Filter(f => f.Range(r =>
-                    {
-                        r.Field("pricePerHour");
-                        if (query.MinPrice.HasValue) r.GreaterThanOrEquals((double)query.MinPrice.Value);
-                        if (query.MaxPrice.HasValue) r.LessThanOrEquals((double)query.MaxPrice.Value);
-                        return r;
-                    }));
-
-                if (query.MinCapacity.HasValue)
-                    b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(query.MinCapacity.Value)));
-
-                if (query.Amenities?.Count > 0)
-                    b.Filter(f => f.Terms(t => t.Field("amenities").Terms(query.Amenities)));
-
-                if (query.Lat.HasValue && query.Lon.HasValue)
-                    b.Filter(f => f.GeoDistance(g => g
-                        .Field("location")
-                        .Distance((query.RadiusKm ?? 10) + "km")
-                        .Location(query.Lat.Value, query.Lon.Value)));
-
-                return b;
-            }))
-            .Sort(sort =>
-            {
-                sort.Field("_score", SortOrder.Descending);
-                sort.Field("rating", SortOrder.Descending);
-                if (query.Lat.HasValue && query.Lon.HasValue)
-                {
-                    sort.GeoDistance(g => g
-                        .Field("location")
-                        .DistanceType(GeoDistanceType.Arc)
-                        .Unit(DistanceUnit.Kilometers)
-                        .Order(SortOrder.Ascending)
-                        .Points(new GeoLocation(query.Lat.Value, query.Lon.Value)));
-                }
-                return sort;
-            })
+            .Query(q => q.MatchAll())
         );
 
         _logger.LogInformation(
-            "Search executed: IsValid={IsValid}, Total={Total}, Hits={Hits}",
+            "DEBUG handler: IsValid={IsValid}, Total={Total}, Hits={Hits}, Raw json={Response}",
             response.IsValid,
             response.Total,
-            response.Hits?.Count ?? 0);
+            response.Hits?.Count ?? 0,
+            response.DebugInformation ?? "no debug");
 
         var items = new List<OfficeResult>();
         if (response.Hits != null)
@@ -118,7 +67,7 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
             items.AsReadOnly(),
             query.Page,
             query.PageSize,
-            response.Total,
+            response.Total > 0 ? response.Total : response.Hits?.Count ?? 0,
             totalPages);
     }
 
