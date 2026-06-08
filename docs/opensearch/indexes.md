@@ -2,9 +2,9 @@
 
 ## Overview
 
-OpenSearch 2.x is used for full-text search and geo-location queries on office spaces. The `search-service` performs all search operations against the `offices` index, while `core-service` writes to it when offices are created or updated.
+OpenSearch 2.x is used for full-text search, geo-location queries, dynamic attribute filtering, and semantic vector search on workspaces. The `search-service` performs all search operations against the `offices` index, while `core-service` writes to it when workspaces are created, updated, or deleted.
 
-## Office Index Mapping
+## Workspace Index Mapping
 
 ```json
 {
@@ -55,6 +55,9 @@ OpenSearch 2.x is used for full-text search and geo-location queries on office s
 | `location`    | geo_point      | Geo-distance and geo-bounding-box queries              |
 | `rating`      | float          | Sort by rating, range filter                           |
 | `reviewCount` | integer        | Sort by popularity                                     |
+| `dynamicAttributes` | flattened | Dynamic key-value attributes (e.g., `pet-friendly`, `24-7-access`) |
+| `nameVector`  | dense_vector   | Semantic embedding of workspace name (768d, cosine)     |
+| `descriptionVector` | dense_vector | Semantic embedding of description (768d, cosine)      |
 
 ### Custom Analyzer
 
@@ -153,6 +156,92 @@ GET /offices/_search
 ```
 
 (Requires a `completion` sub-field on `name` if implemented.)
+
+### Dynamic Attribute Filtering
+
+Dynamic attributes are indexed using the `flattened` type, which allows arbitrary key-value pairs to be searched without prior mapping definition. All attribute keys are normalized (lowercase, accent-free, space-to-hyphen) before indexing to ensure consistency.
+
+```
+GET /offices/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "dynamicAttributes.pet-friendly": "true" } },
+        { "term": { "dynamicAttributes.24-7-access": "yes" } }
+      ]
+    }
+  }
+}
+```
+
+### Hybrid Search (BM25 + k-NN)
+
+When an Ollama instance is configured, the search-service combines traditional full-text search (BM25) with semantic vector search (k-NN) for improved relevance. If Ollama is unavailable, the search falls back to BM25-only transparently.
+
+```
+GET /offices/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        { "multi_match": { "query": "modern creative workspace", "fields": ["name^3", "description^2", "address"] } },
+        { "knn": { "nameVector": { "vector": [...], "k": 10 } } }
+      ]
+    }
+  }
+}
+```
+
+## Ollama Integration
+
+### Model
+
+The project uses `nomic-embed-text-v2-moe` (~958MB, 305M active params, 100+ languages, 768d cosine) for generating semantic embeddings.
+
+### Configuration
+
+```json
+// appsettings.json — both core-service and search-service
+{
+  "Ollama": {
+    "BaseUrl": "",                        // empty = disabled (local dev)
+    "Model": "nomic-embed-text-v2-moe"   // model name in Ollama
+  }
+}
+```
+
+Environment variables in docker-compose:
+```yaml
+Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}               # set in .env for production
+Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
+```
+
+### Embedding Flow
+
+```
+On workspace create/update (core-service):
+  1. Persist to PostgreSQL
+  2. If Ollama configured:
+     → POST {model, prompt} to Ollama API → embedding vector
+     → Include nameVector + descriptionVector in OpenSearch document
+  3. Index document in OpenSearch
+
+On search (search-service):
+  1. If Ollama configured:
+     → Generate embedding for query text
+     → Add k-NN clause alongside BM25
+  2. If Ollama not configured or unreachable:
+     → BM25-only search (no error)
+```
+
+### Fallback Strategy
+
+| Scenario | Ollama Available | Search Mode |
+|---|---|---|
+| Dev local (no config) | No | BM25 only |
+| Production with Ollama | Yes | BM25 + k-NN hybrid |
+| Ollama VM unreachable | No (silent catch) | BM25 only (graceful degradation) |
 
 ## Indexing Flow
 
