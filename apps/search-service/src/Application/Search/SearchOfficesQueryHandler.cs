@@ -46,7 +46,8 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
                 response.Total,
                 response.Hits?.Count ?? 0);
 
-            var items = response.Hits
+            var hits = response.Hits ?? Array.Empty<IHit<WorkspaceDocument>>();
+            var items = hits
                 .Select(h => MapToResult(h.Source))
                 .ToList();
 
