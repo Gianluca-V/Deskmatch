@@ -77,7 +77,8 @@ public sealed class WorkspaceController : ControllerBase
             request.PricePerDay,
             request.PricePerMonth,
             request.Amenities,
-            request.Images);
+            request.Images,
+            request.DynamicAttributes?.Select(a => new WorkspaceAttributeInput(a.Key, a.Value)).ToList());
 
         var id = await _createHandler.HandleAsync(command, cancellationToken);
         var workspace = await _repository.GetByIdAsync(id, cancellationToken);
@@ -191,7 +192,8 @@ public sealed class WorkspaceController : ControllerBase
             request.PricePerDay,
             request.PricePerMonth,
             request.Amenities,
-            request.Images);
+            request.Images,
+            request.DynamicAttributes?.Select(a => new WorkspaceAttributeInput(a.Key, a.Value)).ToList());
 
         await _updateHandler.HandleAsync(command, cancellationToken);
 
@@ -227,6 +229,8 @@ public sealed class WorkspaceController : ControllerBase
     private static WorkspaceResponse ToResponse(Domain.Workspaces.Workspace w) => new(
         w.Id, w.CompanyId, w.Name, w.Description, w.Address, w.City, w.Country,
         w.Latitude, w.Longitude, w.Capacity, w.PricePerHour, w.PricePerDay,
-        w.PricePerMonth, w.Amenities, w.Images, w.Rating, w.ReviewCount,
+        w.PricePerMonth, w.Amenities, w.Images,
+        w.DynamicAttributes.Select(a => new WorkspaceAttributeDto(a.Key, a.Value)).ToList(),
+        w.Rating, w.ReviewCount,
         w.IsActive, w.CreatedAt);
 }
