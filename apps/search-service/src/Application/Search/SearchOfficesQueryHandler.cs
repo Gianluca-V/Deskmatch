@@ -1,5 +1,5 @@
+using System.Text.Json;
 using DeskMatch.Domain.CQRS;
-using DeskMatch.SDK.OpenSearch;
 using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch.Documents;
 using Microsoft.Extensions.Logging;
@@ -9,16 +9,18 @@ namespace DeskMatch.SearchService.Application.Search;
 
 public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery, SearchOfficesResponse>
 {
-    private readonly IOpenSearchRepository<WorkspaceDocument> _searchRepo;
+    private readonly IOpenSearchClient _client;
     private readonly IOllamaClient _ollama;
     private readonly ILogger<SearchOfficesQueryHandler> _logger;
 
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     public SearchOfficesQueryHandler(
-        IOpenSearchRepository<WorkspaceDocument> searchRepo,
+        IOpenSearchClient client,
         IOllamaClient ollama,
         ILogger<SearchOfficesQueryHandler> logger)
     {
-        _searchRepo = searchRepo;
+        _client = client;
         _ollama = ollama;
         _logger = logger;
     }
@@ -29,118 +31,95 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
     {
         var embedding = await _ollama.GetEmbeddingAsync(query.Text ?? "");
 
-        try
-        {
-            var response = await _searchRepo.SearchAsync(s => s
-                .Index("offices")
-                .From((query.Page - 1) * query.PageSize)
-                .Size(query.PageSize)
-                .Query(q => q.Bool(b => { BuildBoolQuery(query, embedding, b); return b; }))
-                .Sort(sort => BuildSort(query, sort))
-            );
-
-            _logger.LogInformation(
-                "Search executed: Elapsed={Elapsed}ms, IsValid={IsValid}, Total={Total}, Hits={Hits}",
-                response.Took,
-                response.IsValid,
-                response.Total,
-                response.Hits?.Count ?? 0);
-
-            var hits = response.Hits ?? Array.Empty<IHit<WorkspaceDocument>>();
-            var items = hits
-                .Select(h => MapToResult(h.Source))
-                .ToList();
-
-            var totalPages = (int)Math.Ceiling(response.Total / (double)query.PageSize);
-
-            return new SearchOfficesResponse(
-                items.AsReadOnly(),
-                query.Page,
-                query.PageSize,
-                response.Total,
-                totalPages);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "OpenSearch search failed");
-            throw;
-        }
-    }
-
-    private static void BuildBoolQuery(SearchOfficesQuery query, float[]? embedding, BoolQueryDescriptor<WorkspaceDocument> boolQuery)
-    {
-        if (!string.IsNullOrWhiteSpace(query.Text))
-        {
-            boolQuery.Must(mu => mu.MultiMatch(mm => mm
-                .Fields(f => f
-                    .Field(d => d.Name, boost: 3)
-                    .Field(d => d.Description, boost: 2)
-                    .Field(d => d.Address))
-                .Query(query.Text)
-            ));
-        }
-
-        if (embedding != null)
-        {
-            boolQuery.Should(sh => sh
-                .Knn(k => k
-                    .Field(f => f.NameVector)
-                    .Vector(embedding)
-                    .K(10)
-                )
-            );
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.City))
-            boolQuery.Filter(f => f.Term(t => t.Field(d => d.City).Value(query.City)));
-
-        if (!string.IsNullOrWhiteSpace(query.Country))
-            boolQuery.Filter(f => f.Term(t => t.Field(d => d.Country).Value(query.Country)));
-
-        if (query.MinPrice.HasValue || query.MaxPrice.HasValue)
-        {
-            boolQuery.Filter(f => f.Range(r =>
+        var response = await _client.SearchAsync<object>(s => s
+            .Index("offices")
+            .From((query.Page - 1) * query.PageSize)
+            .Size(query.PageSize)
+            .Query(q => q.Bool(b =>
             {
-                var range = r.Field(d => d.PricePerHour);
-                if (query.MinPrice.HasValue) range = range.GreaterThanOrEquals((double)query.MinPrice.Value);
-                if (query.MaxPrice.HasValue) range = range.LessThanOrEquals((double)query.MaxPrice.Value);
-                return range;
-            }));
-        }
+                if (!string.IsNullOrWhiteSpace(query.Text))
+                {
+                    b.Must(mu => mu.MultiMatch(mm => mm
+                        .Fields(new[] { "name^3", "description^2", "address" })
+                        .Query(query.Text)));
+                }
 
-        if (query.MinCapacity.HasValue)
-            boolQuery.Filter(f => f.Range(r => r
-                .Field(d => d.Capacity)
-                .GreaterThanOrEquals(query.MinCapacity.Value)));
+                if (!string.IsNullOrWhiteSpace(query.City))
+                    b.Filter(f => f.Term("city", query.City));
 
-        if (query.Amenities?.Count > 0)
-            boolQuery.Filter(f => f.Terms(t => t
-                .Field(d => d.Amenities)
-                .Terms(query.Amenities)));
+                if (!string.IsNullOrWhiteSpace(query.Country))
+                    b.Filter(f => f.Term("country", query.Country));
 
-        if (query.Lat.HasValue && query.Lon.HasValue)
-            boolQuery.Filter(f => f.GeoDistance(g => g
-                .Field(d => d.Location)
-                .Distance(query.RadiusKm + "km")
-                .Location(query.Lat.Value, query.Lon.Value)));
-    }
+                if (query.MinPrice.HasValue || query.MaxPrice.HasValue)
+                    b.Filter(f => f.Range(r =>
+                    {
+                        r.Field("pricePerHour");
+                        if (query.MinPrice.HasValue) r.GreaterThanOrEquals((double)query.MinPrice.Value);
+                        if (query.MaxPrice.HasValue) r.LessThanOrEquals((double)query.MaxPrice.Value);
+                        return r;
+                    }));
 
-    private static SortDescriptor<WorkspaceDocument> BuildSort(SearchOfficesQuery query, SortDescriptor<WorkspaceDocument> sort)
-    {
-        sort.Field("_score", SortOrder.Descending);
-        sort.Field(f => f.Rating, SortOrder.Descending);
+                if (query.MinCapacity.HasValue)
+                    b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(query.MinCapacity.Value)));
 
-        if (query.Lat.HasValue && query.Lon.HasValue)
+                if (query.Amenities?.Count > 0)
+                    b.Filter(f => f.Terms(t => t.Field("amenities").Terms(query.Amenities)));
+
+                if (query.Lat.HasValue && query.Lon.HasValue)
+                    b.Filter(f => f.GeoDistance(g => g
+                        .Field("location")
+                        .Distance((query.RadiusKm ?? 10) + "km")
+                        .Location(query.Lat.Value, query.Lon.Value)));
+
+                return b;
+            }))
+            .Sort(sort =>
+            {
+                sort.Field("_score", SortOrder.Descending);
+                sort.Field("rating", SortOrder.Descending);
+                if (query.Lat.HasValue && query.Lon.HasValue)
+                {
+                    sort.GeoDistance(g => g
+                        .Field("location")
+                        .DistanceType(GeoDistanceType.Arc)
+                        .Unit(DistanceUnit.Kilometers)
+                        .Order(SortOrder.Ascending)
+                        .Points(new GeoLocation(query.Lat.Value, query.Lon.Value)));
+                }
+                return sort;
+            })
+        );
+
+        _logger.LogInformation(
+            "Search executed: IsValid={IsValid}, Total={Total}, Hits={Hits}",
+            response.IsValid,
+            response.Total,
+            response.Hits?.Count ?? 0);
+
+        var items = new List<OfficeResult>();
+        if (response.Hits != null)
         {
-            sort.GeoDistance(g => g
-                .Field(d => d.Location)
-                .DistanceType(GeoDistanceType.Arc)
-                .Unit(DistanceUnit.Kilometers)
-                .Order(SortOrder.Ascending)
-                .Points(new GeoLocation(query.Lat.Value, query.Lon.Value)));
+            foreach (var hit in response.Hits)
+            {
+                if (hit.Source is JsonElement el)
+                {
+                    var doc = JsonSerializer.Deserialize<WorkspaceDocument>(el.GetRawText(), JsonOptions);
+                    if (doc != null)
+                        items.Add(MapToResult(doc));
+                }
+            }
         }
 
-        return sort;
+        var totalPages = response.Total > 0
+            ? (int)Math.Ceiling(response.Total / (double)query.PageSize)
+            : 0;
+
+        return new SearchOfficesResponse(
+            items.AsReadOnly(),
+            query.Page,
+            query.PageSize,
+            response.Total,
+            totalPages);
     }
 
     private static OfficeResult MapToResult(WorkspaceDocument doc) => new(
