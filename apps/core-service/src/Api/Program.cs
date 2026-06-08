@@ -1,7 +1,5 @@
 using DeskMatch.BuildingBlocks.Extensions;
 using DeskMatch.CoreService.Api;
-using DeskMatch.CoreService.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,18 +46,6 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-
-try
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-    await db.Database.MigrateAsync();
-}
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogWarning(ex, "Database migration failed — continuing startup");
-}
 
 app.UseBuildingBlocksMiddleware();
 
