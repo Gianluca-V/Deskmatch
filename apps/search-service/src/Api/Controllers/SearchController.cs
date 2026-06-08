@@ -39,12 +39,22 @@ public sealed class SearchController : ControllerBase
     {
         var embedding = await _ollama.GetEmbeddingAsync(q ?? "");
 
+        var hasQuery = !string.IsNullOrWhiteSpace(q);
+        var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
+            || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
+            || !string.IsNullOrWhiteSpace(amenities) || (lat.HasValue && lon.HasValue);
+
         var response = await _client.SearchAsync<object>(s => s
             .Index("offices")
             .From((page - 1) * pageSize)
             .Size(pageSize)
-            .Query(qq => qq.Bool(b =>
+            .Query(qq =>
             {
+                if (!hasQuery && !hasFilters)
+                    return qq.MatchAll();
+
+                return qq.Bool(b =>
+                {
                 if (!string.IsNullOrWhiteSpace(q))
                     b.Must(mu => mu.MultiMatch(mm => mm
                         .Fields(new[] { "name^3", "description^2", "address" })
