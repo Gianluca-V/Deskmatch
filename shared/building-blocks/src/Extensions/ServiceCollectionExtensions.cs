@@ -12,6 +12,16 @@ namespace DeskMatch.BuildingBlocks.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    public static IConfigurationBuilder AddBuildingBlockConfiguration(this IConfigurationBuilder builder)
+    {
+        var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+        if (env == "Development")
+        {
+            builder.AddEnvFile();
+        }
+        return builder;
+    }
+
     public static IServiceCollection AddBuildingBlocks(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddBuildingBlockAuth(configuration);

@@ -4,6 +4,8 @@ using DeskMatch.BuildingBlocks.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddBuildingBlockConfiguration();
+
 builder.Host.UseBuildingBlocks(builder.Configuration);
 
 builder.Services.AddBuildingBlocks(builder.Configuration);

@@ -74,25 +74,32 @@ namespace DeskMatch.CoreService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<List<string>>("Amenities")
                         .HasColumnType("text[]");
 
                     b.Property<int>("Capacity")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("City")
-                        .HasColumnType("text");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Country")
-                        .HasColumnType("text");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -101,7 +108,9 @@ namespace DeskMatch.CoreService.Migrations
                         .HasColumnType("text[]");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision");
@@ -111,16 +120,31 @@ namespace DeskMatch.CoreService.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<decimal?>("PricePerDay")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<decimal>("PricePerHour")
-                        .HasColumnType("numeric");
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<decimal?>("PricePerMonth")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<double?>("Rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("ReviewCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -128,6 +152,39 @@ namespace DeskMatch.CoreService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Workspaces", "core");
+                });
+
+            modelBuilder.Entity("DeskMatch.CoreService.Domain.Workspaces.Workspace", b =>
+                {
+                    b.OwnsMany("DeskMatch.CoreService.Domain.Workspaces.WorkspaceAttribute", "DynamicAttributes", b1 =>
+                        {
+                            b1.Property<Guid>("WorkspaceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("Key")
+                                .IsRequired()
+                                .HasMaxLength(64)
+                                .HasColumnType("character varying(64)");
+
+                            b1.Property<string>("Value")
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)");
+
+                            b1.HasKey("WorkspaceId", "Id");
+
+                            b1.ToTable("WorkspaceAttributes", "core");
+
+                            b1.WithOwner()
+                                .HasForeignKey("WorkspaceId");
+                        });
+
+                    b.Navigation("DynamicAttributes");
                 });
 #pragma warning restore 612, 618
         }

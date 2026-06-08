@@ -18,6 +18,7 @@ public sealed class WorkspaceController : ControllerBase
     private readonly ICommandHandler<CreateWorkspaceCommand, Guid> _createHandler;
     private readonly ICommandHandler<UpdateWorkspaceCommand> _updateHandler;
     private readonly ICommandHandler<DeleteWorkspaceCommand> _deleteHandler;
+    private readonly ICommandHandler<ReindexWorkspacesCommand> _reindexHandler;
     private readonly IWorkspaceRepository _repository;
     private readonly ICompanyRepository _companyRepository;
 
@@ -25,12 +26,14 @@ public sealed class WorkspaceController : ControllerBase
         ICommandHandler<CreateWorkspaceCommand, Guid> createHandler,
         ICommandHandler<UpdateWorkspaceCommand> updateHandler,
         ICommandHandler<DeleteWorkspaceCommand> deleteHandler,
+        ICommandHandler<ReindexWorkspacesCommand> reindexHandler,
         IWorkspaceRepository repository,
         ICompanyRepository companyRepository)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
+        _reindexHandler = reindexHandler;
         _repository = repository;
         _companyRepository = companyRepository;
     }
@@ -77,7 +80,8 @@ public sealed class WorkspaceController : ControllerBase
             request.PricePerDay,
             request.PricePerMonth,
             request.Amenities,
-            request.Images);
+            request.Images,
+            request.DynamicAttributes?.Select(a => new WorkspaceAttributeInput(a.Key, a.Value)).ToList());
 
         var id = await _createHandler.HandleAsync(command, cancellationToken);
         var workspace = await _repository.GetByIdAsync(id, cancellationToken);
@@ -191,7 +195,8 @@ public sealed class WorkspaceController : ControllerBase
             request.PricePerDay,
             request.PricePerMonth,
             request.Amenities,
-            request.Images);
+            request.Images,
+            request.DynamicAttributes?.Select(a => new WorkspaceAttributeInput(a.Key, a.Value)).ToList());
 
         await _updateHandler.HandleAsync(command, cancellationToken);
 
@@ -224,9 +229,24 @@ public sealed class WorkspaceController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Reindexa todos los workspaces de PostgreSQL a OpenSearch (solo Admin).</summary>
+    /// <response code="200">Reindexacion completada.</response>
+    /// <response code="403">No tiene permisos de administrador.</response>
+    [HttpPost("reindex")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Reindex(CancellationToken cancellationToken)
+    {
+        await _reindexHandler.HandleAsync(new ReindexWorkspacesCommand(), cancellationToken);
+        return Ok(new { message = "Reindex completed" });
+    }
+
     private static WorkspaceResponse ToResponse(Domain.Workspaces.Workspace w) => new(
         w.Id, w.CompanyId, w.Name, w.Description, w.Address, w.City, w.Country,
         w.Latitude, w.Longitude, w.Capacity, w.PricePerHour, w.PricePerDay,
-        w.PricePerMonth, w.Amenities, w.Images, w.Rating, w.ReviewCount,
+        w.PricePerMonth, w.Amenities, w.Images,
+        w.DynamicAttributes.Select(a => new WorkspaceAttributeDto(a.Key, a.Value)).ToList(),
+        w.Rating, w.ReviewCount,
         w.IsActive, w.CreatedAt);
 }

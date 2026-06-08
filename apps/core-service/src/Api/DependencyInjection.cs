@@ -1,5 +1,4 @@
 
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DeskMatch.CoreService.Application.Companies.Commands;
@@ -10,6 +9,10 @@ using DeskMatch.CoreService.Infrastructure.Repositories;
 using DeskMatch.Domain.CQRS;
 using DeskMatch.SDK.Geocoding;
 using DeskMatch.SDK.Storage;
+using DeskMatch.SDK.OpenSearch;
+using DeskMatch.SDK.Ollama;
+using DeskMatch.SDK.OpenSearch.Documents;
+using OpenSearch.Client;
 using Microsoft.EntityFrameworkCore;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
@@ -31,9 +34,18 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<ReindexWorkspacesCommand>, ReindexWorkspacesCommandHandler>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
+        services.AddOpenSearchSdk(configuration);
+        services.AddOllamaClient();
+
+        services.AddSingleton(provider =>
+        {
+            var client = provider.GetRequiredService<IOpenSearchClient>();
+            return new OpenSearchRepository<WorkspaceDocument>(client);
+        });
 
         return services;
     }

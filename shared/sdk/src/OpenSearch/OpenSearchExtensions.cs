@@ -24,7 +24,8 @@ public static class OpenSearchExtensions
         var settings = new ConnectionSettings(new SingleNodeConnectionPool(new Uri(options.Uri)))
             .BasicAuthentication(options.Username, options.Password)
             .ServerCertificateValidationCallback((sender, certificate, chain, errors) => true)
-            .DefaultIndex(options.DefaultIndex);
+            .DefaultIndex(options.DefaultIndex)
+            .DisableDirectStreaming();
 
         var client = new OpenSearchClient(settings);
 

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\shared\sdk\src\Notification\DeskMatch.SDK.Notification.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\Storage\DeskMatch.SDK.Storage.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\Geocoding\DeskMatch.SDK.Geocoding.csproj" />
+    <ProjectReference Include="..\..\shared\sdk\src\Ollama\DeskMatch.SDK.Ollama.csproj" />
   </ItemGroup>
 
 </Project>
