@@ -58,11 +58,8 @@ public sealed class ReindexWorkspacesCommandHandler : ICommandHandler<ReindexWor
 
             if (_ollama.IsAvailable)
             {
-                doc = doc with
-                {
-                    NameVector = await _ollama.GetEmbeddingAsync(w.Name),
-                    DescriptionVector = await _ollama.GetEmbeddingAsync(w.Description ?? "")
-                };
+                doc.NameVector = await _ollama.GetEmbeddingAsync(w.Name);
+                doc.DescriptionVector = await _ollama.GetEmbeddingAsync(w.Description ?? "");
             }
 
             documents.Add(doc);
