@@ -59,11 +59,8 @@ public sealed class UpdateWorkspaceCommandHandler : ICommandHandler<UpdateWorksp
 
         if (_ollama.IsAvailable)
         {
-            document = document with
-            {
-                NameVector = await _ollama.GetEmbeddingAsync(workspace.Name),
-                DescriptionVector = await _ollama.GetEmbeddingAsync(workspace.Description ?? "")
-            };
+            document.NameVector = await _ollama.GetEmbeddingAsync(workspace.Name);
+            document.DescriptionVector = await _ollama.GetEmbeddingAsync(workspace.Description ?? "");
         }
 
         await _searchRepo.UpdateAsync(workspace.Id.ToString(), document, index: "offices");
