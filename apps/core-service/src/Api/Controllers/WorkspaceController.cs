@@ -229,10 +229,13 @@ public sealed class WorkspaceController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Reindexa todos los workspaces de PostgreSQL a OpenSearch.</summary>
-    /// <response code="200">Reindexaciu00f3n completada.</response>
+    /// <summary>Reindexa todos los workspaces de PostgreSQL a OpenSearch (solo Admin).</summary>
+    /// <response code="200">Reindexacion completada.</response>
+    /// <response code="403">No tiene permisos de administrador.</response>
     [HttpPost("reindex")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Reindex(CancellationToken cancellationToken)
     {
         await _reindexHandler.HandleAsync(new ReindexWorkspacesCommand(), cancellationToken);
