@@ -96,10 +96,33 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
     private SearchOfficesResponse ParseResponse(ISearchResponse<object> response, int page, int pageSize)
     {
         var rawBody = response.ApiCall?.ResponseBodyInBytes;
-        if (rawBody == null || rawBody.Length == 0)
-            return new SearchOfficesResponse(new List<OfficeResult>().AsReadOnly(), page, pageSize, 0, 0);
+        if (rawBody != null && rawBody.Length > 0)
+        {
+            return ParseRawBody(Encoding.UTF8.GetString(rawBody), page, pageSize);
+        }
 
-        var root = JsonSerializer.Deserialize<JsonElement>(Encoding.UTF8.GetString(rawBody));
+        var items = new List<OfficeResult>();
+        if (response.Hits != null)
+        {
+            foreach (var hit in response.Hits)
+            {
+                if (hit.Source is JsonElement el)
+                {
+                    var doc = JsonSerializer.Deserialize<WorkspaceDocument>(el.GetRawText(), JsonOptions);
+                    if (doc != null)
+                        items.Add(MapToResult(doc));
+                }
+            }
+        }
+
+        var total = response.Total;
+        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
+        return new SearchOfficesResponse(items.AsReadOnly(), page, pageSize, total, totalPages);
+    }
+
+    private SearchOfficesResponse ParseRawBody(string body, int page, int pageSize)
+    {
+        var root = JsonSerializer.Deserialize<JsonElement>(body);
         var hits = root.GetProperty("hits");
         var totalObj = hits.GetProperty("total");
 
