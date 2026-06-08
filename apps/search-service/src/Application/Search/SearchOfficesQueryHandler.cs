@@ -4,6 +4,7 @@ using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch.Documents;
 using Microsoft.Extensions.Logging;
 using OpenSearch.Client;
+using OpenSearch.Net;
 
 namespace DeskMatch.SearchService.Application.Search;
 
@@ -31,43 +32,90 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
     {
         var embedding = await _ollama.GetEmbeddingAsync(query.Text ?? "");
 
-        var response = await _client.SearchAsync<object>(s => s
+        var searchDescriptor = new SearchDescriptor<object>()
             .Index("offices")
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
-            .Query(q => q.MatchAll())
-        );
+            .Query(q => q.Bool(b =>
+            {
+                if (!string.IsNullOrWhiteSpace(query.Text))
+                {
+                    b.Must(mu => mu.MultiMatch(mm => mm
+                        .Fields(new[] { "name^3", "description^2", "address" })
+                        .Query(query.Text)));
+                }
 
-        _logger.LogInformation(
-            "DEBUG handler: IsValid={IsValid}, Total={Total}, Hits={Hits}, Raw json={Response}",
-            response.IsValid,
-            response.Total,
-            response.Hits?.Count ?? 0,
-            response.DebugInformation ?? "no debug");
+                if (!string.IsNullOrWhiteSpace(query.City))
+                    b.Filter(f => f.Term("city", query.City));
+                if (!string.IsNullOrWhiteSpace(query.Country))
+                    b.Filter(f => f.Term("country", query.Country));
+
+                if (query.MinPrice.HasValue || query.MaxPrice.HasValue)
+                    b.Filter(f => f.Range(r =>
+                    {
+                        r.Field("pricePerHour");
+                        if (query.MinPrice.HasValue) r.GreaterThanOrEquals((double)query.MinPrice.Value);
+                        if (query.MaxPrice.HasValue) r.LessThanOrEquals((double)query.MaxPrice.Value);
+                        return r;
+                    }));
+
+                if (query.MinCapacity.HasValue)
+                    b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(query.MinCapacity.Value)));
+
+                if (query.Amenities?.Count > 0)
+                    b.Filter(f => f.Terms(t => t.Field("amenities").Terms(query.Amenities)));
+
+                if (query.Lat.HasValue && query.Lon.HasValue)
+                    b.Filter(f => f.GeoDistance(g => g
+                        .Field("location")
+                        .Distance((query.RadiusKm ?? 10) + "km")
+                        .Location(query.Lat.Value, query.Lon.Value)));
+
+                return b;
+            }))
+            .Sort(sort =>
+            {
+                sort.Field("_score", SortOrder.Descending);
+                sort.Field("rating", SortOrder.Descending);
+                if (query.Lat.HasValue && query.Lon.HasValue)
+                {
+                    sort.GeoDistance(g => g
+                        .Field("location")
+                        .DistanceType(GeoDistanceType.Arc)
+                        .Unit(DistanceUnit.Kilometers)
+                        .Order(SortOrder.Ascending)
+                        .Points(new GeoLocation(query.Lat.Value, query.Lon.Value)));
+                }
+                return sort;
+            });
+
+        var searchRequest = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(searchRequest);
+
+        var root = JsonSerializer.Deserialize<JsonElement>(stringResponse.Body);
+
+        var hits = root.GetProperty("hits");
+        var total = hits.GetProperty("total").GetProperty("value").GetInt64();
+        var hitsList = hits.GetProperty("hits");
 
         var items = new List<OfficeResult>();
-        if (response.Hits != null)
+        foreach (var hit in hitsList.EnumerateArray())
         {
-            foreach (var hit in response.Hits)
-            {
-                if (hit.Source is JsonElement el)
-                {
-                    var doc = JsonSerializer.Deserialize<WorkspaceDocument>(el.GetRawText(), JsonOptions);
-                    if (doc != null)
-                        items.Add(MapToResult(doc));
-                }
-            }
+            var source = hit.GetProperty("_source");
+            var doc = JsonSerializer.Deserialize<WorkspaceDocument>(source.GetRawText(), JsonOptions);
+            if (doc != null)
+                items.Add(MapToResult(doc));
         }
 
-        var totalPages = response.Total > 0
-            ? (int)Math.Ceiling(response.Total / (double)query.PageSize)
+        var totalPages = total > 0
+            ? (int)Math.Ceiling(total / (double)query.PageSize)
             : 0;
 
         return new SearchOfficesResponse(
             items.AsReadOnly(),
             query.Page,
             query.PageSize,
-            response.Total > 0 ? response.Total : response.Hits?.Count ?? 0,
+            total,
             totalPages);
     }
 
