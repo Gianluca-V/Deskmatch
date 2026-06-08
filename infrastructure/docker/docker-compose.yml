@@ -354,7 +354,10 @@ services:
       - deskmatch-network
 
   # ────────────────────────────────────────────── CLOUDFLARE TUNNEL ──
+  # Solo se activa cuando COMPOSE_PROFILES=cloudflare (o --profile cloudflare)
+  # Ver .env → CLOUDFLARE y COMPOSE_PROFILES
   cloudflared:
+    profiles: ["cloudflare"]
     image: cloudflare/cloudflared:latest
     container_name: deskmatch-cloudflared
     restart: unless-stopped
