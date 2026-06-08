@@ -231,6 +231,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5001
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -257,6 +260,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5002
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -299,6 +305,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5004
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -325,6 +334,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5005
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_notification;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -370,6 +382,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5000
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
