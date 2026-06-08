@@ -95,29 +95,45 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
 
     private SearchOfficesResponse ParseResponse(ISearchResponse<object> response, int page, int pageSize)
     {
-        var rawBody = response.ApiCall?.ResponseBodyInBytes;
-        if (rawBody != null && rawBody.Length > 0)
+        try
         {
-            return ParseRawBody(Encoding.UTF8.GetString(rawBody), page, pageSize);
-        }
-
-        var items = new List<OfficeResult>();
-        if (response.Hits != null)
-        {
-            foreach (var hit in response.Hits)
+            var rawBody = response.ApiCall?.ResponseBodyInBytes;
+            if (rawBody != null && rawBody.Length > 0)
             {
-                if (hit.Source is JsonElement el)
-                {
-                    var doc = JsonSerializer.Deserialize<WorkspaceDocument>(el.GetRawText(), JsonOptions);
-                    if (doc != null)
-                        items.Add(MapToResult(doc));
-                }
+                return ParseRawBody(Encoding.UTF8.GetString(rawBody), page, pageSize);
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to parse raw OpenSearch response body");
+        }
 
-        var total = response.Total;
-        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
-        return new SearchOfficesResponse(items.AsReadOnly(), page, pageSize, total, totalPages);
+        try
+        {
+            var items = new List<OfficeResult>();
+            if (response.Hits != null)
+            {
+                foreach (var hit in response.Hits)
+                {
+                    if (hit.Source is JsonElement el)
+                    {
+                        var doc = JsonSerializer.Deserialize<WorkspaceDocument>(el.GetRawText(), JsonOptions);
+                        if (doc != null)
+                            items.Add(MapToResult(doc));
+                    }
+                }
+            }
+
+            var total = response.Total;
+            var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
+            return new SearchOfficesResponse(items.AsReadOnly(), page, pageSize, total, totalPages);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to parse OpenSearch hits from typed response. Total={Total}, ApiCall={HasApiCall}",
+                response.Total, response.ApiCall != null);
+            return new SearchOfficesResponse(new List<OfficeResult>().AsReadOnly(), page, pageSize, 0, 0);
+        }
     }
 
     private SearchOfficesResponse ParseRawBody(string body, int page, int pageSize)
