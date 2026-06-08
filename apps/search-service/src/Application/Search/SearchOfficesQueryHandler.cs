@@ -1,10 +1,10 @@
+using System.Text;
 using System.Text.Json;
 using DeskMatch.Domain.CQRS;
 using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch.Documents;
 using Microsoft.Extensions.Logging;
 using OpenSearch.Client;
-using OpenSearch.Net;
 
 namespace DeskMatch.SearchService.Application.Search;
 
@@ -32,7 +32,7 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
     {
         var embedding = await _ollama.GetEmbeddingAsync(query.Text ?? "");
 
-        var searchDescriptor = new SearchDescriptor<object>()
+        var response = await _client.SearchAsync<object>(s => s
             .Index("offices")
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
@@ -87,23 +87,19 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
                         .Points(new GeoLocation(query.Lat.Value, query.Lon.Value)));
                 }
                 return sort;
-            });
+            })
+        );
 
-        var searchRequest = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(searchRequest);
-
-        _logger.LogInformation("LowLevel response body (first 500 chars): {Body}",
-            stringResponse.Body?.Substring(0, Math.Min(500, stringResponse.Body?.Length ?? 0)));
-
-        return ParseResponse(stringResponse.Body, query.Page, query.PageSize);
+        return ParseResponse(response, query.Page, query.PageSize);
     }
 
-    private SearchOfficesResponse ParseResponse(string? body, int page, int pageSize)
+    private SearchOfficesResponse ParseResponse(ISearchResponse<object> response, int page, int pageSize)
     {
-        if (string.IsNullOrWhiteSpace(body))
+        var rawBody = response.ApiCall?.ResponseBodyInBytes;
+        if (rawBody == null || rawBody.Length == 0)
             return new SearchOfficesResponse(new List<OfficeResult>().AsReadOnly(), page, pageSize, 0, 0);
 
-        var root = JsonSerializer.Deserialize<JsonElement>(body);
+        var root = JsonSerializer.Deserialize<JsonElement>(Encoding.UTF8.GetString(rawBody));
         var hits = root.GetProperty("hits");
         var totalObj = hits.GetProperty("total");
 
