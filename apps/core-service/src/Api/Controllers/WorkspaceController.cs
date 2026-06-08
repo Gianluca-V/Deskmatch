@@ -18,6 +18,7 @@ public sealed class WorkspaceController : ControllerBase
     private readonly ICommandHandler<CreateWorkspaceCommand, Guid> _createHandler;
     private readonly ICommandHandler<UpdateWorkspaceCommand> _updateHandler;
     private readonly ICommandHandler<DeleteWorkspaceCommand> _deleteHandler;
+    private readonly ICommandHandler<ReindexWorkspacesCommand> _reindexHandler;
     private readonly IWorkspaceRepository _repository;
     private readonly ICompanyRepository _companyRepository;
 
@@ -25,12 +26,14 @@ public sealed class WorkspaceController : ControllerBase
         ICommandHandler<CreateWorkspaceCommand, Guid> createHandler,
         ICommandHandler<UpdateWorkspaceCommand> updateHandler,
         ICommandHandler<DeleteWorkspaceCommand> deleteHandler,
+        ICommandHandler<ReindexWorkspacesCommand> reindexHandler,
         IWorkspaceRepository repository,
         ICompanyRepository companyRepository)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
+        _reindexHandler = reindexHandler;
         _repository = repository;
         _companyRepository = companyRepository;
     }
@@ -224,6 +227,16 @@ public sealed class WorkspaceController : ControllerBase
         await _deleteHandler.HandleAsync(command, cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>Reindexa todos los workspaces de PostgreSQL a OpenSearch.</summary>
+    /// <response code="200">Reindexaciu00f3n completada.</response>
+    [HttpPost("reindex")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Reindex(CancellationToken cancellationToken)
+    {
+        await _reindexHandler.HandleAsync(new ReindexWorkspacesCommand(), cancellationToken);
+        return Ok(new { message = "Reindex completed" });
     }
 
     private static WorkspaceResponse ToResponse(Domain.Workspaces.Workspace w) => new(

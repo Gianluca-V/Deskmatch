@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<ReindexWorkspacesCommand>, ReindexWorkspacesCommandHandler>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
