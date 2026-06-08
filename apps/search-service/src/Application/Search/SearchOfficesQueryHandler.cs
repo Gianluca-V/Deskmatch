@@ -2,6 +2,7 @@ using DeskMatch.Domain.CQRS;
 using DeskMatch.SDK.OpenSearch;
 using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch.Documents;
+using Microsoft.Extensions.Logging;
 using OpenSearch.Client;
 
 namespace DeskMatch.SearchService.Application.Search;
@@ -10,13 +11,16 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
 {
     private readonly IOpenSearchRepository<WorkspaceDocument> _searchRepo;
     private readonly IOllamaClient _ollama;
+    private readonly ILogger<SearchOfficesQueryHandler> _logger;
 
     public SearchOfficesQueryHandler(
         IOpenSearchRepository<WorkspaceDocument> searchRepo,
-        IOllamaClient ollama)
+        IOllamaClient ollama,
+        ILogger<SearchOfficesQueryHandler> logger)
     {
         _searchRepo = searchRepo;
         _ollama = ollama;
+        _logger = logger;
     }
 
     public async Task<SearchOfficesResponse> HandleAsync(
@@ -25,26 +29,41 @@ public sealed class SearchOfficesQueryHandler : IQueryHandler<SearchOfficesQuery
     {
         var embedding = await _ollama.GetEmbeddingAsync(query.Text ?? "");
 
-        var response = await _searchRepo.SearchAsync(s => s
-            .Index("offices")
-            .From((query.Page - 1) * query.PageSize)
-            .Size(query.PageSize)
-            .Query(q => q.Bool(b => { BuildBoolQuery(query, embedding, b); return b; }))
-            .Sort(sort => BuildSort(query, sort))
-        );
+        try
+        {
+            var response = await _searchRepo.SearchAsync(s => s
+                .Index("offices")
+                .From((query.Page - 1) * query.PageSize)
+                .Size(query.PageSize)
+                .Query(q => q.Bool(b => { BuildBoolQuery(query, embedding, b); return b; }))
+                .Sort(sort => BuildSort(query, sort))
+            );
 
-        var items = response.Hits
-            .Select(h => MapToResult(h.Source))
-            .ToList();
+            _logger.LogInformation(
+                "Search executed: Elapsed={Elapsed}ms, IsValid={IsValid}, Total={Total}, Hits={Hits}",
+                response.Took,
+                response.IsValid,
+                response.Total,
+                response.Hits?.Count ?? 0);
 
-        var totalPages = (int)Math.Ceiling(response.Total / (double)query.PageSize);
+            var items = response.Hits
+                .Select(h => MapToResult(h.Source))
+                .ToList();
 
-        return new SearchOfficesResponse(
-            items.AsReadOnly(),
-            query.Page,
-            query.PageSize,
-            response.Total,
-            totalPages);
+            var totalPages = (int)Math.Ceiling(response.Total / (double)query.PageSize);
+
+            return new SearchOfficesResponse(
+                items.AsReadOnly(),
+                query.Page,
+                query.PageSize,
+                response.Total,
+                totalPages);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OpenSearch search failed");
+            throw;
+        }
     }
 
     private static void BuildBoolQuery(SearchOfficesQuery query, float[]? embedding, BoolQueryDescriptor<WorkspaceDocument> boolQuery)
