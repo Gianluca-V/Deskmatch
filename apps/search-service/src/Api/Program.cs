@@ -3,6 +3,8 @@ using DeskMatch.SearchService.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddBuildingBlockConfiguration();
+
 builder.Host.UseBuildingBlocks(builder.Configuration);
 
 builder.Services.AddControllers();

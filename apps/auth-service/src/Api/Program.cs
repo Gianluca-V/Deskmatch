@@ -10,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("src/Api/appsettings.json", optional: true, reloadOnChange: true);
 
+builder.Configuration.AddBuildingBlockConfiguration();
+
 builder.Host.UseBuildingBlocks(builder.Configuration);
 
 builder.Services.AddApplicationServices(builder.Configuration);
