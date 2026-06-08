@@ -1,4 +1,5 @@
 using DeskMatch.BuildingBlocks.Extensions;
+using DeskMatch.SearchService.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,9 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
 
-// ─────────────────────────────── Application DI ──
-// TODO: Move registrations to DependencyInjection.cs once implemented
-// builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddApplicationServices(builder.Configuration);
 
 builder.Services.AddHealthChecks();
 
