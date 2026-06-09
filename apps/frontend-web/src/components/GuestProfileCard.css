@@ -1,0 +1,179 @@
+.guest-profile-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.guest-profile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: rgba(58, 149, 223, 0.2);
+}
+
+.guest-profile-card--error {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.guest-profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.guest-profile-card__avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #3a95df 0%, #2563eb 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.guest-profile-card__avatar.skeleton-avatar {
+  background: #e5e7eb;
+}
+
+.guest-profile-card__name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 4px 0;
+}
+
+.guest-profile-card__subtitle {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.guest-profile-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guest-profile-card__field {
+  display: flex;
+  gap: 12px;
+}
+
+.guest-profile-card__field-icon {
+  width: 40px;
+  height: 40px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.guest-profile-card__field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.guest-profile-card__field-value {
+  font-size: 15px;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: 500;
+}
+
+.guest-profile-card__field-value--empty {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.guest-profile-card__error-message {
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.guest-profile-card__error-message p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 8px 0;
+}
+
+.guest-profile-card__error-message small {
+  font-size: 14px;
+  color: var(--color-muted);
+  display: block;
+}
+
+/* Skeleton loaders */
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-line--name {
+  height: 20px;
+  width: 200px;
+  margin-bottom: 8px;
+}
+
+.skeleton-line--email {
+  height: 14px;
+  width: 150px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .guest-profile-card {
+    padding: 16px;
+  }
+
+  .guest-profile-card__header {
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+
+  .guest-profile-card__avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .guest-profile-card__name {
+    font-size: 16px;
+  }
+
+  .guest-profile-card__field-icon {
+    width: 36px;
+    height: 36px;
+  }
+}

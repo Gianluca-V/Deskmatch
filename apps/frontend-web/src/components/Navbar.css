@@ -1,0 +1,139 @@
+.navbar {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar__container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  gap: 20px;
+}
+
+.navbar__logo {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.navbar__logo:hover {
+  opacity: 0.8;
+}
+
+.navbar__links {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar__link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  position: relative;
+}
+
+.navbar__link:hover {
+  opacity: 0.8;
+}
+
+.navbar__link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: width 0.2s ease;
+}
+
+.navbar__link:hover::after {
+  width: 100%;
+}
+
+.navbar__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.navbar__btn {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.navbar__btn--text {
+  background: transparent;
+}
+
+.navbar__btn--text:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar__btn--primary {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.navbar__btn--primary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar__container {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .navbar__logo {
+    font-size: 16px;
+  }
+
+  .navbar__links {
+    display: none;
+  }
+
+  .navbar__link {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar__container {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .navbar__logo {
+    font-size: 14px;
+  }
+
+  .navbar__btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

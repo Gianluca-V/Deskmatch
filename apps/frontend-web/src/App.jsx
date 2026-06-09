@@ -1,5 +1,6 @@
-import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterCompany from './pages/RegisterCompany';
@@ -7,6 +8,7 @@ import RegisterType from './pages/RegisterType';
 import Home from './pages/Home';
 import Offices from './pages/Offices';
 import MySpaces from './pages/MySpaces';
+import Profile from './pages/Profile';
 
 
 function OfficeDetail() {
@@ -27,28 +29,43 @@ function Dashboard() {
   );
 }
 
+function Spaces() {
+  return (
+    <section>
+      <h1>Mis Espacios</h1>
+      <p>Gestiona los espacios de tu empresa.</p>
+    </section>
+  );
+}
+
+function ManageCompany() {
+  return (
+    <section>
+      <h1>Gestionar Empresa</h1>
+      <p>Administra la información de tu empresa.</p>
+    </section>
+  );
+}
+
+function Analytics() {
+  return (
+    <section>
+      <h1>Analytics</h1>
+      <p>Métricas y análisis de tu negocio.</p>
+    </section>
+  );
+}
+
 function App() {
-  const location = useLocation();  
-  const hideNavbar = ['/', '/login', '/register', '/register/user', '/register/company'].includes(location.pathname);
+  const { isAuthenticated } = useAuth();
   
   const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated } = useAuth();
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
+  
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
-      {!hideNavbar && (
-        <header style={{ padding: '16px', backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>
-          <nav style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>Home</Link>
-            <Link to="/offices" style={{ color: '#ffffff', textDecoration: 'none' }}>Oficinas</Link>
-            <Link to="/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>Dashboard</Link>
-            <Link to="/my-spaces" style={{ color: '#ffffff', textDecoration: 'none' }}>Mis Espacios</Link>
-            <Link to="/login" style={{ color: '#ffffff', textDecoration: 'none' }}>Login</Link>
-            <Link to="/register" style={{ color: '#ffffff', textDecoration: 'none' }}>Registrarse</Link>
-          </nav>
-        </header>
-      )}
+      <Navbar />
       <main style={{ flex: 1, padding: '24px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -60,6 +77,10 @@ function App() {
           <Route path="/register/company" element={<RegisterCompany />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
+          <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
+          <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </main>
       <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
