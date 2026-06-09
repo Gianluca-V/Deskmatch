@@ -231,6 +231,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5001
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -257,6 +260,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5002
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -271,6 +277,8 @@ services:
       Storage__BucketName: ${MINIO_BUCKET:-deskmatch}
       Storage__UseSsl: ${STORAGE_USE_SSL:-false}
       Storage__PublicUrl: ${STORAGE_PUBLIC_URL:-http://localhost:9000}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}
+      Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
     depends_on:
       postgres:
         condition: service_healthy
@@ -297,12 +305,17 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5004
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
       OpenSearch__Uri: http://opensearch:9200
       OpenSearch__User: admin
       OpenSearch__Password: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-DeskMatch123!}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}
+      Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
     depends_on:
       opensearch:
         condition: service_healthy
@@ -321,6 +334,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5005
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_notification;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -338,7 +354,10 @@ services:
       - deskmatch-network
 
   # ────────────────────────────────────────────── CLOUDFLARE TUNNEL ──
+  # Solo se activa cuando COMPOSE_PROFILES=cloudflare (o --profile cloudflare)
+  # Ver .env → CLOUDFLARE y COMPOSE_PROFILES
   cloudflared:
+    profiles: ["cloudflare"]
     image: cloudflare/cloudflared:latest
     container_name: deskmatch-cloudflared
     restart: unless-stopped
@@ -353,7 +372,6 @@ services:
     networks:
       - deskmatch-network
 
-
   api-gateway:
     build:
       context: ../../.
@@ -366,6 +384,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5000
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -413,7 +434,6 @@ services:
         condition: service_healthy
     networks:
       - deskmatch-network
-
 
 secrets:
   tunnel-credentials:

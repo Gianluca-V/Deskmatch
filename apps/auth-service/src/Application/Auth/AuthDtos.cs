@@ -14,11 +14,6 @@ public sealed record LoginRequest(
     [Required, EmailAddress] string Email,
     [Required] string Password);
 
-public sealed record UpdateProfileRequest(
-    [MaxLength(256)] string? Name,
-    [MaxLength(128)] string? FirstName,
-    [MaxLength(128)] string? LastName);
-
 public sealed record UserResponse(
     Guid Id,
     string Name,

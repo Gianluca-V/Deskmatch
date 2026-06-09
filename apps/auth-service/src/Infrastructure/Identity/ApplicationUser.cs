@@ -13,6 +13,9 @@ public class ApplicationUser : IdentityUser<Guid>
     [MaxLength(128)]
     public string? LastName { get; set; }
 
+    [MaxLength(100)]
+    public string? Location { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; }
