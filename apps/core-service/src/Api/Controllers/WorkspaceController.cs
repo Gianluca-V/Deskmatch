@@ -171,8 +171,8 @@ public sealed class WorkspaceController : ControllerBase
         UpdateWorkspaceRequest request,
         CancellationToken cancellationToken)
     {
-        var exists = await _repository.ExistsAsync(id, cancellationToken);
-        if (!exists) return NotFound();
+        var existing = await _repository.GetByIdAsync(id, cancellationToken);
+        if (existing is null || !existing.IsActive) return NotFound();
 
         await ValidateCompanyOwnership(request.CompanyId, cancellationToken);
 
