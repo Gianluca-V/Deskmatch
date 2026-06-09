@@ -26,6 +26,7 @@ public class Workspace : AggregateRoot<Guid>
     public decimal? PricePerMonth { get; set; }
     public List<string>? Amenities { get; set; }
     public List<string>? Images { get; set; }
+    public List<WorkspaceAttribute> DynamicAttributes { get; set; } = [];
     public double? Rating { get; set; }
     public int ReviewCount { get; set; } = 0;
     public bool IsActive { get; set; } = true;

@@ -17,4 +17,5 @@ public sealed record UpdateWorkspaceCommand(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images) : ICommand;
+    List<string>? Images,
+    List<WorkspaceAttributeInput>? DynamicAttributes) : ICommand;

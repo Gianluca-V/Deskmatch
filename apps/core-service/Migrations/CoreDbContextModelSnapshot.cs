@@ -162,6 +162,39 @@ namespace DeskMatch.CoreService.Migrations
 
                     b.ToTable("Workspaces", "core");
                 });
+
+            modelBuilder.Entity("DeskMatch.CoreService.Domain.Workspaces.Workspace", b =>
+                {
+                    b.OwnsMany("DeskMatch.CoreService.Domain.Workspaces.WorkspaceAttribute", "DynamicAttributes", b1 =>
+                        {
+                            b1.Property<Guid>("WorkspaceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("Key")
+                                .IsRequired()
+                                .HasMaxLength(64)
+                                .HasColumnType("character varying(64)");
+
+                            b1.Property<string>("Value")
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)");
+
+                            b1.HasKey("WorkspaceId", "Id");
+
+                            b1.ToTable("WorkspaceAttributes", "core");
+
+                            b1.WithOwner()
+                                .HasForeignKey("WorkspaceId");
+                        });
+
+                    b.Navigation("DynamicAttributes");
+                });
 #pragma warning restore 612, 618
         }
     }

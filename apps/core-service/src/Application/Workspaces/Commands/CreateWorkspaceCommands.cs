@@ -16,4 +16,7 @@ public sealed record CreateWorkspaceCommand(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images) : ICommand<Guid>;
+    List<string>? Images,
+    List<WorkspaceAttributeInput>? DynamicAttributes) : ICommand<Guid>;
+
+public sealed record WorkspaceAttributeInput(string Key, string? Value);

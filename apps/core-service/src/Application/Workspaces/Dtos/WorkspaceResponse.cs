@@ -16,6 +16,7 @@ public sealed record WorkspaceResponse(
     decimal? PricePerMonth,
     List<string>? Amenities,
     List<string>? Images,
+    List<WorkspaceAttributeDto>? DynamicAttributes,
     double? Rating,
     int ReviewCount,
     bool IsActive,
