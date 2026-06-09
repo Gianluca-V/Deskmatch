@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DeskMatch.CoreService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DeskMatch.CoreService.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    partial class CoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609155429_AddCompanyProfileFields")]
+    partial class AddCompanyProfileFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,39 +164,6 @@ namespace DeskMatch.CoreService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Workspaces", "core");
-                });
-
-            modelBuilder.Entity("DeskMatch.CoreService.Domain.Workspaces.Workspace", b =>
-                {
-                    b.OwnsMany("DeskMatch.CoreService.Domain.Workspaces.WorkspaceAttribute", "DynamicAttributes", b1 =>
-                        {
-                            b1.Property<Guid>("WorkspaceId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
-
-                            b1.Property<string>("Key")
-                                .IsRequired()
-                                .HasMaxLength(64)
-                                .HasColumnType("character varying(64)");
-
-                            b1.Property<string>("Value")
-                                .HasMaxLength(256)
-                                .HasColumnType("character varying(256)");
-
-                            b1.HasKey("WorkspaceId", "Id");
-
-                            b1.ToTable("WorkspaceAttributes", "core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("WorkspaceId");
-                        });
-
-                    b.Navigation("DynamicAttributes");
                 });
 #pragma warning restore 612, 618
         }

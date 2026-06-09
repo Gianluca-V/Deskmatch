@@ -1,7 +1,7 @@
 namespace DeskMatch.CoreService.Application.Companies.Dtos;
 
-public sealed record CreateCompanyRequest(
+public sealed record CompanyUpdateProfileDto(
     string Name,
     string? Description,
-    string? LogoUrl,
+    string? ContactEmail,
     string? WebsiteUrl);

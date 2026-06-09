@@ -34,7 +34,7 @@ services:
     networks:
       - deskmatch-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U deskmatch"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-deskmatch}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -230,7 +230,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5001
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION_STRING}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
@@ -241,8 +241,6 @@ services:
       Jwt__RefreshTokenExpirationDays: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
       Redis__ConnectionString: redis:6379,password=,ssl=false,abortConnect=false
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -259,7 +257,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5002
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION_STRING}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
@@ -280,8 +278,6 @@ services:
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}
       Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       opensearch:
@@ -304,7 +300,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5004
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_core;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION_STRING}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
@@ -333,7 +329,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5005
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_notification;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION_STRING}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
@@ -347,9 +343,6 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-noreply@deskmatch.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-DeskMatch}
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - deskmatch-network
 
@@ -372,7 +365,6 @@ services:
     networks:
       - deskmatch-network
 
-
   api-gateway:
     build:
       context: ../../.
@@ -384,7 +376,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:5000
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=deskmatch_auth;Username=${POSTGRES_USER:-deskmatch};Password=${POSTGRES_PASSWORD:-deskmatch123!}
+      ConnectionStrings__DefaultConnection: ${POSTGRES_CONNECTION_STRING}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
@@ -435,7 +427,6 @@ services:
         condition: service_healthy
     networks:
       - deskmatch-network
-
 
 secrets:
   tunnel-credentials:

@@ -7,4 +7,4 @@ public sealed record CreateCompanyCommand(
     string? Description,
     string? LogoUrl,
     string? WebsiteUrl,
-    Guid? OwnerId) : ICommand<Guid>;
+    Guid OwnerId) : ICommand<Guid>;

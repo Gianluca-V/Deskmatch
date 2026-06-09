@@ -18,15 +18,15 @@ public sealed class CreateCompanyCommandHandler : ICommandHandler<CreateCompanyC
         CreateCompanyCommand command,
         CancellationToken cancellationToken = default)
     {
-      var company = new Company(Guid.NewGuid())
-      {
-          Name = command.Name,
-          Description = command.Description,
-          LogoUrl = command.LogoUrl,
-          WebsiteUrl = command.WebsiteUrl,
-          OwnerId = command.OwnerId,
-          IsActive = true
-      };
+        var company = new Company(Guid.NewGuid())
+        {
+            Name = command.Name,
+            Description = command.Description,
+            LogoUrl = command.LogoUrl,
+            WebsiteUrl = command.WebsiteUrl,
+            OwnerId = command.OwnerId,
+            IsActive = true
+        };
         await _repository.AddAsync(company, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 

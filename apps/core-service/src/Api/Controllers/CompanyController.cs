@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DeskMatch.CoreService.Application.Companies.Commands;
 using DeskMatch.CoreService.Application.Companies.Dtos;
 using DeskMatch.CoreService.Application.Companies.Interfaces;
@@ -25,21 +26,30 @@ public sealed class CompanyController : ControllerBase
     }
 
     /// <summary>Crea una nueva empresa.</summary>
+    /// <remarks>El owner se determina automáticamente desde el JWT del usuario autenticado.</remarks>
     /// <response code="201">Empresa creada correctamente.</response>
     /// <response code="400">Datos inválidos.</response>
+    /// <response code="401">Token inválido.</response>
     [HttpPost]
     [ProducesResponseType(typeof(CompanyResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<CompanyResponse>> Create(
         CreateCompanyRequest request,
         CancellationToken cancellationToken)
     {
+        var sub = User.FindFirst("sub")?.Value
+               ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(sub, out var ownerId))
+            return Unauthorized();
+
         var command = new CreateCompanyCommand(
             request.Name,
             request.Description,
             request.LogoUrl,
             request.WebsiteUrl,
-            request.OwnerId);
+            ownerId);
 
         var id = await _createHandler.HandleAsync(command, cancellationToken);
         var company = await _repository.GetByIdAsync(id, cancellationToken);

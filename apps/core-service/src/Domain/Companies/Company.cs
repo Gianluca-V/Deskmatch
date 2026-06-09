@@ -16,6 +16,10 @@ public class Company : AggregateRoot<Guid>
     public string? Description { get; set; }
     public string? LogoUrl { get; set; }
     public string? WebsiteUrl { get; set; }
+    public string? ContactEmail { get; set; }
+    public bool IsVerified { get; set; } = false;
     public Guid? OwnerId { get; set; }
     public bool IsActive { get; set; } = true;
+
+    public void MarkAsUpdated() => UpdatedAt = DateTime.UtcNow;
 }

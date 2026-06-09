@@ -24,6 +24,13 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.WebsiteUrl)
             .HasMaxLength(512);
 
+        builder.Property(c => c.ContactEmail)
+            .HasMaxLength(256);
+
+        builder.Property(c => c.IsVerified)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(c => c.IsActive)
             .IsRequired()
             .HasDefaultValue(true);
