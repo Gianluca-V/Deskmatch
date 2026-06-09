@@ -48,14 +48,6 @@ public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.Property(w => w.Images)
             .HasColumnType("text[]");
 
-        builder.OwnsMany(w => w.DynamicAttributes, attr =>
-        {
-            attr.WithOwner().HasForeignKey("WorkspaceId");
-            attr.Property(a => a.Key).IsRequired().HasMaxLength(64);
-            attr.Property(a => a.Value).HasMaxLength(256);
-            attr.ToTable("WorkspaceAttributes");
-        });
-
         builder.Property(w => w.Rating)
             .HasPrecision(3, 2);
 

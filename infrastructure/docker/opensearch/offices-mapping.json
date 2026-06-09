@@ -13,14 +13,14 @@
     }
   },
   "mappings": {
-    "dynamic": false,
     "properties": {
       "name": {
         "type": "text",
         "analyzer": "office_analyzer",
         "fields": {
-          "raw": { "type": "keyword" },
-          "suggest": { "type": "completion" }
+          "raw": {
+            "type": "keyword"
+          }
         }
       },
       "description": {
@@ -60,21 +60,6 @@
       },
       "updatedAt": {
         "type": "date"
-      },
-      "dynamicAttributes": {
-        "type": "flattened"
-      },
-      "nameVector": {
-        "type": "dense_vector",
-        "dims": 768,
-        "index": true,
-        "similarity": "cosine"
-      },
-      "descriptionVector": {
-        "type": "dense_vector",
-        "dims": 768,
-        "index": true,
-        "similarity": "cosine"
       }
     }
   }

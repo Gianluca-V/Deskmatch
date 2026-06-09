@@ -14,7 +14,4 @@ public sealed record CreateWorkspaceRequest(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images,
-    List<WorkspaceAttributeDto>? DynamicAttributes);
-
-public sealed record WorkspaceAttributeDto(string Key, string? Value);
+    List<string>? Images);

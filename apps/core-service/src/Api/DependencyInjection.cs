@@ -35,18 +35,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
-        services.AddScoped<ICommandHandler<ReindexWorkspacesCommand>, ReindexWorkspacesCommandHandler>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
-        services.AddOpenSearchSdk(configuration);
-        services.AddOllamaClient();
-
-        services.AddSingleton(provider =>
-        {
-            var client = provider.GetRequiredService<IOpenSearchClient>();
-            return new OpenSearchRepository<WorkspaceDocument>(client);
-        });
 
         return services;
     }
