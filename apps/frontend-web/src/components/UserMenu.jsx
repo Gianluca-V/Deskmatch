@@ -32,6 +32,11 @@ function UserMenu() {
     navigate('/login');
   };
 
+  const getProfileRoute = () => {
+    // Manager = empresa/company user, User = regular user
+    return user.role === 'Manager' ? '/profile/company' : '/profile/user';
+  };
+
   // Obtener inicial del usuario
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
   const userName = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email;
@@ -65,7 +70,7 @@ function UserMenu() {
               <p className="user-menu__header-email">{userEmail}</p>
               {user?.role && (
                 <span className="user-menu__role-badge">
-                  {user.role === 'Company' ? '🏢 Empresa' : user.role === 'Admin' ? '👑 Admin' : '👤 Usuario'}
+                  {user.role === 'Manager' ? '🏢 Empresa' : user.role === 'Admin' ? '👑 Admin' : '👤 Usuario'}
                 </span>
               )}
             </div>
@@ -73,8 +78,8 @@ function UserMenu() {
 
           <div className="user-menu__divider"></div>
 
-          <Link 
-            to="/profile" 
+          <Link
+            to={getProfileRoute()}
             className="user-menu__item"
             onClick={() => setIsOpen(false)}
           >
@@ -82,8 +87,8 @@ function UserMenu() {
             <span>Mi Perfil</span>
           </Link>
 
-          <Link 
-            to="/profile" 
+          <Link
+            to={getProfileRoute()}
             className="user-menu__item"
             onClick={() => setIsOpen(false)}
           >

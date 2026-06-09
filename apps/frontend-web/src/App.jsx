@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -64,29 +66,43 @@ function App() {
   };
   
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
-      <Navbar />
-      <main style={{ flex: 1, padding: '24px' }}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/offices" element={<Offices />} />
-          <Route path="/offices/:id" element={<OfficeDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<RegisterType />} />
-          <Route path="/register/user" element={<Register />} />
-          <Route path="/register/company" element={<RegisterCompany />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
-          <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
-          <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        </Routes>
-      </main>
-      <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
-        <p style={{ fontSize: '13px', margin: 0 }}>DeskMatch - Sitio web de búsqueda de espacios</p>
-      </footer>
-    </div>
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+        <Navbar />
+        <main style={{ flex: 1, padding: '24px' }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/offices" element={<Offices />} />
+            <Route path="/offices/:id" element={<OfficeDetail />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<RegisterType />} />
+            <Route path="/register/user" element={<Register />} />
+            <Route path="/register/company" element={<RegisterCompany />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
+            <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
+            <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/profile/user" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/company" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          </Routes>
+        </main>
+        <footer style={{ padding: '12px 16px', textAlign: 'center', backgroundColor: 'transparent', color: 'var(--color-muted)' }}>
+          <p style={{ fontSize: '13px', margin: 0 }}>DeskMatch - Sitio web de búsqueda de espacios</p>
+        </footer>
+      </div>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+    </>
   );
 }
 
