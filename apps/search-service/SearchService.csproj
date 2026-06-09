@@ -9,7 +9,6 @@
     <ProjectReference Include="..\..\shared\domain\DeskMatch.Domain.csproj" />
     <ProjectReference Include="..\..\shared\building-blocks\DeskMatch.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\OpenSearch\DeskMatch.SDK.OpenSearch.csproj" />
-    <ProjectReference Include="..\..\shared\sdk\src\Ollama\DeskMatch.SDK.Ollama.csproj" />
   </ItemGroup>
 
   <ItemGroup>

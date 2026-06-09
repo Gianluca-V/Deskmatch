@@ -14,5 +14,4 @@ public sealed record UpdateWorkspaceRequest(
     decimal? PricePerDay,
     decimal? PricePerMonth,
     List<string>? Amenities,
-    List<string>? Images,
-    List<WorkspaceAttributeDto>? DynamicAttributes);
+    List<string>? Images);
