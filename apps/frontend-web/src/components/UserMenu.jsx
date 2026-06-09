@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfileCompany } from '../hooks/useProfile';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import './UserMenu.css';
 
 function UserMenu() {
   const { user, logout, isAuthenticated } = useAuth();
+  const { data: companyProfile } = useProfileCompany();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
