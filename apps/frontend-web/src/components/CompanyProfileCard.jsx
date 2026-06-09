@@ -1,7 +1,10 @@
-import { Building2, Mail, Phone, MapPin, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Building2, Mail, Phone, MapPin, CheckCircle, Edit } from 'lucide-react';
+import EditCompanyProfileModal from './EditCompanyProfileModal';
 import './CompanyProfileCard.css';
 
 function CompanyProfileCard({ company, isLoading, error }) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   if (isLoading) {
     return (
       <div className="company-profile-card">
@@ -41,26 +44,34 @@ function CompanyProfileCard({ company, isLoading, error }) {
   const isVerified = company?.isVerified || false;
 
   return (
-    <div className="company-profile-card">
-      <div className="company-profile-card__header">
-        <div className="company-profile-card__avatar">
-          <Building2 size={32} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div className="company-profile-card__title-wrapper">
-            <h3 className="company-profile-card__name">{companyName}</h3>
-            {isVerified && (
-              <div className="company-profile-card__badge">
-                <CheckCircle size={16} />
-                <span>Verificado</span>
-              </div>
-            )}
+    <>
+      <div className="company-profile-card">
+        <div className="company-profile-card__header">
+          <div className="company-profile-card__avatar">
+            <Building2 size={32} />
           </div>
-          <p className="company-profile-card__subtitle">Información de la Empresa</p>
+          <div style={{ flex: 1 }}>
+            <div className="company-profile-card__title-wrapper">
+              <h3 className="company-profile-card__name">{companyName}</h3>
+              {isVerified && (
+                <div className="company-profile-card__badge">
+                  <CheckCircle size={16} />
+                  <span>Verificado</span>
+                </div>
+              )}
+            </div>
+            <p className="company-profile-card__subtitle">Información de la Empresa</p>
+          </div>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="company-profile-card__edit-button"
+            title="Editar perfil"
+          >
+            <Edit size={18} />
+          </button>
         </div>
-      </div>
 
-      <div className="company-profile-card__content">
+        <div className="company-profile-card__content">
         <div className="company-profile-card__field">
           <div className="company-profile-card__field-icon">
             <Building2 size={18} />
@@ -106,8 +117,14 @@ function CompanyProfileCard({ company, isLoading, error }) {
             </p>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+
+      <EditCompanyProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
+    </>
   );
 }
 

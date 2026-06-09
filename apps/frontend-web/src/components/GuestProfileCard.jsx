@@ -1,7 +1,10 @@
-import { User, Mail, Phone, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { User, Mail, Phone, MapPin, Edit } from 'lucide-react';
+import EditProfileModal from './EditProfileModal';
 import './GuestProfileCard.css';
 
 function GuestProfileCard({ user, isLoading, error }) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   if (isLoading) {
     return (
       <div className="guest-profile-card">
@@ -39,20 +42,28 @@ function GuestProfileCard({ user, isLoading, error }) {
   const location = user?.location || 'No especificado';
 
   return (
-    <div className="guest-profile-card">
-      <div className="guest-profile-card__header">
-        <div className="guest-profile-card__avatar">
-          <User size={32} />
+    <>
+      <div className="guest-profile-card">
+        <div className="guest-profile-card__header">
+          <div className="guest-profile-card__avatar">
+            <User size={32} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 className="guest-profile-card__name">
+              {firstName} {lastName}
+            </h3>
+            <p className="guest-profile-card__subtitle">Información Personal</p>
+          </div>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="guest-profile-card__edit-button"
+            title="Editar perfil"
+          >
+            <Edit size={18} />
+          </button>
         </div>
-        <div>
-          <h3 className="guest-profile-card__name">
-            {firstName} {lastName}
-          </h3>
-          <p className="guest-profile-card__subtitle">Información Personal</p>
-        </div>
-      </div>
 
-      <div className="guest-profile-card__content">
+        <div className="guest-profile-card__content">
         <div className="guest-profile-card__field">
           <div className="guest-profile-card__field-icon">
             <User size={18} />
@@ -98,8 +109,14 @@ function GuestProfileCard({ user, isLoading, error }) {
             </p>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
+    </>
   );
 }
 
