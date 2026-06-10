@@ -117,7 +117,7 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
               placeholder="https://ejemplo.com"
               {...register('websiteUrl', {
                 pattern: {
-                  value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+                  value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
                   message: 'URL inválida',
                 },
               })}

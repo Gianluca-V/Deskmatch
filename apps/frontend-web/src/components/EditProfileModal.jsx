@@ -30,9 +30,6 @@ function EditProfileModal({ isOpen, onClose, onSuccess }) {
 
   const onSubmit = async (data) => {
     try {
-      const [firstName, ...lastNameParts] = data.fullName.trim().split(' ');
-      const lastName = lastNameParts.join(' ') || '';
-
       const payload = {
         fullName: data.fullName.trim(),
         phoneNumber: data.phoneNumber?.trim() || null,
