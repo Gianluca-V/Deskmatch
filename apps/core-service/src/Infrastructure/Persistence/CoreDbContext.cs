@@ -11,6 +11,7 @@ public class CoreDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
+    public DbSet<WorkspaceSchedule> WorkspaceSchedules => Set<WorkspaceSchedule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
