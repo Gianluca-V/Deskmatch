@@ -11,7 +11,8 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     setError('');
     setLoading(true);
     try {
@@ -36,7 +37,7 @@ function Login() {
             {error}
           </p>
         )}
-        <form>
+        <form onSubmit={handleLogin}>
           <label style={{ display: 'block', marginBottom: '12px', color: 'var(--color-muted-strong)' }}>
             Correo electrónico
             <input
@@ -58,8 +59,7 @@ function Login() {
             />
           </label>
           <button
-            type="button"
-            onClick={handleLogin}
+            type="submit"
             disabled={loading}
             style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: 'none', backgroundColor: 'var(--color-primary)', color: '#ffffff', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
           >
