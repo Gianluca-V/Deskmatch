@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, Mail, Phone, MapPin, CheckCircle, Globe, LogOut, Settings } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, CheckCircle, Globe, LogOut, Settings, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import EditCompanyProfileModal from './EditCompanyProfileModal';
 import './CompanyProfileCard.css';
@@ -84,6 +84,14 @@ function CompanyProfileCard({ company, isLoading, error }) {
             >
               <Settings size={18} />
               <span>Editar Perfil</span>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/spaces')}
+              className="company-profile-card__action-button company-profile-card__action-button--config"
+              title="Gestionar espacios"
+            >
+              <LayoutGrid size={18} />
+              <span>Gestionar Espacios</span>
             </button>
             <button
               onClick={handleLogout}

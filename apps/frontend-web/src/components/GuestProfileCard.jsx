@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, MapPin, Settings, LogOut } from 'lucide-react';
 import EditProfileModal from './EditProfileModal';
 import './GuestProfileCard.css';
 
 function GuestProfileCard({ user, isLoading, error }) {
+  const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   if (isLoading) {
     return (
       <div className="guest-profile-card">
-        <div className="guest-profile-card__header">
+        <div className="guest-profile-card__header-section">
           <div className="guest-profile-card__avatar skeleton-avatar"></div>
           <div>
             <div className="skeleton-line skeleton-line--name"></div>
@@ -44,23 +52,47 @@ function GuestProfileCard({ user, isLoading, error }) {
   return (
     <>
       <div className="guest-profile-card">
-        <div className="guest-profile-card__header">
-          <div className="guest-profile-card__avatar">
-            <User size={32} />
+        <div className="guest-profile-card__header-top">
+          <div className="guest-profile-card__header-section">
+            <div className="guest-profile-card__avatar">
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt={`${firstName} ${lastName}`} />
+              ) : (
+                <User size={32} />
+              )}
+            </div>
+            <div>
+              <h2 className="guest-profile-card__name">
+                {firstName} {lastName}
+              </h2>
+              <p className="guest-profile-card__email">{email}</p>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <h3 className="guest-profile-card__name">
-              {firstName} {lastName}
-            </h3>
-            <p className="guest-profile-card__subtitle">Información Personal</p>
+          <div className="guest-profile-card__actions">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="guest-profile-card__action-button guest-profile-card__action-button--config"
+              title="Configuración"
+            >
+              <Settings size={18} />
+              <span>Configuración</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="guest-profile-card__action-button guest-profile-card__action-button--logout"
+              title="Cerrar sesión"
+            >
+              <LogOut size={18} />
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="guest-profile-card__edit-button"
-            title="Editar perfil"
-          >
-            <Edit size={18} />
-          </button>
+        </div>
+
+        <div className="guest-profile-card__divider"></div>
+
+        <div className="guest-profile-card__section-title">
+          <User size={20} />
+          <h3>Información Personal</h3>
         </div>
 
         <div className="guest-profile-card__content">

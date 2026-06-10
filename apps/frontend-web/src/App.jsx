@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Offices from './pages/Offices';
 import MySpaces from './pages/MySpaces';
 import Profile from './pages/Profile';
+import Reservations from './pages/Reservations';
 
 
 function OfficeDetail() {
@@ -83,6 +84,7 @@ function App() {
             <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
             <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/reservations" element={<ProtectedRoute><Reservations /></ProtectedRoute>} />
             <Route path="/profile/user" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/company" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           </Routes>

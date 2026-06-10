@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Calendar } from 'lucide-react';
 import './UserMenu.css';
 
 function UserMenu() {
@@ -85,6 +85,15 @@ function UserMenu() {
           >
             <User size={18} />
             <span>Mi Perfil</span>
+          </Link>
+
+          <Link
+            to="/reservations"
+            className="user-menu__item"
+            onClick={() => setIsOpen(false)}
+          >
+            <Calendar size={18} />
+            <span>Mis Reservas</span>
           </Link>
 
           <Link
