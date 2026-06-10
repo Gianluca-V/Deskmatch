@@ -13,7 +13,7 @@ const loadSession = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [session, setSession] = useState(loadSession);
+  const [session, setSession] = useState(() => loadSession());
 
   const login = (loginResponse) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(loginResponse));
