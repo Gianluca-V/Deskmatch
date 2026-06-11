@@ -345,6 +345,107 @@ public sealed class SearchController : ControllerBase
         return Ok(names);
     }
 
+    [HttpGet("ai")]
+    public async Task<IActionResult> AiSearch(
+        [FromQuery] string text,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return BadRequest(new { error = "text query is required" });
+
+        var aiParams = await ExtractSearchParams(text);
+
+        var expandedQ = ExpandQuery(aiParams.q ?? text);
+        var embedding = await _ollama.GetEmbeddingAsync(expandedQ);
+        var hasQuery = expandedQ.Length > 0;
+        var hasFilters = !string.IsNullOrWhiteSpace(aiParams.city) || !string.IsNullOrWhiteSpace(aiParams.country)
+            || aiParams.minPrice.HasValue || aiParams.maxPrice.HasValue || aiParams.minCapacity.HasValue
+            || (aiParams.lat.HasValue && aiParams.lon.HasValue)
+            || (aiParams.amenities?.Length > 0);
+
+        var body = BuildSearchBody(expandedQ, embedding, aiParams.city, aiParams.country,
+            aiParams.minPrice, aiParams.maxPrice, aiParams.minCapacity,
+            aiParams.amenities != null ? string.Join(',', aiParams.amenities) : null,
+            aiParams.lat, aiParams.lon, aiParams.radius, page, pageSize, hasQuery, hasFilters);
+
+        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
+            "offices", PostData.String(JsonSerializer.Serialize(body)));
+
+        long total = 0;
+        var items = new List<object>();
+        if (stringResponse.Body != null)
+        {
+            using var doc = JsonDocument.Parse(stringResponse.Body);
+            var hits = doc.RootElement.GetProperty("hits");
+            total = hits.GetProperty("total").ValueKind == JsonValueKind.Object
+                ? hits.GetProperty("total").GetProperty("value").GetInt64()
+                : hits.GetProperty("total").GetInt64();
+            foreach (var hit in hits.GetProperty("hits").EnumerateArray())
+                if (hit.TryGetProperty("_source", out var src))
+                    items.Add(ParseSource(src));
+        }
+
+        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
+        return Ok(new { items, page, pageSize, totalCount = total, totalPages, aiInterpretation = aiParams });
+    }
+
+    private async Task<AiSearchParams> ExtractSearchParams(string userText)
+    {
+        var systemPrompt = """
+You are a search query parser for a coworking space search engine. 
+Extract structured search parameters from the user's natural language description.
+
+Available fields:
+- q: text search (keywords describing the space)
+- city: city name
+- country: country name
+- minPrice: minimum price per hour (decimal)
+- maxPrice: maximum price per hour (decimal)
+- minCapacity: minimum number of people
+- amenities: array of amenity names (e.g. wifi, coffee, gym, parking, meeting rooms)
+- lat, lon, radius: location coordinates and radius in km (ONLY if user mentions a specific neighborhood or coordinates, otherwise leave null)
+
+Return ONLY valid JSON with these fields. Use null for unknown fields. Use lowercase for amenities.
+Example input: "oficina moderna con wifi y cafe en Buenos Aires para 10 personas maximo 30 dolares"
+Example output: {"q":"oficina moderna","city":"Buenos Aires","country":null,"minPrice":null,"maxPrice":30,"minCapacity":10,"amenities":["wifi","cafe"],"lat":null,"lon":null,"radius":null}
+
+Return ONLY the JSON object, nothing else.
+""";
+
+        try
+        {
+            var result = await _ollama.ChatCompletionAsync(systemPrompt, userText);
+            if (string.IsNullOrWhiteSpace(result)) return new AiSearchParams { q = userText };
+
+            var cleaned = result.Trim();
+            if (cleaned.StartsWith("```")) cleaned = cleaned.Substring(cleaned.IndexOf('\n') + 1).Trim();
+            if (cleaned.EndsWith("```")) cleaned = cleaned[..cleaned.LastIndexOf('`')].Trim();
+            cleaned = cleaned.TrimStart('{').StartsWith('"') ? "{" + cleaned : cleaned;
+
+            var parsed = JsonSerializer.Deserialize<AiSearchParams>(cleaned);
+            return parsed ?? new AiSearchParams { q = userText };
+        }
+        catch
+        {
+            return new AiSearchParams { q = userText };
+        }
+    }
+
+    private sealed class AiSearchParams
+    {
+        public string? q { get; set; }
+        public string? city { get; set; }
+        public string? country { get; set; }
+        public decimal? minPrice { get; set; }
+        public decimal? maxPrice { get; set; }
+        public int? minCapacity { get; set; }
+        public string[]? amenities { get; set; }
+        public double? lat { get; set; }
+        public double? lon { get; set; }
+        public double? radius { get; set; }
+    }
+
     private static object? ParseElement(JsonElement el) => el.ValueKind switch
     {
         JsonValueKind.String => el.GetString(),
