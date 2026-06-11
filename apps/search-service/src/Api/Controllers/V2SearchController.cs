@@ -3,7 +3,6 @@ using System.Text.Json;
 using DeskMatch.SDK.Ollama;
 using Microsoft.AspNetCore.Mvc;
 using OpenSearch.Client;
-using OpenSearch.Net;
 
 namespace DeskMatch.SearchService.Api.Controllers;
 
@@ -38,32 +37,85 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var embedding = await _ollama.GetEmbeddingAsync(q ?? "");
+        var hasQuery = !string.IsNullOrWhiteSpace(q);
         var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
             || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
             || (lat.HasValue && lon.HasValue)
             || !string.IsNullOrWhiteSpace(amenities);
 
-        ISearchResponse<object> response;
+        var response = await _client.SearchAsync<object>(s =>
+        {
+            s.Index("offices")
+             .From((page - 1) * pageSize)
+             .Size(pageSize);
 
-        if (string.IsNullOrWhiteSpace(q) && !hasFilters)
-        {
-            response = await _client.SearchAsync<object>(s => s
-                .Index("offices")
-                .From((page - 1) * pageSize)
-                .Size(pageSize)
-                .Query(qq => qq.MatchAll()));
-        }
-        else if (embedding != null)
-        {
-            response = await _client.SearchAsync<object>(s =>
-                BuildHybridQuery(s, q, city, country, minPrice, maxPrice, minCapacity, amenities, lat, lon, radius, page, pageSize, embedding));
-        }
-        else
-        {
-            response = await _client.SearchAsync<object>(s =>
-                BuildBm25Query(s, q, city, country, minPrice, maxPrice, minCapacity, amenities, lat, lon, radius, page, pageSize));
-        }
+            if (!hasQuery && !hasFilters)
+            {
+                s.Query(qq => qq.MatchAll());
+            }
+            else
+            {
+                s.Query(qq => qq.Bool(b =>
+                {
+                    if (hasQuery)
+                    {
+                        b.Must(mu => mu.MultiMatch(mm => mm
+                            .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
+                            .Query(q)
+                            .Fuzziness(Fuzziness.Auto)
+                            .Operator(Operator.Or)));
+
+                        b.Should(sh => sh
+                            .Match(m => m.Field("amenities").Query(q).Boost(2)));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(city))
+                        b.Filter(f => f.Term("city", city));
+                    if (!string.IsNullOrWhiteSpace(country))
+                        b.Filter(f => f.Term("country", country));
+
+                    if (minPrice.HasValue || maxPrice.HasValue)
+                        b.Filter(f => f.Range(r =>
+                        {
+                            r.Field("pricePerHour");
+                            if (minPrice.HasValue) r.GreaterThanOrEquals((double)minPrice.Value);
+                            if (maxPrice.HasValue) r.LessThanOrEquals((double)maxPrice.Value);
+                            return r;
+                        }));
+
+                    if (minCapacity.HasValue)
+                        b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(minCapacity.Value)));
+
+                    var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    if (amList?.Length > 0)
+                        b.Filter(f => f.Terms(t => t.Field("amenities").Terms(amList)));
+
+                    if (lat.HasValue && lon.HasValue)
+                        b.Filter(f => f.GeoDistance(g => g
+                            .Field("location")
+                            .Distance((radius ?? 10) + "km")
+                            .Location(lat.Value, lon.Value)));
+
+                    return b;
+                }));
+            }
+
+            s.Sort(sort =>
+            {
+                sort.Field("_score", SortOrder.Descending);
+                sort.Field("rating", SortOrder.Descending);
+                if (lat.HasValue && lon.HasValue)
+                    sort.GeoDistance(g => g
+                        .Field("location")
+                        .DistanceType(GeoDistanceType.Arc)
+                        .Unit(DistanceUnit.Kilometers)
+                        .Order(SortOrder.Ascending)
+                        .Points(new GeoLocation(lat.Value, lon.Value)));
+                return sort;
+            });
+
+            return s;
+        });
 
         var items = ParseResponseItems(response);
         var total = response.Total;
@@ -132,135 +184,6 @@ public sealed class SearchController : ControllerBase
         }
 
         return Ok(names);
-    }
-
-    private static SearchDescriptor<object> BuildBm25Query(
-        SearchDescriptor<object> s, string? q,
-        string? city, string? country, decimal? minPrice, decimal? maxPrice,
-        int? minCapacity, string? amenities, double? lat, double? lon,
-        double? radius, int page, int pageSize)
-    {
-        return s.Index("offices")
-            .From((page - 1) * pageSize)
-            .Size(pageSize)
-            .Query(qq => qq.Bool(b =>
-            {
-                if (!string.IsNullOrWhiteSpace(q))
-                {
-                    b.Must(mu => mu.MultiMatch(mm => mm
-                        .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                        .Query(q)
-                        .Fuzziness(Fuzziness.Auto)
-                        .Operator(Operator.Or)));
-
-                    b.Should(sh => sh
-                        .Match(m => m.Field("amenities").Query(q).Boost(2)));
-                }
-
-                AddFilters(b, city, country, minPrice, maxPrice, minCapacity, amenities, lat, lon, radius);
-
-                return b;
-            }))
-            .Sort(sort =>
-            {
-                sort.Field("_score", SortOrder.Descending);
-                sort.Field("rating", SortOrder.Descending);
-                if (lat.HasValue && lon.HasValue)
-                    sort.GeoDistance(g => g
-                        .Field("location")
-                        .DistanceType(GeoDistanceType.Arc)
-                        .Unit(DistanceUnit.Kilometers)
-                        .Order(SortOrder.Ascending)
-                        .Points(new GeoLocation(lat.Value, lon.Value)));
-                return sort;
-            });
-    }
-
-    private static SearchDescriptor<object> BuildHybridQuery(
-        SearchDescriptor<object> s, string? q,
-        string? city, string? country, decimal? minPrice, decimal? maxPrice,
-        int? minCapacity, string? amenities, double? lat, double? lon,
-        double? radius, int page, int pageSize, float[] embedding)
-    {
-        return s.Index("offices")
-            .From((page - 1) * pageSize)
-            .Size(pageSize)
-            .Query(qq => qq.Bool(b =>
-            {
-                if (!string.IsNullOrWhiteSpace(q))
-                {
-                    b.Must(mu => mu.MultiMatch(mm => mm
-                        .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                        .Query(q)
-                        .Fuzziness(Fuzziness.Auto)
-                        .Operator(Operator.Or)));
-
-                    b.Should(sh => sh
-                        .Match(m => m.Field("amenities").Query(q).Boost(2)));
-                }
-
-                b.Should(sh => sh
-                    .Script(scr => scr
-                        .Script(sc => sc
-                            .Source("cosineSimilarity(params.query_vector, 'nameVector') + 1.0")
-                            .Params(d => d.Add("query_vector", embedding)))));
-
-                b.Should(sh => sh
-                    .Script(scr => scr
-                        .Script(sc => sc
-                            .Source("cosineSimilarity(params.query_vector, 'descriptionVector') + 0.5")
-                            .Params(d => d.Add("query_vector", embedding)))));
-
-                AddFilters(b, city, country, minPrice, maxPrice, minCapacity, amenities, lat, lon, radius);
-
-                return b;
-            }))
-            .Sort(sort =>
-            {
-                sort.Field("_score", SortOrder.Descending);
-                sort.Field("rating", SortOrder.Descending);
-                if (lat.HasValue && lon.HasValue)
-                    sort.GeoDistance(g => g
-                        .Field("location")
-                        .DistanceType(GeoDistanceType.Arc)
-                        .Unit(DistanceUnit.Kilometers)
-                        .Order(SortOrder.Ascending)
-                        .Points(new GeoLocation(lat.Value, lon.Value)));
-                return sort;
-            });
-    }
-
-    private static void AddFilters(
-        BoolQueryDescriptor<object> b,
-        string? city, string? country, decimal? minPrice, decimal? maxPrice,
-        int? minCapacity, string? amenities, double? lat, double? lon, double? radius)
-    {
-        if (!string.IsNullOrWhiteSpace(city))
-            b.Filter(f => f.Term("city", city));
-        if (!string.IsNullOrWhiteSpace(country))
-            b.Filter(f => f.Term("country", country));
-
-        if (minPrice.HasValue || maxPrice.HasValue)
-            b.Filter(f => f.Range(r =>
-            {
-                r.Field("pricePerHour");
-                if (minPrice.HasValue) r.GreaterThanOrEquals((double)minPrice.Value);
-                if (maxPrice.HasValue) r.LessThanOrEquals((double)maxPrice.Value);
-                return r;
-            }));
-
-        if (minCapacity.HasValue)
-            b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(minCapacity.Value)));
-
-        if (lat.HasValue && lon.HasValue)
-            b.Filter(f => f.GeoDistance(g => g
-                .Field("location")
-                .Distance((radius ?? 10) + "km")
-                .Location(lat.Value, lon.Value)));
-
-        var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (amList?.Length > 0)
-            b.Filter(f => f.Terms(t => t.Field("amenities").Terms(amList)));
     }
 
     private List<object> ParseResponseItems(ISearchResponse<object> response)
