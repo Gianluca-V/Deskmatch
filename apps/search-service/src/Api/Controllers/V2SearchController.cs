@@ -38,7 +38,16 @@ public sealed class V2SearchController : ControllerBase
             .Index("offices")
             .From((page - 1) * pageSize)
             .Size(pageSize)
-            .Query(qq => qq.Bool(b =>
+            .Query(qq =>
+            {
+                var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
+                    || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
+                    || (lat.HasValue && lon.HasValue);
+
+                if (string.IsNullOrWhiteSpace(q) && !hasFilters)
+                    return (QueryContainer)qq.MatchAll();
+
+                return qq.Bool(b =>
             {
                 if (!string.IsNullOrWhiteSpace(q))
                     b.Must(mu => mu.MultiMatch(mm => mm
