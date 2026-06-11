@@ -356,17 +356,21 @@ public sealed class SearchController : ControllerBase
 
         var aiParams = await ExtractSearchParams(text);
 
-        var expandedQ = ExpandQuery(aiParams.q ?? text);
+        // Merge AI-extracted amenities into the search text for query expansion
+        var enrichedText = aiParams.q ?? text;
+        if (aiParams.amenities?.Length > 0)
+            enrichedText += " " + string.Join(" ", aiParams.amenities);
+
+        var expandedQ = ExpandQuery(enrichedText);
         var embedding = await _ollama.GetEmbeddingAsync(expandedQ);
         var hasQuery = expandedQ.Length > 0;
         var hasFilters = !string.IsNullOrWhiteSpace(aiParams.city) || !string.IsNullOrWhiteSpace(aiParams.country)
             || aiParams.minPrice.HasValue || aiParams.maxPrice.HasValue || aiParams.minCapacity.HasValue
-            || (aiParams.lat.HasValue && aiParams.lon.HasValue)
-            || (aiParams.amenities?.Length > 0);
+            || (aiParams.lat.HasValue && aiParams.lon.HasValue);
 
         var body = BuildSearchBody(expandedQ, embedding, aiParams.city, aiParams.country,
             aiParams.minPrice, aiParams.maxPrice, aiParams.minCapacity,
-            aiParams.amenities != null ? string.Join(',', aiParams.amenities) : null,
+            null,  // don't use amenities as strict filter, merged into search text
             aiParams.lat, aiParams.lon, aiParams.radius, page, pageSize, hasQuery, hasFilters);
 
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
