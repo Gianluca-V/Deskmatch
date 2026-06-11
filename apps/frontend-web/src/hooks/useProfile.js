@@ -44,7 +44,11 @@ export function useProfileCompany() {
     queryKey: ['profile-company'],
     queryFn: async () => {
       try {
-        return await profileAPI.getCompany();
+        const data = await profileAPI.getCompany();
+        return {
+          ...data,
+          phone: data.phoneNumber || data.phone,
+        };
       } catch (error) {
         // Retornar null si no hay empresa asociada
         if (error.response?.status === 404) {
@@ -53,11 +57,11 @@ export function useProfileCompany() {
             return {
               id: 1,
               name: 'WorkSpace Solutions',
-              email: 'owner@example.com',
-              phone: '+34 912 345 678',
+              contactEmail: 'owner@example.com',
+              phoneNumber: '+34 912 345 678',
               location: 'Madrid, España',
               description: 'Proveedor líder de espacios de trabajo flexibles en España. Ofrecemos oficinas modernas, salas de reuniones y espacios de coworking diseñados para maximizar la productividad de tu equipo.',
-              website: 'www.workspacesolutions.es',
+              websiteUrl: 'https://www.workspacesolutions.es',
               isVerified: true,
               averageRating: 4.8,
               reviewCount: 127,

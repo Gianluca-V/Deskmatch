@@ -14,6 +14,8 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
       description: companyData?.description || '',
       contactEmail: companyData?.contactEmail || '',
       websiteUrl: companyData?.websiteUrl || '',
+      phoneNumber: companyData?.phoneNumber || '',
+      location: companyData?.location || '',
     },
   });
 
@@ -24,6 +26,8 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
         description: companyData?.description || '',
         contactEmail: companyData?.contactEmail || '',
         websiteUrl: companyData?.websiteUrl || '',
+        phoneNumber: companyData?.phoneNumber || '',
+        location: companyData?.location || '',
       });
     }
   }, [companyData, reset]);
@@ -35,6 +39,8 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
         description: data.description?.trim() || '',
         contactEmail: data.contactEmail.trim(),
         websiteUrl: data.websiteUrl?.trim() || '',
+        phoneNumber: data.phoneNumber?.trim() || '',
+        location: data.location?.trim() || '',
       };
 
       await api.put('/api/companies/me/profile', payload);
@@ -124,6 +130,34 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
               className="edit-company-modal__input"
             />
             {errors.websiteUrl && <span className="edit-company-modal__error">{errors.websiteUrl.message}</span>}
+          </div>
+
+          <div className="edit-company-modal__form-group">
+            <label htmlFor="phoneNumber">Teléfono</label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              placeholder="+34 912 345 678"
+              {...register('phoneNumber', {
+                maxLength: { value: 20, message: 'Máximo 20 caracteres' },
+              })}
+              className="edit-company-modal__input"
+            />
+            {errors.phoneNumber && <span className="edit-company-modal__error">{errors.phoneNumber.message}</span>}
+          </div>
+
+          <div className="edit-company-modal__form-group">
+            <label htmlFor="location">Ubicación</label>
+            <input
+              id="location"
+              type="text"
+              placeholder="Madrid, España"
+              {...register('location', {
+                maxLength: { value: 200, message: 'Máximo 200 caracteres' },
+              })}
+              className="edit-company-modal__input"
+            />
+            {errors.location && <span className="edit-company-modal__error">{errors.location.message}</span>}
           </div>
 
           <div className="edit-company-modal__form-group">

@@ -47,7 +47,7 @@ function CompanyProfileCard({ company, isLoading, error }) {
 
   const companyName = company?.name || 'Mi Empresa';
   const email = company?.contactEmail || 'No especificado';
-  const phone = company?.phone || '';
+  const phone = company?.phoneNumber || company?.phone || '';
   const location = company?.location || '';
   const description = company?.description || '';
   const website = company?.websiteUrl || '';
