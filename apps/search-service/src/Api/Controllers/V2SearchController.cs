@@ -145,7 +145,7 @@ public sealed class SearchController : ControllerBase
 
             if (hasQuery)
             {
-                must.Add(new Dictionary<string, object>
+                should.Add(new Dictionary<string, object>
                 {
                     ["multi_match"] = new Dictionary<string, object>
                     {
@@ -218,7 +218,11 @@ public sealed class SearchController : ControllerBase
 
             var boolQuery = new Dictionary<string, object>();
             if (must.Count > 0) boolQuery["must"] = must;
-            if (should.Count > 0) boolQuery["should"] = should;
+            if (should.Count > 0)
+            {
+                boolQuery["should"] = should;
+                boolQuery["minimum_should_match"] = 1;
+            }
             if (filter.Count > 0) boolQuery["filter"] = filter;
 
             body["query"] = new { @bool = boolQuery };
