@@ -48,8 +48,10 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
       console.log('Enviando datos:', payload);
       await api.put('/api/companies/me/profile', payload);
       toast.success('Perfil de la empresa actualizado exitosamente');
-      // Invalidar el caché de React Query para forzar refetch
+      // Invalidar el caché e inmediatamente refetch los nuevos datos
       await queryClient.invalidateQueries({ queryKey: ['profile-company'] });
+      // Esperar a que React Query refetch los datos antes de cerrar el modal
+      await queryClient.refetchQueries({ queryKey: ['profile-company'] });
       onSuccess?.();
       onClose();
     } catch (error) {
