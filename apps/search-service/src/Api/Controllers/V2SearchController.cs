@@ -1,6 +1,4 @@
-using System.Text;
 using System.Text.Json;
-using DeskMatch.SDK.Ollama;
 using Microsoft.AspNetCore.Mvc;
 using OpenSearch.Client;
 
@@ -12,13 +10,11 @@ namespace DeskMatch.SearchService.Api.Controllers;
 public sealed class SearchController : ControllerBase
 {
     private readonly IOpenSearchClient _client;
-    private readonly IOllamaClient _ollama;
     private readonly ILogger<SearchController> _logger;
 
-    public SearchController(IOpenSearchClient client, IOllamaClient ollama, ILogger<SearchController> logger)
+    public SearchController(IOpenSearchClient client, ILogger<SearchController> logger)
     {
         _client = client;
-        _ollama = ollama;
         _logger = logger;
     }
 
