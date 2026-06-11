@@ -159,7 +159,7 @@ public sealed class SearchController : ControllerBase
                 // Each word separately for keyword amenities field
                 foreach (var word in q!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = word } });
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = word.ToLowerInvariant() } });
                 }
             }
 
