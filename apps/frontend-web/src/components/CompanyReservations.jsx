@@ -1,7 +1,9 @@
-import { Calendar, Euro } from 'lucide-react';
+import { Calendar, Euro, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './CompanyReservations.css';
 
 function CompanyReservations({ reservations, isLoading }) {
+  const navigate = useNavigate();
   const getStatusBadgeClass = (status) => {
     const statusMap = {
       confirmed: 'company-reservations__status--confirmed',
@@ -60,6 +62,12 @@ function CompanyReservations({ reservations, isLoading }) {
         <h3 className="company-reservations__title">Reservas Recientes</h3>
         <div className="company-reservations__empty">
           <p>No hay reservas recientes</p>
+          <button
+            onClick={() => navigate('/reservations')}
+            className="company-reservations__view-all-btn"
+          >
+            Ver todas las reservas <ArrowRight size={16} />
+          </button>
         </div>
       </div>
     );
@@ -106,6 +114,14 @@ function CompanyReservations({ reservations, isLoading }) {
           </div>
         ))}
       </div>
+      {reservations.length > 5 && (
+        <button
+          onClick={() => navigate('/reservations')}
+          className="company-reservations__view-all-btn"
+        >
+          Ver todas las reservas <ArrowRight size={16} />
+        </button>
+      )}
     </div>
   );
 }
