@@ -297,7 +297,7 @@ public sealed class SearchController : ControllerBase
         var body = new Dictionary<string, object>
         {
             ["size"] = 5,
-            ["_source"] = new[] { "name", "amenities" },
+            ["_source"] = new[] { "name" },
             ["query"] = new Dictionary<string, object>
             {
                 ["bool"] = new Dictionary<string, object>
@@ -306,11 +306,9 @@ public sealed class SearchController : ControllerBase
                     {
                         new Dictionary<string, object>
                         {
-                            ["multi_match"] = new Dictionary<string, object>
+                            ["match_bool_prefix"] = new Dictionary<string, object>
                             {
-                                ["query"] = q,
-                                ["fields"] = new[] { "name^3" },
-                                ["fuzziness"] = "AUTO:4,6"
+                                ["name"] = q
                             }
                         },
                         new { match = new Dictionary<string, object> { ["amenities"] = q.ToLowerInvariant() } },
