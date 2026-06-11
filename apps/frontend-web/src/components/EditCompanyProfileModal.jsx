@@ -45,6 +45,7 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
         location: data.location?.trim() || '',
       };
 
+      console.log('Enviando datos:', payload);
       await api.put('/api/companies/me/profile', payload);
       toast.success('Perfil de la empresa actualizado exitosamente');
       // Invalidar el caché de React Query para forzar refetch
