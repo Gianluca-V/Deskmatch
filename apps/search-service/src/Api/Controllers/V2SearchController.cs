@@ -16,6 +16,54 @@ public sealed class SearchController : ControllerBase
     private readonly IOllamaClient _ollama;
     private readonly ILogger<SearchController> _logger;
 
+    private static readonly Dictionary<string, string> QueryExpansions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["cafe"] = "cafe cafe coffee cafeteria",
+        ["coffe"] = "coffee",
+        ["cafeteria"] = "cafeteria cafeteria coffee cafe",
+        ["gim"] = "gym",
+        ["gimnasio"] = "gimnasio gym fitness",
+        ["wifi"] = "wifi internet wireless",
+        ["estacionamiento"] = "estacionamiento parking cochera garage",
+        ["parking"] = "parking estacionamiento cochera",
+        ["pet"] = "pet mascotas mascota petfriendly pet-friendly",
+        ["reunion"] = "reunion reuniones meeting sala boardroom",
+        ["meeting"] = "meeting reuniones sala boardroom conference",
+        ["escritorio"] = "escritorio desk workspace puesto",
+        ["privado"] = "privado private exclusivo vip",
+        ["silencioso"] = "silencioso silent quiet tranquilo",
+        ["terraza"] = "terraza rooftop terraza outdoor exterior",
+        ["cocina"] = "cocina kitchen cocina kitchenette",
+        ["impresora"] = "impresora printer printing impresion",
+        ["accesible"] = "accesible accessible access wheelchair",
+        ["24"] = "24 24horas 24-horas horarioextendido",
+        ["moderno"] = "moderno modern contemporary sleek",
+        ["oficina"] = "oficina office workspace despacho",
+        ["espacio"] = "espacio space workspace area room",
+    };
+
+    private static string ExpandQuery(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "";
+
+        var words = raw.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var expanded = new List<string>(words);
+
+        foreach (var word in words)
+        {
+            if (QueryExpansions.TryGetValue(word, out var expansion))
+            {
+                foreach (var term in expansion.Split(' '))
+                {
+                    if (!expanded.Contains(term, StringComparer.OrdinalIgnoreCase))
+                        expanded.Add(term);
+                }
+            }
+        }
+
+        return string.Join(" ", expanded).Trim();
+    }
+
     public SearchController(IOpenSearchClient client, IOllamaClient ollama, ILogger<SearchController> logger)
     {
         _client = client;
@@ -38,13 +86,14 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var embedding = q != null ? await _ollama.GetEmbeddingAsync(q) : null;
-        var hasQuery = !string.IsNullOrWhiteSpace(q);
+        var expandedQ = ExpandQuery(q);
+        var embedding = expandedQ.Length > 0 ? await _ollama.GetEmbeddingAsync(expandedQ) : null;
+        var hasQuery = expandedQ.Length > 0;
         var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
             || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
             || !string.IsNullOrWhiteSpace(amenities) || (lat.HasValue && lon.HasValue);
 
-        var body = BuildSearchBody(q, embedding, city, country, minPrice, maxPrice,
+        var body = BuildSearchBody(expandedQ, embedding, city, country, minPrice, maxPrice,
             minCapacity, amenities, lat, lon, radius, page, pageSize, hasQuery, hasFilters);
 
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
