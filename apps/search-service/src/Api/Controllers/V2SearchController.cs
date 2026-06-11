@@ -156,43 +156,8 @@ public sealed class SearchController : ControllerBase
                     }
                 });
 
-                // k-NN: disabled until OpenSearch cosineSimilarity script verified
-                /*
-                if (embedding != null && embedding.Length == 768)
-                {
-                    should.Add(new Dictionary<string, object>
-                    {
-                        ["script_score"] = new Dictionary<string, object>
-                        {
-                            ["query"] = new { match_all = new { } },
-                            ["script"] = new Dictionary<string, object>
-                            {
-                                ["source"] = "cosineSimilarity(params.query_vector, 'nameVector') + 1.0",
-                                ["params"] = new Dictionary<string, object>
-                                {
-                                    ["query_vector"] = embedding
-                                }
-                            }
-                        }
-                    });
-
-                    should.Add(new Dictionary<string, object>
-                    {
-                        ["script_score"] = new Dictionary<string, object>
-                        {
-                            ["query"] = new { match_all = new { } },
-                            ["script"] = new Dictionary<string, object>
-                            {
-                                ["source"] = "cosineSimilarity(params.query_vector, 'descriptionVector') + 0.5",
-                                ["params"] = new Dictionary<string, object>
-                                {
-                                    ["query_vector"] = embedding
-                                }
-                            }
-                        }
-                    });
-                }
-                */
+                // k-NN: requiere recrear indice con index.knn=true y knn_vector (no dense_vector)
+                // El query expansion con sinonimos ya cubre busqueda semantica sin IA
             }
 
             if (!string.IsNullOrWhiteSpace(city))
