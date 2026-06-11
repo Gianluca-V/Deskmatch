@@ -8,7 +8,10 @@ import puppeteer from 'puppeteer';
     });
     
     const page = await browser.newPage();
-    
+
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('error', err => console.error('PAGE ERROR:', err));
+
     // Establecer localStorage antes de navegar
     await page.evaluateOnNewDocument(() => {
       const fakeSession = {
