@@ -311,8 +311,8 @@ public sealed class SearchController : ControllerBase
                                 ["name"] = q
                             }
                         },
-                        new { match = new Dictionary<string, object> { ["amenities"] = q.ToLowerInvariant() } },
-                        new { match = new Dictionary<string, object> { ["amenities"] = char.ToUpperInvariant(q[0]) + q[1..].ToLowerInvariant() } }
+                        new { prefix = new Dictionary<string, object> { ["amenities"] = q.ToLowerInvariant() } },
+                        new { prefix = new Dictionary<string, object> { ["amenities"] = char.ToUpperInvariant(q[0]) + q[1..].ToLowerInvariant() } }
                     },
                     ["minimum_should_match"] = 1
                 }
