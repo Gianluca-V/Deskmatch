@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using OpenSearch.Client;
@@ -33,31 +34,17 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var hasQuery = !string.IsNullOrWhiteSpace(q);
-        var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
-            || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
-            || (lat.HasValue && lon.HasValue)
-            || !string.IsNullOrWhiteSpace(amenities);
-
         var response = await _client.SearchAsync<object>(s => s
             .Index("offices")
             .From((page - 1) * pageSize)
             .Size(pageSize)
-            .Query(qq => qq.MatchAll())
-            .Sort(sort =>
-            {
-                sort.Field("_score", SortOrder.Descending);
-                sort.Field("rating", SortOrder.Descending);
-                if (lat.HasValue && lon.HasValue)
-                    sort.GeoDistance(g => g
-                        .Field("location")
-                        .DistanceType(GeoDistanceType.Arc)
-                        .Unit(DistanceUnit.Kilometers)
-                        .Order(SortOrder.Ascending)
-                        .Points(new GeoLocation(lat.Value, lon.Value)));
-                return sort;
-            })
-        );
+            .Query(qq => string.IsNullOrWhiteSpace(q)
+                ? (QueryContainer)qq.MatchAll()
+                : qq.MultiMatch(mm => mm
+                    .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
+                    .Query(q)
+                    .Fuzziness(Fuzziness.Auto)
+                    .Operator(Operator.Or))));
 
         var items = ParseResponseItems(response);
         var total = response.Total;
@@ -100,8 +87,7 @@ public sealed class SearchController : ControllerBase
     [HttpGet("suggest")]
     public async Task<IActionResult> Suggest([FromQuery] string? q)
     {
-        if (string.IsNullOrWhiteSpace(q))
-            return Ok(new List<string>());
+        if (string.IsNullOrWhiteSpace(q)) return Ok(new List<string>());
 
         var response = await _client.SearchAsync<object>(s => s
             .Index("offices")
@@ -109,8 +95,7 @@ public sealed class SearchController : ControllerBase
             .Query(qq => qq.MultiMatch(mm => mm
                 .Fields(new[] { "name^3" })
                 .Query(q)
-                .Fuzziness(Fuzziness.Auto)))
-        );
+                .Fuzziness(Fuzziness.Auto))));
 
         var names = new List<string>();
         var rawBody = response.ApiCall?.ResponseBodyInBytes;
@@ -118,52 +103,24 @@ public sealed class SearchController : ControllerBase
         {
             using var doc = JsonDocument.Parse(rawBody);
             foreach (var hit in doc.RootElement.GetProperty("hits").GetProperty("hits").EnumerateArray())
-            {
-                var name = hit.GetProperty("_source").GetProperty("name").GetString();
-                if (!string.IsNullOrWhiteSpace(name))
-                    names.Add(name);
-            }
+                names.Add(hit.GetProperty("_source").GetProperty("name").GetString() ?? "");
         }
-
         return Ok(names);
     }
 
     private List<object> ParseResponseItems(ISearchResponse<object> response)
     {
         var items = new List<object>();
-        try
+        var rawBody = response.ApiCall?.ResponseBodyInBytes;
+        if (rawBody != null && rawBody.Length > 0)
         {
-            var rawBody = response.ApiCall?.ResponseBodyInBytes;
-            if (rawBody != null && rawBody.Length > 0)
-            {
-                using var doc = JsonDocument.Parse(rawBody);
-                var root = doc.RootElement;
-                if (root.TryGetProperty("hits", out var hitsContainer) &&
-                    hitsContainer.TryGetProperty("hits", out var hitsArray))
-                {
-                    foreach (var hit in hitsArray.EnumerateArray())
-                    {
-                        if (hit.TryGetProperty("_source", out var source))
-                            items.Add(ParseSource(source));
-                    }
-                }
-                return items;
-            }
+            using var doc = JsonDocument.Parse(rawBody);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("hits", out var h1) && h1.TryGetProperty("hits", out var h2))
+                foreach (var hit in h2.EnumerateArray())
+                    if (hit.TryGetProperty("_source", out var src))
+                        items.Add(ParseSource(src));
         }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to parse raw OpenSearch response body");
-        }
-
-        if (response.Hits != null)
-        {
-            foreach (var hit in response.Hits)
-            {
-                if (hit.Source is JsonElement el)
-                    items.Add(ParseSource(el));
-            }
-        }
-
         return items;
     }
 
@@ -173,9 +130,7 @@ public sealed class SearchController : ControllerBase
         {
             JsonValueKind.String => el.GetString(),
             JsonValueKind.Number => el.TryGetInt64(out var i) ? i : el.GetDouble(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            JsonValueKind.Null => null,
+            JsonValueKind.True => true, JsonValueKind.False => false, JsonValueKind.Null => null,
             JsonValueKind.Array => el.EnumerateArray().Select(ParseElement).ToList(),
             JsonValueKind.Object => el.EnumerateObject().ToDictionary(p => p.Name, p => ParseElement(p.Value)),
             _ => el.GetRawText()
@@ -184,11 +139,8 @@ public sealed class SearchController : ControllerBase
 
     private static Dictionary<string, object?> ParseSource(JsonElement el)
     {
-        var dict = new Dictionary<string, object?>();
-        foreach (var prop in el.EnumerateObject())
-        {
-            dict[prop.Name] = ParseElement(prop.Value);
-        }
-        return dict;
+        var d = new Dictionary<string, object?>();
+        foreach (var p in el.EnumerateObject()) d[p.Name] = ParseElement(p.Value);
+        return d;
     }
 }
