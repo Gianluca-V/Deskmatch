@@ -156,6 +156,8 @@ public sealed class SearchController : ControllerBase
                     }
                 });
 
+                // k-NN boost: apenas se estabilice, descomentar
+                /*
                 if (embedding != null && embedding.Length == 768)
                 {
                     should.Add(new Dictionary<string, object>
@@ -169,19 +171,8 @@ public sealed class SearchController : ControllerBase
                             }
                         }
                     });
-
-                    should.Add(new Dictionary<string, object>
-                    {
-                        ["knn"] = new Dictionary<string, object>
-                        {
-                            ["descriptionVector"] = new Dictionary<string, object>
-                            {
-                                ["vector"] = embedding,
-                                ["k"] = 10
-                            }
-                        }
-                    });
                 }
+                */
             }
 
             if (!string.IsNullOrWhiteSpace(city))
