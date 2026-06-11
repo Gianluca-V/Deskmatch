@@ -393,41 +393,44 @@ public sealed class SearchController : ControllerBase
     private async Task<AiSearchParams> ExtractSearchParams(string userText)
     {
         var systemPrompt = """
-You are a search query parser for a coworking space search engine. 
-Extract structured search parameters from the user's natural language description.
+You are a search parameter extractor for a coworking space (workspace) search engine.
+Given a user message describing what office they need, extract these fields as JSON:
 
-Available fields:
-- q: text search (keywords describing the space)
-- city: city name
-- country: country name
-- minPrice: minimum price per hour (decimal)
-- maxPrice: maximum price per hour (decimal)
-- minCapacity: minimum number of people
-- amenities: array of amenity names (e.g. wifi, coffee, gym, parking, meeting rooms)
-- lat, lon, radius: location coordinates and radius in km (ONLY if user mentions a specific neighborhood or coordinates, otherwise leave null)
+- "q": search keywords about the space type/style (lowercase). If user says "moderno" or "modern", put that here. If they mention specific words describing the space ("tranquilo", "luminoso", "creativo"), include them.
+- "city": city name (e.g. "Buenos Aires", "New York", "San Francisco")
+- "country": country name  
+- "minPrice", "maxPrice": numeric price per hour. If user says "barato" put maxPrice 20. If "menos de 50 dolares" put maxPrice 50.
+- "minCapacity": minimum number of people the space must hold
+- "amenities": array of amenity names (ALWAYS extract these). ONLY use exact amenity names like: wifi, coffee, gym, parking, ac, printer, meeting, cafeteria. If user says "cafe" or "cafetería" add "coffee" or "cafeteria". If user says "gimnasio" add "gym". If user says "wifi" or "internet" add "wifi". RETURN THIS AS AN ARRAY.
+- "lat", "lon", "radius": leave null
 
-Return ONLY valid JSON with these fields. Use null for unknown fields. Use lowercase for amenities.
-Example input: "oficina moderna con wifi y cafe en Buenos Aires para 10 personas maximo 30 dolares"
-Example output: {"q":"oficina moderna","city":"Buenos Aires","country":null,"minPrice":null,"maxPrice":30,"minCapacity":10,"amenities":["wifi","cafe"],"lat":null,"lon":null,"radius":null}
+IMPORTANT: Always extract whatever you can. If unsure, leave the field as null.
+Return ONLY valid JSON. Do NOT wrap in backticks or explanation.
 
-Return ONLY the JSON object, nothing else.
-""";
+Example input: "necesito oficina moderna con wifi y cafe en palermo para 5 personas maximo 30 dolares"
+Example output: {"q":"oficina moderna","city":"Buenos Aires","country":null,"minPrice":null,"maxPrice":30,"minCapacity":5,"amenities":["wifi","coffee"],"lat":null,"lon":null,"radius":null}
+
+Input: "{0}"
+Output:"""
+
+        var fullPrompt = systemPrompt.Replace("{0}", userText);
 
         try
         {
-            var result = await _ollama.ChatCompletionAsync(systemPrompt, userText);
+            var result = await _ollama.ChatCompletionAsync("You are a JSON API. Return only valid JSON.", fullPrompt);
             if (string.IsNullOrWhiteSpace(result)) return new AiSearchParams { q = userText };
 
             var cleaned = result.Trim();
-            if (cleaned.StartsWith("```")) cleaned = cleaned.Substring(cleaned.IndexOf('\n') + 1).Trim();
-            if (cleaned.EndsWith("```")) cleaned = cleaned[..cleaned.LastIndexOf('`')].Trim();
-            cleaned = cleaned.TrimStart('{').StartsWith('"') ? "{" + cleaned : cleaned;
+            cleaned = cleaned.Replace("```json", "").Replace("```", "").Trim();
+            if (!cleaned.StartsWith("{")) cleaned = "{" + cleaned;
+            if (!cleaned.EndsWith("}")) cleaned += "}";
 
             var parsed = JsonSerializer.Deserialize<AiSearchParams>(cleaned);
             return parsed ?? new AiSearchParams { q = userText };
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "AI search param extraction failed for text: {Text}", userText);
             return new AiSearchParams { q = userText };
         }
     }
