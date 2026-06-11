@@ -2,99 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { profileAPI } from '../api/profile';
 
-const getMockCompanyData = () => ({
-  id: 1,
-  name: 'WorkSpace Solutions',
-  contactEmail: 'owner@example.com',
-  phoneNumber: '+34 912 345 678',
-  phone: '+34 912 345 678',
-  location: 'Madrid, España',
-  description: 'Proveedor líder de espacios de trabajo flexibles en España. Ofrecemos oficinas modernas, salas de reuniones y espacios de coworking diseñados para maximizar la productividad de tu equipo.',
-  websiteUrl: 'https://www.workspacesolutions.es',
-  isVerified: true,
-  averageRating: 4.8,
-  reviewCount: 127,
-  spaces: [
-    {
-      id: 1,
-      name: 'Oficina Moderna Centro',
-      city: 'Madrid',
-      location: 'Madrid',
-      type: 'Oficina Privada',
-      price: '€250',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
-    },
-    {
-      id: 2,
-      name: 'Coworking Barcelona Tech',
-      city: 'Barcelona',
-      location: 'Barcelona',
-      type: 'Coworking',
-      price: '€35',
-      image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Sala de Reuniones Premium',
-      city: 'Madrid',
-      location: 'Madrid',
-      type: 'Sala de Reuniones',
-      price: '€120',
-      image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=400&h=300&fit=crop'
-    }
-  ],
-  reservations: [
-    {
-      id: 1,
-      space: {
-        id: 1,
-        name: 'Oficina Moderna Centro',
-        image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=100&h=100&fit=crop'
-      },
-      user: {
-        firstName: 'María',
-        lastName: 'González'
-      },
-      startDate: '2026-06-03',
-      endDate: '2026-06-08',
-      totalPrice: '€1250',
-      status: 'Confirmada'
-    },
-    {
-      id: 2,
-      space: {
-        id: 2,
-        name: 'Coworking Barcelona Tech',
-        image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=100&h=100&fit=crop'
-      },
-      user: {
-        firstName: 'María',
-        lastName: 'González'
-      },
-      startDate: '2026-06-13',
-      endDate: '2026-06-18',
-      totalPrice: '€175',
-      status: 'Pendiente'
-    },
-    {
-      id: 3,
-      space: {
-        id: 3,
-        name: 'Sala de Reuniones Premium',
-        image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=100&h=100&fit=crop'
-      },
-      user: {
-        firstName: 'María',
-        lastName: 'González'
-      },
-      startDate: '2026-05-19',
-      endDate: '2026-05-20',
-      totalPrice: '€120',
-      status: 'Cancelada'
-    }
-  ]
-});
-
 export function useProfile() {
   const { user: authUser } = useAuth();
 
@@ -138,12 +45,6 @@ export function useProfileCompany() {
     queryFn: async () => {
       try {
         const data = await profileAPI.getCompany();
-
-        // En desarrollo, si la empresa no tiene espacios/reservas, usar datos de prueba
-        if (import.meta.env.DEV && (!data.spaces || data.spaces.length === 0)) {
-          return getMockCompanyData();
-        }
-
         return {
           ...data,
           phone: data.phoneNumber || data.phone,
