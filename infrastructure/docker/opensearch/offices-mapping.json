@@ -2,6 +2,7 @@
   "settings": {
     "number_of_shards": 1,
     "number_of_replicas": 0,
+    "index.knn": true,
     "analysis": {
       "analyzer": {
         "office_analyzer": {
@@ -13,14 +14,14 @@
     }
   },
   "mappings": {
+    "dynamic": false,
     "properties": {
       "name": {
         "type": "text",
         "analyzer": "office_analyzer",
         "fields": {
-          "raw": {
-            "type": "keyword"
-          }
+          "raw": { "type": "keyword" },
+          "suggest": { "type": "completion" }
         }
       },
       "description": {
@@ -60,6 +61,27 @@
       },
       "updatedAt": {
         "type": "date"
+      },
+      "dynamicAttributes": {
+        "type": "flattened"
+      },
+      "nameVector": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "name": "hnsw",
+          "space_type": "cosinesimil",
+          "engine": "nmslib"
+        }
+      },
+      "descriptionVector": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "name": "hnsw",
+          "space_type": "cosinesimil",
+          "engine": "nmslib"
+        }
       }
     }
   }
