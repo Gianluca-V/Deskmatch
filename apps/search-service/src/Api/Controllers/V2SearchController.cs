@@ -43,19 +43,16 @@ public sealed class SearchController : ControllerBase
             || (lat.HasValue && lon.HasValue)
             || !string.IsNullOrWhiteSpace(amenities);
 
-        var response = await _client.SearchAsync<object>(s =>
-        {
-            s.Index("offices")
-             .From((page - 1) * pageSize)
-             .Size(pageSize);
+        var response = await _client.SearchAsync<object>(s => s
+            .Index("offices")
+            .From((page - 1) * pageSize)
+            .Size(pageSize)
+            .Query(qq =>
+            {
+                if (!hasQuery && !hasFilters)
+                    return (QueryContainer)qq.MatchAll();
 
-            if (!hasQuery && !hasFilters)
-            {
-                s.Query(qq => qq.MatchAll());
-            }
-            else
-            {
-                s.Query(qq => qq.Bool(b =>
+                return qq.Bool(b =>
                 {
                     if (hasQuery)
                     {
@@ -97,10 +94,9 @@ public sealed class SearchController : ControllerBase
                             .Location(lat.Value, lon.Value)));
 
                     return b;
-                }));
-            }
-
-            s.Sort(sort =>
+                });
+            })
+            .Sort(sort =>
             {
                 sort.Field("_score", SortOrder.Descending);
                 sort.Field("rating", SortOrder.Descending);
@@ -112,10 +108,8 @@ public sealed class SearchController : ControllerBase
                         .Order(SortOrder.Ascending)
                         .Points(new GeoLocation(lat.Value, lon.Value)));
                 return sort;
-            });
-
-            return s;
-        });
+            })
+        );
 
         var items = ParseResponseItems(response);
         var total = response.Total;
