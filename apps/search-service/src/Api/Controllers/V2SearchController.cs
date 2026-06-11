@@ -392,33 +392,29 @@ public sealed class SearchController : ControllerBase
 
     private async Task<AiSearchParams> ExtractSearchParams(string userText)
     {
-        var systemPrompt = """
-You are a search parameter extractor for a coworking space (workspace) search engine.
+        var systemPrompt = @"You are a search parameter extractor for a coworking space (workspace) search engine.
 Given a user message describing what office they need, extract these fields as JSON:
 
-- "q": search keywords about the space type/style (lowercase). If user says "moderno" or "modern", put that here. If they mention specific words describing the space ("tranquilo", "luminoso", "creativo"), include them.
-- "city": city name (e.g. "Buenos Aires", "New York", "San Francisco")
-- "country": country name  
-- "minPrice", "maxPrice": numeric price per hour. If user says "barato" put maxPrice 20. If "menos de 50 dolares" put maxPrice 50.
-- "minCapacity": minimum number of people the space must hold
-- "amenities": array of amenity names (ALWAYS extract these). ONLY use exact amenity names like: wifi, coffee, gym, parking, ac, printer, meeting, cafeteria. If user says "cafe" or "cafetería" add "coffee" or "cafeteria". If user says "gimnasio" add "gym". If user says "wifi" or "internet" add "wifi". RETURN THIS AS AN ARRAY.
-- "lat", "lon", "radius": leave null
+- ""q"": search keywords about the space type/style (lowercase). If user says ""moderno"" or ""modern"", put that here.
+- ""city"": city name (e.g. ""Buenos Aires"", ""New York"", ""San Francisco"")
+- ""country"": country name  
+- ""minPrice"", ""maxPrice"": numeric price per hour. If user says ""barato"" put maxPrice 20. If ""menos de 50 dolares"" put maxPrice 50.
+- ""minCapacity"": minimum number of people the space must hold
+- ""amenities"": array of amenity names (ALWAYS extract). Use exact amenity names: wifi, coffee, gym, parking, ac, printer, meeting, cafeteria. If user says ""cafe"" or ""cafetería"" add ""coffee"" or ""cafeteria"". If user says ""gimnasio"" add ""gym"". RETURN AS ARRAY.
+- ""lat"", ""lon"", ""radius"": leave null
 
-IMPORTANT: Always extract whatever you can. If unsure, leave the field as null.
-Return ONLY valid JSON. Do NOT wrap in backticks or explanation.
+IMPORTANT: Always extract whatever you can. Leave unknown fields as null.
+Return ONLY valid JSON. Do NOT wrap in backticks.
 
-Example input: "necesito oficina moderna con wifi y cafe en palermo para 5 personas maximo 30 dolares"
-Example output: {"q":"oficina moderna","city":"Buenos Aires","country":null,"minPrice":null,"maxPrice":30,"minCapacity":5,"amenities":["wifi","coffee"],"lat":null,"lon":null,"radius":null}
+Example input: ""necesito oficina moderna con wifi y cafe para 5 personas maximo 30 dolares""
+Example output: {""q"":""oficina moderna"",""city"":null,""country"":null,""minPrice"":null,""maxPrice"":30,""minCapacity"":5,""amenities"":[""wifi"",""coffee""],""lat"":null,""lon"":null,""radius"":null}
 
-Input: "{0}"
-Output:
-"""
-
-        var fullPrompt = systemPrompt.Replace("{0}", userText);
+Input: """ + userText + @"""
+Output:";
 
         try
         {
-            var result = await _ollama.ChatCompletionAsync("You are a JSON API. Return only valid JSON.", fullPrompt);
+            var result = await _ollama.ChatCompletionAsync("You are a JSON API. Return only valid JSON.", systemPrompt);
             if (string.IsNullOrWhiteSpace(result)) return new AiSearchParams { q = userText };
 
             var cleaned = result.Trim();
