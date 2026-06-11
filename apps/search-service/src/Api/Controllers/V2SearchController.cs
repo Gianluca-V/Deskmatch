@@ -70,11 +70,10 @@ public sealed class SearchController : ControllerBase
 
         var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (amList?.Length > 0)
-            filter.Add(new QueryContainer(new TermsQuery
-            {
-                Field = "amenities",
-                Terms = amList.Cast<object>().ToList()
-            }));
+        {
+            foreach (var am in amList)
+                filter.Add(new QueryContainer(new MatchQuery { Field = "amenities", Query = am }));
+        }
 
         if (lat.HasValue && lon.HasValue)
             filter.Add(new QueryContainer(new GeoDistanceQuery
