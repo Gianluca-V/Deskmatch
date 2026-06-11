@@ -52,49 +52,11 @@ public sealed class SearchController : ControllerBase
                 if (!hasQuery && !hasFilters)
                     return (QueryContainer)qq.MatchAll();
 
-                return qq.Bool(b =>
-                {
-                    if (hasQuery)
-                    {
-                        b.Must(mu => mu.MultiMatch(mm => mm
-                            .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                            .Query(q)
-                            .Fuzziness(Fuzziness.Auto)
-                            .Operator(Operator.Or)));
-
-                        b.Should(sh => sh
-                            .Match(m => m.Field("amenities").Query(q).Boost(2)));
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(city))
-                        b.Filter(f => f.Term("city", city));
-                    if (!string.IsNullOrWhiteSpace(country))
-                        b.Filter(f => f.Term("country", country));
-
-                    if (minPrice.HasValue || maxPrice.HasValue)
-                        b.Filter(f => f.Range(r =>
-                        {
-                            r.Field("pricePerHour");
-                            if (minPrice.HasValue) r.GreaterThanOrEquals((double)minPrice.Value);
-                            if (maxPrice.HasValue) r.LessThanOrEquals((double)maxPrice.Value);
-                            return r;
-                        }));
-
-                    if (minCapacity.HasValue)
-                        b.Filter(f => f.Range(r => r.Field("capacity").GreaterThanOrEquals(minCapacity.Value)));
-
-                    var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    if (amList?.Length > 0)
-                        b.Filter(f => f.Terms(t => t.Field("amenities").Terms(amList)));
-
-                    if (lat.HasValue && lon.HasValue)
-                        b.Filter(f => f.GeoDistance(g => g
-                            .Field("location")
-                            .Distance((radius ?? 10) + "km")
-                            .Location(lat.Value, lon.Value)));
-
-                    return b;
-                });
+                return qq.MultiMatch(mm =>
+                    mm.Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
+                      .Query(q ?? "")
+                      .Fuzziness(Fuzziness.Auto)
+                      .Operator(Operator.Or));
             })
             .Sort(sort =>
             {
