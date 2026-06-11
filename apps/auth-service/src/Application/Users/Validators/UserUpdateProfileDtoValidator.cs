@@ -13,7 +13,7 @@ public class UserUpdateProfileDtoValidator : AbstractValidator<UserUpdateProfile
             .MaximumLength(100).WithMessage("El nombre no puede superar los 100 caracteres.");
 
         RuleFor(x => x.PhoneNumber)
-            .MaxLength(20).WithMessage("El teléfono no puede superar los 20 caracteres.")
+            .MaximumLength(20).WithMessage("El teléfono no puede superar los 20 caracteres.")
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
 
         RuleFor(x => x.Location)
