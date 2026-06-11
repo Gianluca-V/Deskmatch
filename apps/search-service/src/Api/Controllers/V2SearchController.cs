@@ -34,17 +34,75 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var response = await _client.SearchAsync<object>(s => s
-            .Index("offices")
-            .From((page - 1) * pageSize)
-            .Size(pageSize)
-            .Query(qq => string.IsNullOrWhiteSpace(q)
-                ? (QueryContainer)qq.MatchAll()
-                : qq.MultiMatch(mm => mm
-                    .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                    .Query(q)
-                    .Fuzziness(Fuzziness.Auto)
-                    .Operator(Operator.Or))));
+        var must = new List<QueryContainer>();
+        var filter = new List<QueryContainer>();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            must.Add(new QueryContainer(new MultiMatchQuery
+            {
+                Fields = new[] { "name^3", "description^2", "amenities^2", "address" },
+                Query = q,
+                Fuzziness = Fuzziness.Auto,
+                Operator = Operator.Or
+            }));
+        }
+
+        if (!string.IsNullOrWhiteSpace(city))
+            filter.Add(new QueryContainer(new TermQuery { Field = "city", Value = city }));
+        if (!string.IsNullOrWhiteSpace(country))
+            filter.Add(new QueryContainer(new TermQuery { Field = "country", Value = country }));
+
+        if (minPrice.HasValue || maxPrice.HasValue)
+        {
+            var range = new NumericRangeQuery { Field = "pricePerHour" };
+            if (minPrice.HasValue) range.GreaterThanOrEqualTo = (double)minPrice.Value;
+            if (maxPrice.HasValue) range.LessThanOrEqualTo = (double)maxPrice.Value;
+            filter.Add(new QueryContainer(range));
+        }
+
+        if (minCapacity.HasValue)
+            filter.Add(new QueryContainer(new NumericRangeQuery
+            {
+                Field = "capacity",
+                GreaterThanOrEqualTo = minCapacity.Value
+            }));
+
+        var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (amList?.Length > 0)
+            filter.Add(new QueryContainer(new TermsQuery
+            {
+                Field = "amenities",
+                Terms = amList.Cast<object>().ToList()
+            }));
+
+        if (lat.HasValue && lon.HasValue)
+            filter.Add(new QueryContainer(new GeoDistanceQuery
+            {
+                Field = "location",
+                Distance = (radius ?? 10) + "km",
+                Location = new GeoLocation(lat.Value, lon.Value)
+            }));
+
+        QueryContainer query;
+        if (must.Count == 0 && filter.Count == 0)
+        {
+            query = new QueryContainer(new MatchAllQuery());
+        }
+        else
+        {
+            var boolQuery = new BoolQuery();
+            if (must.Count > 0) boolQuery.Must = must;
+            if (filter.Count > 0) boolQuery.Filter = filter;
+            query = new QueryContainer(boolQuery);
+        }
+
+        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
+        {
+            From = (page - 1) * pageSize,
+            Size = pageSize,
+            Query = query
+        });
 
         var items = ParseResponseItems(response);
         var total = response.Total;
@@ -60,25 +118,17 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var response = await _client.SearchAsync<object>(s => s
-            .Index("offices")
-            .From((page - 1) * pageSize)
-            .Size(pageSize)
-            .Query(q => q.GeoDistance(g => g
-                .Field("location")
-                .Distance(radius + "km")
-                .Location(lat, lon)))
-            .Sort(sort =>
+        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
+        {
+            From = (page - 1) * pageSize,
+            Size = pageSize,
+            Query = new QueryContainer(new GeoDistanceQuery
             {
-                sort.GeoDistance(g => g
-                    .Field("location")
-                    .DistanceType(GeoDistanceType.Arc)
-                    .Unit(DistanceUnit.Kilometers)
-                    .Order(SortOrder.Ascending)
-                    .Points(new GeoLocation(lat, lon)));
-                return sort;
+                Field = "location",
+                Distance = radius + "km",
+                Location = new GeoLocation(lat, lon)
             })
-        );
+        });
 
         var items = ParseResponseItems(response);
         return Ok(new { items, page, pageSize, totalCount = response.Total, totalPages = 0 });
@@ -89,13 +139,16 @@ public sealed class SearchController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(q)) return Ok(new List<string>());
 
-        var response = await _client.SearchAsync<object>(s => s
-            .Index("offices")
-            .Size(5)
-            .Query(qq => qq.MultiMatch(mm => mm
-                .Fields(new[] { "name^3" })
-                .Query(q)
-                .Fuzziness(Fuzziness.Auto))));
+        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
+        {
+            Size = 5,
+            Query = new QueryContainer(new MultiMatchQuery
+            {
+                Fields = new[] { "name^3" },
+                Query = q,
+                Fuzziness = Fuzziness.Auto
+            })
+        });
 
         var names = new List<string>();
         var rawBody = response.ApiCall?.ResponseBodyInBytes;
@@ -124,18 +177,15 @@ public sealed class SearchController : ControllerBase
         return items;
     }
 
-    private static object? ParseElement(JsonElement el)
+    private static object? ParseElement(JsonElement el) => el.ValueKind switch
     {
-        return el.ValueKind switch
-        {
-            JsonValueKind.String => el.GetString(),
-            JsonValueKind.Number => el.TryGetInt64(out var i) ? i : el.GetDouble(),
-            JsonValueKind.True => true, JsonValueKind.False => false, JsonValueKind.Null => null,
-            JsonValueKind.Array => el.EnumerateArray().Select(ParseElement).ToList(),
-            JsonValueKind.Object => el.EnumerateObject().ToDictionary(p => p.Name, p => ParseElement(p.Value)),
-            _ => el.GetRawText()
-        };
-    }
+        JsonValueKind.String => el.GetString(),
+        JsonValueKind.Number => el.TryGetInt64(out var i) ? i : el.GetDouble(),
+        JsonValueKind.True => true, JsonValueKind.False => false, JsonValueKind.Null => null,
+        JsonValueKind.Array => el.EnumerateArray().Select(ParseElement).ToList(),
+        JsonValueKind.Object => el.EnumerateObject().ToDictionary(p => p.Name, p => ParseElement(p.Value)),
+        _ => el.GetRawText()
+    };
 
     private static Dictionary<string, object?> ParseSource(JsonElement el)
     {
