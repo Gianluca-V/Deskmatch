@@ -419,7 +419,8 @@ public sealed class SearchController : ControllerBase
             filter.Add(new { range = new Dictionary<string, object> { ["pricePerHour"] = range } });
         }
 
-        // --- k-NN boost ---
+        // --- k-NN boost: descomentar cuando OpenSearch index.knn esté activo ---
+        /*
         if (embedding != null && embedding.Length == 768)
         {
             should.Add(new Dictionary<string, object>
@@ -435,6 +436,7 @@ public sealed class SearchController : ControllerBase
                 }
             });
         }
+        */
 
         var boolQuery = new Dictionary<string, object>();
         if (should.Count > 0) { boolQuery["should"] = should; boolQuery["minimum_should_match"] = 1; }
