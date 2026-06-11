@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react';
-import api, { STORAGE_KEY } from '../lib/api';
+import { STORAGE_KEY } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -20,12 +20,7 @@ export const AuthProvider = ({ children }) => {
     setSession(loginResponse);
   };
 
-  const logout = async () => {
-    try {
-      await api.post('/api/auth/logout');
-    } catch {
-      // limpiar sesión local aunque el endpoint falle
-    }
+  const logout = () => {
     localStorage.removeItem(STORAGE_KEY);
     setSession(null);
   };

@@ -8,7 +8,10 @@ import puppeteer from 'puppeteer';
     });
     
     const page = await browser.newPage();
-    
+
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('error', err => console.error('PAGE ERROR:', err));
+
     // Establecer localStorage antes de navegar
     await page.evaluateOnNewDocument(() => {
       const fakeSession = {
@@ -21,7 +24,7 @@ import puppeteer from 'puppeteer';
           role: 'manager'
         }
       };
-      localStorage.setItem('session', JSON.stringify(fakeSession));
+      localStorage.setItem('dm_session', JSON.stringify(fakeSession));
     });
     
     await page.goto('http://localhost:5173/profile/company', { waitUntil: 'networkidle2', timeout: 30000 });

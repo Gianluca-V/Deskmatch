@@ -5,27 +5,20 @@ import { profileAPI } from '../api/profile';
 export function useProfile() {
   const { user: authUser } = useAuth();
 
-  // Preparar los datos del usuario del contexto
-  const userDataFromContext = authUser && (authUser.firstName || authUser.lastName) ? {
-    firstName: authUser.firstName,
-    lastName: authUser.lastName,
-    email: authUser.email,
-    phoneNumber: null,
-    location: null,
-  } : null;
-
   return useQuery({
     queryKey: ['profile', authUser?.email],
     queryFn: async () => {
-      // Si tenemos datos del usuario en el contexto de auth, usarlos
-      if (userDataFromContext) {
-        return userDataFromContext;
-      }
-      // Si no, intentar obtener del API (fallará si el API no está disponible)
       try {
-        return await profileAPI.getProfile();
+        const apiData = await profileAPI.getProfile();
+        // Derivar firstName/lastName desde fullName para que el nombre
+        // se actualice en pantalla inmediatamente después de editar y hacer refetch.
+        const fullName = apiData.fullName || '';
+        const spaceIdx = fullName.indexOf(' ');
+        const firstName = spaceIdx > 0 ? fullName.substring(0, spaceIdx) : (fullName || authUser?.firstName || 'Usuario');
+        const lastName = spaceIdx > 0 ? fullName.substring(spaceIdx + 1) : (authUser?.lastName || '');
+        return { ...apiData, firstName, lastName };
       } catch (error) {
-        // Si falla, devolver datos del auth user de todas formas
+        // Fallback al contexto si el API falla
         if (authUser) {
           return {
             firstName: authUser.firstName || 'Usuario',
@@ -33,6 +26,7 @@ export function useProfile() {
             email: authUser.email,
             phoneNumber: null,
             location: null,
+            profilePictureUrl: null,
           };
         }
         throw error;
@@ -40,8 +34,8 @@ export function useProfile() {
     },
     retry: 1,
     retryDelay: 1000,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!authUser, // Solo ejecutar si hay user autenticado
+    staleTime: 5 * 60 * 1000,
+    enabled: !!authUser,
   });
 }
 
@@ -50,7 +44,115 @@ export function useProfileCompany() {
     queryKey: ['profile-company'],
     queryFn: async () => {
       try {
-        return await profileAPI.getCompany();
+        const data = await profileAPI.getCompany();
+
+        // En desarrollo, agregar datos de prueba si no hay espacios/reservas
+        if (import.meta.env.DEV && (!data.spaces || data.spaces.length === 0)) {
+          const mockData = {
+            id: 1,
+            name: 'WorkSpace Solutions',
+            contactEmail: 'owner@example.com',
+            phoneNumber: '+34 912 345 678',
+            phone: '+34 912 345 678',
+            location: 'Madrid, España',
+            description: 'Proveedor líder de espacios de trabajo flexibles en España.',
+            websiteUrl: 'https://www.workspacesolutions.es',
+            isVerified: true,
+            averageRating: 4.8,
+            reviewCount: 127,
+            spaces: [
+              {
+                id: 1,
+                name: 'Oficina Moderna Centro',
+                city: 'Madrid',
+                location: 'Madrid',
+                type: 'Oficina Privada',
+                price: '€250',
+                image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
+              },
+              {
+                id: 2,
+                name: 'Coworking Barcelona Tech',
+                city: 'Barcelona',
+                location: 'Barcelona',
+                type: 'Coworking',
+                price: '€35',
+                image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop'
+              },
+              {
+                id: 3,
+                name: 'Sala de Reuniones Premium',
+                city: 'Madrid',
+                location: 'Madrid',
+                type: 'Sala de Reuniones',
+                price: '€120',
+                image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=400&h=300&fit=crop'
+              }
+            ],
+            reservations: [
+              {
+                id: 1,
+                space: {
+                  id: 1,
+                  name: 'Oficina Moderna Centro',
+                  image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=100&h=100&fit=crop'
+                },
+                user: {
+                  firstName: 'María',
+                  lastName: 'González'
+                },
+                startDate: '2026-06-02',
+                endDate: '2026-06-07',
+                totalPrice: '€1250',
+                status: 'Confirmada'
+              },
+              {
+                id: 2,
+                space: {
+                  id: 2,
+                  name: 'Coworking Barcelona Tech',
+                  image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=100&h=100&fit=crop'
+                },
+                user: {
+                  firstName: 'María',
+                  lastName: 'González'
+                },
+                startDate: '2026-06-12',
+                endDate: '2026-06-17',
+                totalPrice: '€175',
+                status: 'Pendiente'
+              },
+              {
+                id: 3,
+                space: {
+                  id: 3,
+                  name: 'Sala de Reuniones Premium',
+                  image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=100&h=100&fit=crop'
+                },
+                user: {
+                  firstName: 'María',
+                  lastName: 'González'
+                },
+                startDate: '2026-05-18',
+                endDate: '2026-05-19',
+                totalPrice: '€120',
+                status: 'Cancelada'
+              }
+            ]
+          };
+          // Mantener datos reales pero usar espacios y reservas de prueba
+          return {
+            ...data,
+            spaces: mockData.spaces,
+            reservations: mockData.reservations,
+            phone: data.phoneNumber || data.phone,
+          };
+        }
+
+        return {
+          ...data,
+          phone: data.phoneNumber || data.phone,
+        };
       } catch (error) {
         // Retornar null si no hay empresa asociada
         if (error.response?.status === 404) {
@@ -59,11 +161,12 @@ export function useProfileCompany() {
             return {
               id: 1,
               name: 'WorkSpace Solutions',
-              email: 'owner@example.com',
+              contactEmail: 'owner@example.com',
+              phoneNumber: '+34 912 345 678',
               phone: '+34 912 345 678',
               location: 'Madrid, España',
               description: 'Proveedor líder de espacios de trabajo flexibles en España. Ofrecemos oficinas modernas, salas de reuniones y espacios de coworking diseñados para maximizar la productividad de tu equipo.',
-              website: 'www.workspacesolutions.es',
+              websiteUrl: 'https://www.workspacesolutions.es',
               isVerified: true,
               averageRating: 4.8,
               reviewCount: 127,
@@ -108,8 +211,8 @@ export function useProfileCompany() {
                     firstName: 'María',
                     lastName: 'González'
                   },
-                  startDate: '2026-06-04',
-                  endDate: '2026-06-09',
+                  startDate: '2026-06-03',
+                  endDate: '2026-06-08',
                   totalPrice: '€1250',
                   status: 'Confirmada'
                 },
@@ -124,8 +227,8 @@ export function useProfileCompany() {
                     firstName: 'María',
                     lastName: 'González'
                   },
-                  startDate: '2026-06-14',
-                  endDate: '2026-06-19',
+                  startDate: '2026-06-13',
+                  endDate: '2026-06-18',
                   totalPrice: '€175',
                   status: 'Pendiente'
                 },
@@ -155,6 +258,6 @@ export function useProfileCompany() {
     },
     retry: 1,
     retryDelay: 1000,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

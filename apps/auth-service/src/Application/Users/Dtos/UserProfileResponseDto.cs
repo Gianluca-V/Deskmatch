@@ -5,4 +5,5 @@ public sealed record UserProfileResponseDto(
     string FullName,
     string Email,
     string? PhoneNumber,
-    string? Location);
+    string? Location,
+    string? ProfilePictureUrl);

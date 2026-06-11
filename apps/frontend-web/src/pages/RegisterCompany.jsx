@@ -57,21 +57,58 @@ function RegisterCompany() {
         return;
       }
 
-      const res = await fetch('/api/auth/register', {
+      const registerRes = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Name: formData.companyName, Email: formData.email, Password: formData.password, Role: 'Manager', Website: formData.website })
       });
 
-      const data = await res.json().catch(() => ({}));
+      const registerData = await registerRes.json().catch(() => ({}));
 
-      if (res.ok || res.status === 201) {
-        setSuccess('¡Cuenta creada exitosamente! Redirigiendo...');
-        setTimeout(() => navigate('/login'), 1800);
-      } else if (res.status === 409) {
+      if (registerRes.ok || registerRes.status === 201) {
+        // Loguear automáticamente después del registro
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Email: formData.email, Password: formData.password })
+        });
+
+        const loginData = await loginRes.json().catch(() => ({}));
+
+        if (loginRes.ok && loginData.accessToken) {
+          // Crear la empresa automáticamente
+          const companyRes = await fetch('/api/companies', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${loginData.accessToken}`
+            },
+            body: JSON.stringify({
+              Name: formData.companyName,
+              Description: '',
+              WebsiteUrl: formData.website || ''
+            })
+          });
+
+          if (companyRes.ok || companyRes.status === 201) {
+            // Guardar sesión y redirigir al dashboard
+            localStorage.setItem('dm_session', JSON.stringify(loginData));
+            setSuccess('¡Cuenta y empresa creadas exitosamente! Redirigiendo...');
+            setTimeout(() => navigate('/profile/company'), 1500);
+          } else {
+            // Si falla crear la empresa, igual loguear
+            localStorage.setItem('dm_session', JSON.stringify(loginData));
+            setSuccess('Cuenta creada. Por favor crea tu empresa desde el dashboard.');
+            setTimeout(() => navigate('/dashboard'), 1500);
+          }
+        } else {
+          setSuccess('¡Cuenta creada exitosamente! Redirigiendo al login...');
+          setTimeout(() => navigate('/login'), 1800);
+        }
+      } else if (registerRes.status === 409) {
         setError('El correo electrónico ya está registrado. Intenta con otro.');
-      } else if (res.status === 400 && data.errors) {
-        const errorMessages = Object.entries(data.errors)
+      } else if (registerRes.status === 400 && registerData.errors) {
+        const errorMessages = Object.entries(registerData.errors)
           .map(([key, messages]) => {
             if (Array.isArray(messages) && messages.length > 0) {
               return getErrorMessage(messages[0]);
@@ -82,7 +119,7 @@ function RegisterCompany() {
 
         setError(errorMessages.length > 0 ? errorMessages[0] : 'Error al crear la cuenta');
       } else {
-        setError(data.message || 'Error al crear la cuenta');
+        setError(registerData.message || 'Error al crear la cuenta');
       }
     } catch (err) {
       setError('Error al conectar con el servidor: ' + err.message);

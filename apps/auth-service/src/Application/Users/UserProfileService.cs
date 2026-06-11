@@ -31,6 +31,8 @@ public sealed class UserProfileService : IUserProfileService
         user.Name = Sanitize(dto.FullName);
         user.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? null : dto.PhoneNumber.Trim();
         user.Location = string.IsNullOrWhiteSpace(dto.Location) ? null : Sanitize(dto.Location);
+        if (dto.ProfilePictureUrl is not null)
+            user.ProfilePictureUrl = string.IsNullOrWhiteSpace(dto.ProfilePictureUrl) ? null : dto.ProfilePictureUrl.Trim();
         user.UpdatedAt = DateTime.UtcNow;
 
         var result = await _userManager.UpdateAsync(user);
@@ -44,7 +46,7 @@ public sealed class UserProfileService : IUserProfileService
     }
 
     private static UserProfileResponseDto MapToDto(ApplicationUser user) =>
-        new(user.Id, user.Name, user.Email ?? string.Empty, user.PhoneNumber, user.Location);
+        new(user.Id, user.Name, user.Email ?? string.Empty, user.PhoneNumber, user.Location, user.ProfilePictureUrl);
 
     private static string Sanitize(string value) =>
         Regex.Replace(value.Trim(), @"<[^>]*>", string.Empty);

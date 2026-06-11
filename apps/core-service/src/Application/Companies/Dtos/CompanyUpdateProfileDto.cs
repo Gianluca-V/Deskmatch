@@ -4,4 +4,6 @@ public sealed record CompanyUpdateProfileDto(
     string Name,
     string? Description,
     string? ContactEmail,
-    string? WebsiteUrl);
+    string? WebsiteUrl,
+    string? PhoneNumber,
+    string? Location);
