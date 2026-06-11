@@ -70,6 +70,12 @@ jobs:
           - name: SDK.Storage
             path: shared/sdk/src/Storage
             csproj: DeskMatch.SDK.Storage.csproj
+          - name: SDK.Geocoding
+            path: shared/sdk/src/Geocoding
+            csproj: DeskMatch.SDK.Geocoding.csproj
+          - name: SDK.Ollama
+            path: shared/sdk/src/Ollama
+            csproj: DeskMatch.SDK.Ollama.csproj
           - name: ApiGateway
             path: apps/api-gateway
             csproj: ApiGateway.csproj
@@ -99,7 +105,7 @@ jobs:
         run: dotnet restore "${{ matrix.project.path }}/${{ matrix.project.csproj }}"
 
       - name: Build
-        run: dotnet build "${{ matrix.project.path }}/${{ matrix.project.csproj }}" --configuration Release --no-restore
+        run: dotnet build "${{ matrix.project.path }}/${{ matrix.project.csproj }}" --configuration Release
 
       - name: Test
         env:
