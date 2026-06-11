@@ -99,6 +99,10 @@ public sealed class SearchController : ControllerBase
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
             "offices", PostData.String(JsonSerializer.Serialize(body)));
 
+        if (stringResponse.Body != null)
+            _logger.LogInformation("OpenSearch raw response (first 300): {Body}",
+                Encoding.UTF8.GetString(stringResponse.Body).Substring(0, Math.Min(300, stringResponse.Body.Length)));
+
         var items = new List<object>();
         long total = 0;
 
