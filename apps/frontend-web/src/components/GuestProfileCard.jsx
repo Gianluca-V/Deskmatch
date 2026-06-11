@@ -48,8 +48,8 @@ function GuestProfileCard({ user, isLoading, error }) {
   const firstName = user?.firstName || 'Usuario';
   const lastName = user?.lastName || '';
   const email = user?.email || 'No especificado';
-  const phone = user?.phoneNumber || user?.phone || 'No especificado';
-  const location = user?.location || 'No especificado';
+  const phone = user?.phoneNumber || user?.phone || '';
+  const location = user?.location || '';
 
   return (
     <>
