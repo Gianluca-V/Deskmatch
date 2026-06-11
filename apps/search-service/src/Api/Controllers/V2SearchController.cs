@@ -156,7 +156,8 @@ public sealed class SearchController : ControllerBase
                     }
                 });
 
-                if (embedding != null && embedding.Length == 768)
+                // k-NN: activar luego de reindexar workspaces con Ollama
+                if (false && embedding != null && embedding.Length == 768)
                 {
                     should.Add(new Dictionary<string, object>
                     {
