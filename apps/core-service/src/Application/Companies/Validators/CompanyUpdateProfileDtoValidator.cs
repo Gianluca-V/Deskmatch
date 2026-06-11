@@ -13,13 +13,12 @@ public class CompanyUpdateProfileDtoValidator : AbstractValidator<CompanyUpdateP
             .MaximumLength(150).WithMessage("El nombre no puede superar los 150 caracteres.");
 
         RuleFor(x => x.Description)
-            .NotEmpty().WithMessage("La descripción es requerida.")
             .MaximumLength(500).WithMessage("La descripción no puede superar los 500 caracteres.")
-            .When(x => x.Description is not null);
+            .When(x => !string.IsNullOrEmpty(x.Description));
 
         RuleFor(x => x.ContactEmail)
-            .EmailAddress().WithMessage("El email de contacto no tiene un formato válido.")
-            .When(x => !string.IsNullOrEmpty(x.ContactEmail));
+            .NotEmpty().WithMessage("El email de contacto es requerido.")
+            .EmailAddress().WithMessage("El email de contacto no tiene un formato válido.");
 
         RuleFor(x => x.WebsiteUrl)
             .Must(BeAValidUrl).WithMessage("El sitio web debe ser una URL válida con http o https.")

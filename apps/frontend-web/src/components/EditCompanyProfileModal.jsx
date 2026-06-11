@@ -12,7 +12,7 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
     defaultValues: {
       name: companyData?.name || '',
       description: companyData?.description || '',
-      contactEmail: companyData?.email || '',
+      contactEmail: companyData?.contactEmail || '',
       websiteUrl: companyData?.websiteUrl || '',
     },
   });
@@ -22,7 +22,7 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
       reset({
         name: companyData?.name || '',
         description: companyData?.description || '',
-        contactEmail: companyData?.email || '',
+        contactEmail: companyData?.contactEmail || '',
         websiteUrl: companyData?.websiteUrl || '',
       });
     }

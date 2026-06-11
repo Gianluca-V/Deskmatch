@@ -68,7 +68,7 @@ public class UserProfileServiceTests
     {
         var userId = Guid.NewGuid();
         var user = BuildUser(userId, name: "Viejo Nombre", email: "user@test.com");
-        var dto = new UserUpdateProfileDto("Nuevo Nombre", "+5491187654321", "Córdoba, Argentina");
+        var dto = new UserUpdateProfileDto("Nuevo Nombre", "+5491187654321", "Córdoba, Argentina", null);
 
         _userManagerMock
             .Setup(m => m.FindByIdAsync(userId.ToString()))
@@ -92,7 +92,7 @@ public class UserProfileServiceTests
     [InlineData("+")]               // solo plus
     public void Validator_WhenPhoneNumberInvalid_HasValidationError(string phone)
     {
-        var dto = new UserUpdateProfileDto("Juan Pérez", phone, null);
+        var dto = new UserUpdateProfileDto("Juan Pérez", phone, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -105,7 +105,7 @@ public class UserProfileServiceTests
     [InlineData("+447911123456")]
     public void Validator_WhenPhoneNumberValidE164_HasNoValidationError(string phone)
     {
-        var dto = new UserUpdateProfileDto("Juan Pérez", phone, null);
+        var dto = new UserUpdateProfileDto("Juan Pérez", phone, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -119,7 +119,7 @@ public class UserProfileServiceTests
         var userId = Guid.NewGuid();
         var originalEmail = "original@test.com";
         var user = BuildUser(userId, name: "Juan", email: originalEmail);
-        var dto = new UserUpdateProfileDto("Juan", null, null);
+        var dto = new UserUpdateProfileDto("Juan", null, null, null);
 
         _userManagerMock
             .Setup(m => m.FindByIdAsync(userId.ToString()))
@@ -142,7 +142,7 @@ public class UserProfileServiceTests
     {
         var userId = Guid.NewGuid();
         var user = BuildUser(userId, name: "Juan", email: "juan@test.com");
-        var dto = new UserUpdateProfileDto("Nuevo", null, null);
+        var dto = new UserUpdateProfileDto("Nuevo", null, null, null);
 
         _userManagerMock
             .Setup(m => m.FindByIdAsync(userId.ToString()))
@@ -163,7 +163,7 @@ public class UserProfileServiceTests
     {
         var userId = Guid.NewGuid();
         var user = BuildUser(userId, name: "Viejo", email: "user@test.com");
-        var dto = new UserUpdateProfileDto("<script>alert('xss')</script>Juan", null, null);
+        var dto = new UserUpdateProfileDto("<script>alert('xss')</script>Juan", null, null, null);
 
         _userManagerMock
             .Setup(m => m.FindByIdAsync(userId.ToString()))
@@ -186,7 +186,7 @@ public class UserProfileServiceTests
         var userId = Guid.NewGuid();
         var user = BuildUser(userId, name: "Juan", email: "juan@test.com",
             phoneNumber: "+5491112345678");
-        var dto = new UserUpdateProfileDto("Juan", "", null);
+        var dto = new UserUpdateProfileDto("Juan", "", null, null);
 
         _userManagerMock
             .Setup(m => m.FindByIdAsync(userId.ToString()))
