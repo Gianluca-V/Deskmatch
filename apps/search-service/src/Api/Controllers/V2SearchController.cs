@@ -329,7 +329,11 @@ public sealed class SearchController : ControllerBase
     private static Dictionary<string, object?> ParseSource(JsonElement el)
     {
         var d = new Dictionary<string, object?>();
-        foreach (var p in el.EnumerateObject()) d[p.Name] = ParseElement(p.Value);
+        foreach (var p in el.EnumerateObject())
+        {
+            if (p.Name is "nameVector" or "descriptionVector") continue;
+            d[p.Name] = ParseElement(p.Value);
+        }
         return d;
     }
 }
