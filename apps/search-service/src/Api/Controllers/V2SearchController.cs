@@ -99,10 +99,6 @@ public sealed class SearchController : ControllerBase
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
             "offices", PostData.String(JsonSerializer.Serialize(body)));
 
-        if (stringResponse.Body != null)
-            _logger.LogInformation("OpenSearch raw response (first 300): {Body}",
-                Encoding.UTF8.GetString(stringResponse.Body![..Math.Min(300, stringResponse.Body.Length)]));
-
         var items = new List<object>();
         long total = 0;
 
@@ -160,6 +156,8 @@ public sealed class SearchController : ControllerBase
                     }
                 });
 
+                // k-NN: disabled until OpenSearch cosineSimilarity script verified
+                /*
                 if (embedding != null && embedding.Length == 768)
                 {
                     should.Add(new Dictionary<string, object>
@@ -194,6 +192,7 @@ public sealed class SearchController : ControllerBase
                         }
                     });
                 }
+                */
             }
 
             if (!string.IsNullOrWhiteSpace(city))
