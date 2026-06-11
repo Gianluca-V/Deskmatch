@@ -411,7 +411,8 @@ Example input: "necesito oficina moderna con wifi y cafe en palermo para 5 perso
 Example output: {"q":"oficina moderna","city":"Buenos Aires","country":null,"minPrice":null,"maxPrice":30,"minCapacity":5,"amenities":["wifi","coffee"],"lat":null,"lon":null,"radius":null}
 
 Input: "{0}"
-Output:"""
+Output:
+"""
 
         var fullPrompt = systemPrompt.Replace("{0}", userText);
 
