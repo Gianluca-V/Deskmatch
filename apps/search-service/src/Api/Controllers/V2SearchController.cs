@@ -189,16 +189,31 @@ public sealed class SearchController : ControllerBase
     private List<object> ParseResponseItems(ISearchResponse<object> response)
     {
         var items = new List<object>();
-        var rawBody = response.ApiCall?.ResponseBodyInBytes;
-        if (rawBody != null && rawBody.Length > 0)
+        try
         {
-            using var doc = JsonDocument.Parse(rawBody);
-            foreach (var hit in doc.RootElement.GetProperty("hits").GetProperty("hits").EnumerateArray())
+            var rawBody = response.ApiCall?.ResponseBodyInBytes;
+            if (rawBody != null && rawBody.Length > 0)
             {
-                items.Add(ParseSource(hit.GetProperty("_source")));
+                using var doc = JsonDocument.Parse(rawBody);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("hits", out var hitsContainer) &&
+                    hitsContainer.TryGetProperty("hits", out var hitsArray))
+                {
+                    foreach (var hit in hitsArray.EnumerateArray())
+                    {
+                        if (hit.TryGetProperty("_source", out var source))
+                            items.Add(ParseSource(source));
+                    }
+                }
+                return items;
             }
         }
-        else if (response.Hits != null)
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse raw OpenSearch response body");
+        }
+
+        if (response.Hits != null)
         {
             foreach (var hit in response.Hits)
             {
@@ -206,6 +221,7 @@ public sealed class SearchController : ControllerBase
                     items.Add(ParseSource(el));
             }
         }
+
         return items;
     }
 
