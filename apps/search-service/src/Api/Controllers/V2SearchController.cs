@@ -356,42 +356,124 @@ public sealed class SearchController : ControllerBase
 
         var aiParams = await ExtractSearchParams(text);
 
-        // Merge AI-extracted amenities into the search text for query expansion
-        var enrichedText = aiParams.q ?? text;
-        if (aiParams.amenities?.Length > 0)
-            enrichedText += " " + string.Join(" ", aiParams.amenities);
-
-        var expandedQ = ExpandQuery(enrichedText);
+        var expandedQ = ExpandQuery(aiParams.q ?? text);
         var embedding = await _ollama.GetEmbeddingAsync(expandedQ);
-        var hasQuery = expandedQ.Length > 0;
-        var hasFilters = !string.IsNullOrWhiteSpace(aiParams.city) || !string.IsNullOrWhiteSpace(aiParams.country)
-            || aiParams.minPrice.HasValue || aiParams.maxPrice.HasValue || aiParams.minCapacity.HasValue
-            || (aiParams.lat.HasValue && aiParams.lon.HasValue);
 
-        var body = BuildSearchBody(expandedQ, embedding, aiParams.city, aiParams.country,
-            aiParams.minPrice, aiParams.maxPrice, aiParams.minCapacity,
-            null,  // don't use amenities as strict filter, merged into search text
-            aiParams.lat, aiParams.lon, aiParams.radius, page, pageSize, hasQuery, hasFilters);
+        var should = new List<object>();
+        var filter = new List<object>();
+
+        // --- should: text BM25 ---
+        if (expandedQ.Length > 0)
+        {
+            should.Add(new Dictionary<string, object>
+            {
+                ["multi_match"] = new Dictionary<string, object>
+                {
+                    ["query"] = expandedQ,
+                    ["fields"] = new[] { "name^3", "description^2", "address" },
+                    ["fuzziness"] = "AUTO:4,6",
+                    ["operator"] = "or"
+                }
+            });
+
+            foreach (var word in expandedQ.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var lw = word.ToLowerInvariant();
+                var cw = char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant();
+                should.Add(new { match = new Dictionary<string, object> { ["amenities"] = lw } });
+                if (lw != cw)
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = cw } });
+            }
+        }
+
+        // --- should: amenities boosters (from AI extraction) ---
+        if (aiParams.amenities?.Length > 0)
+        {
+            foreach (var am in aiParams.amenities)
+            {
+                var lw = am.ToLowerInvariant();
+                var cw = char.ToUpperInvariant(am[0]) + am[1..].ToLowerInvariant();
+                should.Add(new { match = new Dictionary<string, object> { ["amenities"] = lw } });
+                if (lw != cw)
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = cw } });
+            }
+        }
+
+        // --- should: capacity booster ---
+        if (aiParams.minCapacity.HasValue)
+        {
+            should.Add(new { range = new Dictionary<string, object> { ["capacity"] = new { gte = aiParams.minCapacity.Value } } });
+        }
+
+        // --- filter (strict): city, country, price ---
+        if (!string.IsNullOrWhiteSpace(aiParams.city))
+            filter.Add(new { match = new Dictionary<string, object> { ["city"] = aiParams.city } });
+        if (!string.IsNullOrWhiteSpace(aiParams.country))
+            filter.Add(new { match = new Dictionary<string, object> { ["country"] = aiParams.country } });
+
+        if (aiParams.minPrice.HasValue || aiParams.maxPrice.HasValue)
+        {
+            var range = new Dictionary<string, object>();
+            if (aiParams.minPrice.HasValue) range["gte"] = (double)aiParams.minPrice.Value;
+            if (aiParams.maxPrice.HasValue) range["lte"] = (double)aiParams.maxPrice.Value;
+            filter.Add(new { range = new Dictionary<string, object> { ["pricePerHour"] = range } });
+        }
+
+        // --- k-NN boost ---
+        if (embedding != null && embedding.Length == 768)
+        {
+            should.Add(new Dictionary<string, object>
+            {
+                ["script_score"] = new Dictionary<string, object>
+                {
+                    ["query"] = new { match_all = new { } },
+                    ["script"] = new Dictionary<string, object>
+                    {
+                        ["source"] = "cosineSimilarity(params.query_vector, 'nameVector') + 1.0",
+                        ["params"] = new Dictionary<string, object> { ["query_vector"] = embedding }
+                    }
+                }
+            });
+        }
+
+        var boolQuery = new Dictionary<string, object>();
+        if (should.Count > 0) { boolQuery["should"] = should; boolQuery["minimum_should_match"] = 1; }
+        if (filter.Count > 0) boolQuery["filter"] = filter;
+
+        var body = new Dictionary<string, object>
+        {
+            ["from"] = (page - 1) * pageSize,
+            ["size"] = pageSize,
+            ["query"] = new { @bool = boolQuery }
+        };
 
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
             "offices", PostData.String(JsonSerializer.Serialize(body)));
 
-        long total = 0;
         var items = new List<object>();
-        if (stringResponse.Body != null)
-        {
-            using var doc = JsonDocument.Parse(stringResponse.Body);
-            var hits = doc.RootElement.GetProperty("hits");
-            total = hits.GetProperty("total").ValueKind == JsonValueKind.Object
-                ? hits.GetProperty("total").GetProperty("value").GetInt64()
-                : hits.GetProperty("total").GetInt64();
-            foreach (var hit in hits.GetProperty("hits").EnumerateArray())
-                if (hit.TryGetProperty("_source", out var src))
-                    items.Add(ParseSource(src));
-        }
+        long total = 0;
+        ParseLowLevelResponse(stringResponse, ref items, ref total);
+
+        _logger.LogInformation("AI search: text='{Text}', params={Params}, total={Total}",
+            text, JsonSerializer.Serialize(aiParams), total);
 
         var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
         return Ok(new { items, page, pageSize, totalCount = total, totalPages, aiInterpretation = aiParams });
+    }
+
+    private static void ParseLowLevelResponse(StringResponse stringResponse, ref List<object> items, ref long total)
+    {
+        if (stringResponse.Body == null) return;
+
+        using var doc = JsonDocument.Parse(stringResponse.Body);
+        var hits = doc.RootElement.GetProperty("hits");
+        total = hits.GetProperty("total").ValueKind == JsonValueKind.Object
+            ? hits.GetProperty("total").GetProperty("value").GetInt64()
+            : hits.GetProperty("total").GetInt64();
+
+        foreach (var hit in hits.GetProperty("hits").EnumerateArray())
+            if (hit.TryGetProperty("_source", out var src))
+                items.Add(ParseSource(src));
     }
 
     private async Task<AiSearchParams> ExtractSearchParams(string userText)
