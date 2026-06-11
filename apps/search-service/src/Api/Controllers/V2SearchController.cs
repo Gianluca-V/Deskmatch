@@ -162,9 +162,8 @@ public sealed class SearchController : ControllerBase
                     should.Add(new { match = new Dictionary<string, object> { ["amenities"] = word } });
                 }
             }
-                });
 
-                // k-NN boost: apenas se estabilice, descomentar
+            // k-NN boost: apenas se estabilice, descomentar
                 /*
                 if (embedding != null && embedding.Length == 768)
                 {
