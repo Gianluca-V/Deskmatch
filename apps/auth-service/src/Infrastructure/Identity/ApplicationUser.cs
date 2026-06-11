@@ -16,6 +16,8 @@ public class ApplicationUser : IdentityUser<Guid>
     [MaxLength(100)]
     public string? Location { get; set; }
 
+    public string? ProfilePictureUrl { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; }

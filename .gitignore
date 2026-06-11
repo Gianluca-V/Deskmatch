@@ -109,3 +109,5 @@ coveragereport/
 
 # Local development
 .override.yml
+
+.fake

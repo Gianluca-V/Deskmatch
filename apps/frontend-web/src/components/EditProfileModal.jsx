@@ -38,7 +38,8 @@ function EditProfileModal({ isOpen, onClose, onSuccess }) {
 
       await api.put('/api/users/me/profile', payload);
       toast.success('Perfil actualizado exitosamente');
-      refetch();
+      // Refetch los datos actualizados
+      await refetch();
       onSuccess?.();
       onClose();
     } catch (error) {

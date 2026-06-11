@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Building2, Mail, Phone, MapPin, CheckCircle, Globe, LogOut, Settings, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import EditCompanyProfileModal from './EditCompanyProfileModal';
 import './CompanyProfileCard.css';
 
 function CompanyProfileCard({ company, isLoading, error }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
   };
 
@@ -44,11 +46,11 @@ function CompanyProfileCard({ company, isLoading, error }) {
   }
 
   const companyName = company?.name || 'Mi Empresa';
-  const email = company?.email || 'No especificado';
-  const phone = company?.phone || 'No especificado';
-  const location = company?.location || 'No especificado';
+  const email = company?.contactEmail || 'No especificado';
+  const phone = company?.phoneNumber || company?.phone || '';
+  const location = company?.location || '';
   const description = company?.description || '';
-  const website = company?.website || '';
+  const website = company?.websiteUrl || '';
   const isVerified = company?.isVerified || false;
 
   return (
@@ -142,35 +144,35 @@ function CompanyProfileCard({ company, isLoading, error }) {
             </div>
             <div>
               <label className="company-profile-card__field-label">Correo de contacto</label>
-              <p className={`company-profile-card__field-value ${!company?.email ? 'company-profile-card__field-value--empty' : ''}`}>
+              <p className={`company-profile-card__field-value ${!company?.contactEmail ? 'company-profile-card__field-value--empty' : ''}`}>
                 {email}
               </p>
             </div>
           </div>
 
-          <div className="company-profile-card__field">
-            <div className="company-profile-card__field-icon">
-              <Phone size={18} />
+          {phone && (
+            <div className="company-profile-card__field">
+              <div className="company-profile-card__field-icon">
+                <Phone size={18} />
+              </div>
+              <div>
+                <label className="company-profile-card__field-label">Teléfono</label>
+                <p className="company-profile-card__field-value">{phone}</p>
+              </div>
             </div>
-            <div>
-              <label className="company-profile-card__field-label">Teléfono</label>
-              <p className={`company-profile-card__field-value ${!company?.phone ? 'company-profile-card__field-value--empty' : ''}`}>
-                {phone}
-              </p>
-            </div>
-          </div>
+          )}
 
-          <div className="company-profile-card__field">
-            <div className="company-profile-card__field-icon">
-              <MapPin size={18} />
+          {location && (
+            <div className="company-profile-card__field">
+              <div className="company-profile-card__field-icon">
+                <MapPin size={18} />
+              </div>
+              <div>
+                <label className="company-profile-card__field-label">Ubicación</label>
+                <p className="company-profile-card__field-value">{location}</p>
+              </div>
             </div>
-            <div>
-              <label className="company-profile-card__field-label">Ubicación</label>
-              <p className={`company-profile-card__field-value ${!company?.location ? 'company-profile-card__field-value--empty' : ''}`}>
-                {location}
-              </p>
-            </div>
-          </div>
+          )}
 
           {website && (
             <div className="company-profile-card__field">

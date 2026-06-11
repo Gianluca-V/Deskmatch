@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import EditProfileModal from './EditProfileModal';
 import './GuestProfileCard.css';
 
 function GuestProfileCard({ user, isLoading, error }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
   };
 
@@ -46,8 +48,8 @@ function GuestProfileCard({ user, isLoading, error }) {
   const firstName = user?.firstName || 'Usuario';
   const lastName = user?.lastName || '';
   const email = user?.email || 'No especificado';
-  const phone = user?.phoneNumber || user?.phone || 'No especificado';
-  const location = user?.location || 'No especificado';
+  const phone = user?.phoneNumber || user?.phone || '';
+  const location = user?.location || '';
 
   return (
     <>
@@ -55,8 +57,8 @@ function GuestProfileCard({ user, isLoading, error }) {
         <div className="guest-profile-card__header-top">
           <div className="guest-profile-card__header-section">
             <div className="guest-profile-card__avatar">
-              {user?.profileImage ? (
-                <img src={user.profileImage} alt={`${firstName} ${lastName}`} />
+              {user?.profilePictureUrl ? (
+                <img src={user.profilePictureUrl} alt={`${firstName} ${lastName}`} />
               ) : (
                 <User size={32} />
               )}
@@ -118,29 +120,29 @@ function GuestProfileCard({ user, isLoading, error }) {
           </div>
         </div>
 
-        <div className="guest-profile-card__field">
-          <div className="guest-profile-card__field-icon">
-            <Phone size={18} />
+        {phone && (
+          <div className="guest-profile-card__field">
+            <div className="guest-profile-card__field-icon">
+              <Phone size={18} />
+            </div>
+            <div>
+              <label className="guest-profile-card__field-label">Teléfono</label>
+              <p className="guest-profile-card__field-value">{phone}</p>
+            </div>
           </div>
-          <div>
-            <label className="guest-profile-card__field-label">Teléfono</label>
-            <p className={`guest-profile-card__field-value ${!user?.phone ? 'guest-profile-card__field-value--empty' : ''}`}>
-              {phone}
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="guest-profile-card__field">
-          <div className="guest-profile-card__field-icon">
-            <MapPin size={18} />
+        {location && (
+          <div className="guest-profile-card__field">
+            <div className="guest-profile-card__field-icon">
+              <MapPin size={18} />
+            </div>
+            <div>
+              <label className="guest-profile-card__field-label">Ubicación</label>
+              <p className="guest-profile-card__field-value">{location}</p>
+            </div>
           </div>
-          <div>
-            <label className="guest-profile-card__field-label">Ubicación</label>
-            <p className={`guest-profile-card__field-value ${!user?.location ? 'guest-profile-card__field-value--empty' : ''}`}>
-              {location}
-            </p>
-          </div>
-        </div>
+        )}
         </div>
       </div>
 

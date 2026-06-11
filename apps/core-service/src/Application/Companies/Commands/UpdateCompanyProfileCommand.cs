@@ -8,4 +8,6 @@ public sealed record UpdateCompanyProfileCommand(
     string Name,
     string? Description,
     string? ContactEmail,
-    string? WebsiteUrl) : ICommand<CompanyProfileResponseDto>;
+    string? WebsiteUrl,
+    string? PhoneNumber,
+    string? Location) : ICommand<CompanyProfileResponseDto>;

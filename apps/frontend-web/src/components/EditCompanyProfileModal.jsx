@@ -3,17 +3,21 @@ import { useForm } from 'react-hook-form';
 import { useProfileCompany } from '../hooks/useProfile';
 import { X, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import './EditCompanyProfileModal.css';
 
 function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
+  const queryClient = useQueryClient();
   const { data: companyData, refetch } = useProfileCompany();
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     defaultValues: {
       name: companyData?.name || '',
       description: companyData?.description || '',
-      contactEmail: companyData?.email || '',
+      contactEmail: companyData?.contactEmail || '',
       websiteUrl: companyData?.websiteUrl || '',
+      phoneNumber: companyData?.phoneNumber || '',
+      location: companyData?.location || '',
     },
   });
 
@@ -22,8 +26,10 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
       reset({
         name: companyData?.name || '',
         description: companyData?.description || '',
-        contactEmail: companyData?.email || '',
+        contactEmail: companyData?.contactEmail || '',
         websiteUrl: companyData?.websiteUrl || '',
+        phoneNumber: companyData?.phoneNumber || '',
+        location: companyData?.location || '',
       });
     }
   }, [companyData, reset]);
@@ -35,11 +41,17 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
         description: data.description?.trim() || '',
         contactEmail: data.contactEmail.trim(),
         websiteUrl: data.websiteUrl?.trim() || '',
+        phoneNumber: data.phoneNumber?.trim() || '',
+        location: data.location?.trim() || '',
       };
 
+      console.log('Enviando datos:', payload);
       await api.put('/api/companies/me/profile', payload);
       toast.success('Perfil de la empresa actualizado exitosamente');
-      refetch();
+      // Invalidar el caché e inmediatamente refetch los nuevos datos
+      await queryClient.invalidateQueries({ queryKey: ['profile-company'] });
+      // Esperar a que React Query refetch los datos antes de cerrar el modal
+      await queryClient.refetchQueries({ queryKey: ['profile-company'] });
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -124,6 +136,34 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
               className="edit-company-modal__input"
             />
             {errors.websiteUrl && <span className="edit-company-modal__error">{errors.websiteUrl.message}</span>}
+          </div>
+
+          <div className="edit-company-modal__form-group">
+            <label htmlFor="phoneNumber">Teléfono</label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              placeholder="+34 912 345 678"
+              {...register('phoneNumber', {
+                maxLength: { value: 20, message: 'Máximo 20 caracteres' },
+              })}
+              className="edit-company-modal__input"
+            />
+            {errors.phoneNumber && <span className="edit-company-modal__error">{errors.phoneNumber.message}</span>}
+          </div>
+
+          <div className="edit-company-modal__form-group">
+            <label htmlFor="location">Ubicación</label>
+            <input
+              id="location"
+              type="text"
+              placeholder="Madrid, España"
+              {...register('location', {
+                maxLength: { value: 200, message: 'Máximo 200 caracteres' },
+              })}
+              className="edit-company-modal__input"
+            />
+            {errors.location && <span className="edit-company-modal__error">{errors.location.message}</span>}
           </div>
 
           <div className="edit-company-modal__form-group">
