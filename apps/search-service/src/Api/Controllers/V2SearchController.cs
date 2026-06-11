@@ -297,13 +297,26 @@ public sealed class SearchController : ControllerBase
         var body = new Dictionary<string, object>
         {
             ["size"] = 5,
-            ["query"] = new
+            ["_source"] = new[] { "name", "amenities" },
+            ["query"] = new Dictionary<string, object>
             {
-                multi_match = new Dictionary<string, object>
+                ["bool"] = new Dictionary<string, object>
                 {
-                    ["query"] = q,
-                    ["fields"] = new[] { "name^3" },
-                    ["fuzziness"] = "AUTO:4,6"
+                    ["should"] = new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["multi_match"] = new Dictionary<string, object>
+                            {
+                                ["query"] = q,
+                                ["fields"] = new[] { "name^3" },
+                                ["fuzziness"] = "AUTO:4,6"
+                            }
+                        },
+                        new { match = new Dictionary<string, object> { ["amenities"] = q.ToLowerInvariant() } },
+                        new { match = new Dictionary<string, object> { ["amenities"] = char.ToUpperInvariant(q[0]) + q[1..].ToLowerInvariant() } }
+                    },
+                    ["minimum_should_match"] = 1
                 }
             }
         };
@@ -315,9 +328,22 @@ public sealed class SearchController : ControllerBase
         if (stringResponse.Body != null)
         {
             using var doc = JsonDocument.Parse(stringResponse.Body);
-            foreach (var hit in doc.RootElement.GetProperty("hits").GetProperty("hits").EnumerateArray())
-                names.Add(hit.GetProperty("_source").GetProperty("name").GetString() ?? "");
+            var hitsObj = doc.RootElement.GetProperty("hits");
+            if (hitsObj.TryGetProperty("hits", out var hits))
+            {
+                foreach (var hit in hits.EnumerateArray())
+                {
+                    if (hit.TryGetProperty("_source", out var src) &&
+                        src.TryGetProperty("name", out var name))
+                    {
+                        var n = name.GetString();
+                        if (!string.IsNullOrWhiteSpace(n) && !names.Contains(n))
+                            names.Add(n);
+                    }
+                }
+            }
         }
+
         return Ok(names);
     }
 
