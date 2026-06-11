@@ -3,10 +3,12 @@ import { useForm } from 'react-hook-form';
 import { useProfileCompany } from '../hooks/useProfile';
 import { X, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import './EditCompanyProfileModal.css';
 
 function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
+  const queryClient = useQueryClient();
   const { data: companyData, refetch } = useProfileCompany();
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     defaultValues: {
@@ -45,7 +47,8 @@ function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
 
       await api.put('/api/companies/me/profile', payload);
       toast.success('Perfil de la empresa actualizado exitosamente');
-      refetch();
+      // Invalidar el caché de React Query para forzar refetch
+      await queryClient.invalidateQueries({ queryKey: ['profile-company'] });
       onSuccess?.();
       onClose();
     } catch (error) {
