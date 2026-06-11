@@ -140,10 +140,11 @@ export function useProfileCompany() {
               }
             ]
           };
-          // Mezclar datos reales con datos de prueba para espacios y reservas
+          // Mantener datos reales pero usar espacios y reservas de prueba
           return {
             ...data,
-            ...mockData,
+            spaces: mockData.spaces,
+            reservations: mockData.reservations,
             phone: data.phoneNumber || data.phone,
           };
         }
