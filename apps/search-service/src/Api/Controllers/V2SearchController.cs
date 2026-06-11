@@ -47,13 +47,7 @@ public sealed class SearchController : ControllerBase
             .Index("offices")
             .From((page - 1) * pageSize)
             .Size(pageSize)
-            .Query(qq => !hasQuery && !hasFilters
-                ? (QueryContainer)qq.MatchAll()
-                : qq.MultiMatch(mm => mm
-                    .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                    .Query(q ?? "")
-                    .Fuzziness(Fuzziness.Auto)
-                    .Operator(Operator.Or)))
+            .Query(qq => qq.MatchAll())
             .Sort(sort =>
             {
                 sort.Field("_score", SortOrder.Descending);
