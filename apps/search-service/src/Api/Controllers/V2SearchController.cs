@@ -101,7 +101,7 @@ public sealed class SearchController : ControllerBase
 
         if (stringResponse.Body != null)
             _logger.LogInformation("OpenSearch raw response (first 300): {Body}",
-                Encoding.UTF8.GetString(stringResponse.Body).Substring(0, Math.Min(300, stringResponse.Body.Length)));
+                Encoding.UTF8.GetString(stringResponse.Body![..Math.Min(300, stringResponse.Body.Length)]));
 
         var items = new List<object>();
         long total = 0;
