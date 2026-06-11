@@ -43,11 +43,19 @@ export function useProfileCompany() {
   return useQuery({
     queryKey: ['profile-company'],
     queryFn: async () => {
-      const data = await profileAPI.getCompany();
-      return {
-        ...data,
-        phone: data.phoneNumber || data.phone,
-      };
+      try {
+        const data = await profileAPI.getCompany();
+        return {
+          ...data,
+          phone: data.phoneNumber || data.phone,
+        };
+      } catch (error) {
+        // Retornar null si no hay empresa asociada
+        if (error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
     },
     retry: 1,
     retryDelay: 1000,
