@@ -179,8 +179,7 @@ public sealed class SearchController : ControllerBase
                         }
                     });
                 }
-                */
-            }
+                 */
 
             if (!string.IsNullOrWhiteSpace(city))
                 filter.Add(new { match = new Dictionary<string, object> { ["city"] = city } });
