@@ -150,29 +150,29 @@ function CompanyProfileCard({ company, isLoading, error }) {
             </div>
           </div>
 
-          {phone && (
-            <div className="company-profile-card__field">
-              <div className="company-profile-card__field-icon">
-                <Phone size={18} />
-              </div>
-              <div>
-                <label className="company-profile-card__field-label">Teléfono</label>
-                <p className="company-profile-card__field-value">{phone}</p>
-              </div>
+          <div className="company-profile-card__field">
+            <div className="company-profile-card__field-icon">
+              <Phone size={18} />
             </div>
-          )}
+            <div>
+              <label className="company-profile-card__field-label">Teléfono</label>
+              <p className={`company-profile-card__field-value ${!phone ? 'company-profile-card__field-value--empty' : ''}`}>
+                {phone || 'No especificado'}
+              </p>
+            </div>
+          </div>
 
-          {location && (
-            <div className="company-profile-card__field">
-              <div className="company-profile-card__field-icon">
-                <MapPin size={18} />
-              </div>
-              <div>
-                <label className="company-profile-card__field-label">Ubicación</label>
-                <p className="company-profile-card__field-value">{location}</p>
-              </div>
+          <div className="company-profile-card__field">
+            <div className="company-profile-card__field-icon">
+              <MapPin size={18} />
             </div>
-          )}
+            <div>
+              <label className="company-profile-card__field-label">Ubicación</label>
+              <p className={`company-profile-card__field-value ${!location ? 'company-profile-card__field-value--empty' : ''}`}>
+                {location || 'No especificado'}
+              </p>
+            </div>
+          </div>
 
           {website && (
             <div className="company-profile-card__field">
