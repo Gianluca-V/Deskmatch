@@ -67,20 +67,27 @@ public sealed class SearchController : ControllerBase
         return Ok(new { items, page, pageSize, totalCount = total, totalPages });
     }
 
+    private static object? ParseElement(JsonElement el)
+    {
+        return el.ValueKind switch
+        {
+            JsonValueKind.String => el.GetString(),
+            JsonValueKind.Number => el.TryGetInt64(out var i) ? i : el.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            JsonValueKind.Array => el.EnumerateArray().Select(ParseElement).ToList(),
+            JsonValueKind.Object => el.EnumerateObject().ToDictionary(p => p.Name, p => ParseElement(p.Value)),
+            _ => el.GetRawText()
+        };
+    }
+
     private static Dictionary<string, object?> ParseSource(JsonElement el)
     {
         var dict = new Dictionary<string, object?>();
         foreach (var prop in el.EnumerateObject())
         {
-            dict[prop.Name] = prop.Value.ValueKind switch
-            {
-                JsonValueKind.String => prop.Value.GetString(),
-                JsonValueKind.Number => prop.Value.TryGetInt64(out var i) ? i : prop.Value.GetDouble(),
-                JsonValueKind.True => true,
-                JsonValueKind.False => false,
-                JsonValueKind.Null => null,
-                _ => prop.Value.GetRawText()
-            };
+            dict[prop.Name] = ParseElement(prop.Value);
         }
         return dict;
     }
