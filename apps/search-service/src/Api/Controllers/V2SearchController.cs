@@ -1,7 +1,9 @@
 using System.Text;
 using System.Text.Json;
+using DeskMatch.SDK.Ollama;
 using Microsoft.AspNetCore.Mvc;
 using OpenSearch.Client;
+using OpenSearch.Net;
 
 namespace DeskMatch.SearchService.Api.Controllers;
 
@@ -11,11 +13,13 @@ namespace DeskMatch.SearchService.Api.Controllers;
 public sealed class SearchController : ControllerBase
 {
     private readonly IOpenSearchClient _client;
+    private readonly IOllamaClient _ollama;
     private readonly ILogger<SearchController> _logger;
 
-    public SearchController(IOpenSearchClient client, ILogger<SearchController> logger)
+    public SearchController(IOpenSearchClient client, IOllamaClient ollama, ILogger<SearchController> logger)
     {
         _client = client;
+        _ollama = ollama;
         _logger = logger;
     }
 
@@ -34,79 +38,155 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var must = new List<QueryContainer>();
-        var filter = new List<QueryContainer>();
+        var embedding = q != null ? await _ollama.GetEmbeddingAsync(q) : null;
+        var hasQuery = !string.IsNullOrWhiteSpace(q);
+        var hasFilters = !string.IsNullOrWhiteSpace(city) || !string.IsNullOrWhiteSpace(country)
+            || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
+            || !string.IsNullOrWhiteSpace(amenities) || (lat.HasValue && lon.HasValue);
 
-        if (!string.IsNullOrWhiteSpace(q))
+        var body = BuildSearchBody(q, embedding, city, country, minPrice, maxPrice,
+            minCapacity, amenities, lat, lon, radius, page, pageSize, hasQuery, hasFilters);
+
+        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
+            "offices", PostData.String(JsonSerializer.Serialize(body)));
+
+        var items = new List<object>();
+        long total = 0;
+
+        if (stringResponse.Body != null)
         {
-            must.Add(new QueryContainer(new MultiMatchQuery
+            using var doc = JsonDocument.Parse(stringResponse.Body);
+            var hits = doc.RootElement.GetProperty("hits");
+            total = hits.GetProperty("total").ValueKind == JsonValueKind.Object
+                ? hits.GetProperty("total").GetProperty("value").GetInt64()
+                : hits.GetProperty("total").GetInt64();
+
+            foreach (var hit in hits.GetProperty("hits").EnumerateArray())
             {
-                Fields = new[] { "name^3", "description^2", "amenities^2", "address" },
-                Query = q,
-                Fuzziness = Fuzziness.Auto,
-                Operator = Operator.Or
-            }));
+                if (hit.TryGetProperty("_source", out var src))
+                    items.Add(ParseSource(src));
+            }
         }
 
-        if (!string.IsNullOrWhiteSpace(city))
-            filter.Add(new QueryContainer(new MatchQuery { Field = "city", Query = city }));
-        if (!string.IsNullOrWhiteSpace(country))
-            filter.Add(new QueryContainer(new MatchQuery { Field = "country", Query = country }));
+        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
+        return Ok(new { items, page, pageSize, totalCount = total, totalPages });
+    }
 
-        if (minPrice.HasValue || maxPrice.HasValue)
+    private static object BuildSearchBody(string? q, float[]? embedding,
+        string? city, string? country, decimal? minPrice, decimal? maxPrice,
+        int? minCapacity, string? amenities, double? lat, double? lon,
+        double? radius, int page, int pageSize, bool hasQuery, bool hasFilters)
+    {
+        var body = new Dictionary<string, object>
         {
-            var range = new NumericRangeQuery { Field = "pricePerHour" };
-            if (minPrice.HasValue) range.GreaterThanOrEqualTo = (double)minPrice.Value;
-            if (maxPrice.HasValue) range.LessThanOrEqualTo = (double)maxPrice.Value;
-            filter.Add(new QueryContainer(range));
-        }
+            ["from"] = (page - 1) * pageSize,
+            ["size"] = pageSize,
+            ["sort"] = new[] { new Dictionary<string, object> { ["_score"] = new { order = "desc" } } }
+        };
 
-        if (minCapacity.HasValue)
-            filter.Add(new QueryContainer(new NumericRangeQuery
-            {
-                Field = "capacity",
-                GreaterThanOrEqualTo = minCapacity.Value
-            }));
-
-        var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (amList?.Length > 0)
+        if (!hasQuery && !hasFilters)
         {
-            foreach (var am in amList)
-                filter.Add(new QueryContainer(new MatchQuery { Field = "amenities", Query = am }));
-        }
-
-        if (lat.HasValue && lon.HasValue)
-            filter.Add(new QueryContainer(new GeoDistanceQuery
-            {
-                Field = "location",
-                Distance = (radius ?? 10) + "km",
-                Location = new GeoLocation(lat.Value, lon.Value)
-            }));
-
-        QueryContainer query;
-        if (must.Count == 0 && filter.Count == 0)
-        {
-            query = new QueryContainer(new MatchAllQuery());
+            body["query"] = new { match_all = new { } };
         }
         else
         {
-            var boolQuery = new BoolQuery();
-            if (must.Count > 0) boolQuery.Must = must;
-            if (filter.Count > 0) boolQuery.Filter = filter;
-            query = new QueryContainer(boolQuery);
+            var must = new List<object>();
+            var filter = new List<object>();
+            var should = new List<object>();
+
+            if (hasQuery)
+            {
+                must.Add(new Dictionary<string, object>
+                {
+                    ["multi_match"] = new Dictionary<string, object>
+                    {
+                        ["query"] = q!,
+                        ["fields"] = new[] { "name^3", "description^2", "amenities^2", "address" },
+                        ["fuzziness"] = "AUTO:4,6",
+                        ["operator"] = "or"
+                    }
+                });
+
+                if (embedding != null && embedding.Length == 768)
+                {
+                    should.Add(new Dictionary<string, object>
+                    {
+                        ["script_score"] = new Dictionary<string, object>
+                        {
+                            ["query"] = new { match_all = new { } },
+                            ["script"] = new Dictionary<string, object>
+                            {
+                                ["source"] = "cosineSimilarity(params.query_vector, 'nameVector') + 1.0",
+                                ["params"] = new Dictionary<string, object>
+                                {
+                                    ["query_vector"] = embedding
+                                }
+                            }
+                        }
+                    });
+
+                    should.Add(new Dictionary<string, object>
+                    {
+                        ["script_score"] = new Dictionary<string, object>
+                        {
+                            ["query"] = new { match_all = new { } },
+                            ["script"] = new Dictionary<string, object>
+                            {
+                                ["source"] = "cosineSimilarity(params.query_vector, 'descriptionVector') + 0.5",
+                                ["params"] = new Dictionary<string, object>
+                                {
+                                    ["query_vector"] = embedding
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(city))
+                filter.Add(new { match = new Dictionary<string, object> { ["city"] = city } });
+            if (!string.IsNullOrWhiteSpace(country))
+                filter.Add(new { match = new Dictionary<string, object> { ["country"] = country } });
+
+            if (minPrice.HasValue || maxPrice.HasValue)
+            {
+                var range = new Dictionary<string, object>();
+                if (minPrice.HasValue) range["gte"] = (double)minPrice.Value;
+                if (maxPrice.HasValue) range["lte"] = (double)maxPrice.Value;
+                filter.Add(new { range = new Dictionary<string, object> { ["pricePerHour"] = range } });
+            }
+
+            if (minCapacity.HasValue)
+                filter.Add(new { range = new Dictionary<string, object> { ["capacity"] = new { gte = minCapacity.Value } } });
+
+            var amList = amenities?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (amList?.Length > 0)
+            {
+                foreach (var am in amList)
+                    filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = am } });
+            }
+
+            if (lat.HasValue && lon.HasValue)
+            {
+                filter.Add(new
+                {
+                    geo_distance = new
+                    {
+                        distance = (radius ?? 10) + "km",
+                        location = new { lat = lat.Value, lon = lon.Value }
+                    }
+                });
+            }
+
+            var boolQuery = new Dictionary<string, object>();
+            if (must.Count > 0) boolQuery["must"] = must;
+            if (should.Count > 0) boolQuery["should"] = should;
+            if (filter.Count > 0) boolQuery["filter"] = filter;
+
+            body["query"] = new { @bool = boolQuery };
         }
 
-        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
-        {
-            From = (page - 1) * pageSize,
-            Size = pageSize,
-            Query = query
-        });
-
-        var items = ParseResponseItems(response);
-        var total = response.Total;
-        var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
-        return Ok(new { items, page, pageSize, totalCount = total, totalPages });
+        return body;
     }
 
     [HttpGet("nearby")]
@@ -117,20 +197,50 @@ public sealed class SearchController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
+        var body = new Dictionary<string, object>
         {
-            From = (page - 1) * pageSize,
-            Size = pageSize,
-            Query = new QueryContainer(new GeoDistanceQuery
+            ["from"] = (page - 1) * pageSize,
+            ["size"] = pageSize,
+            ["query"] = new
             {
-                Field = "location",
-                Distance = radius + "km",
-                Location = new GeoLocation(lat, lon)
-            })
-        });
+                geo_distance = new
+                {
+                    distance = radius + "km",
+                    location = new { lat, lon }
+                }
+            },
+            ["sort"] = new[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["_geo_distance"] = new Dictionary<string, object>
+                    {
+                        ["location"] = new { lat, lon },
+                        ["order"] = "asc",
+                        ["unit"] = "km"
+                    }
+                }
+            }
+        };
 
-        var items = ParseResponseItems(response);
-        return Ok(new { items, page, pageSize, totalCount = response.Total, totalPages = 0 });
+        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
+            "offices", PostData.String(JsonSerializer.Serialize(body)));
+
+        var items = new List<object>();
+        long total = 0;
+        if (stringResponse.Body != null)
+        {
+            using var doc = JsonDocument.Parse(stringResponse.Body);
+            var hits = doc.RootElement.GetProperty("hits");
+            total = hits.GetProperty("total").ValueKind == JsonValueKind.Object
+                ? hits.GetProperty("total").GetProperty("value").GetInt64()
+                : hits.GetProperty("total").GetInt64();
+            foreach (var hit in hits.GetProperty("hits").EnumerateArray())
+                if (hit.TryGetProperty("_source", out var src))
+                    items.Add(ParseSource(src));
+        }
+
+        return Ok(new { items, page, pageSize, totalCount = total, totalPages = 0 });
     }
 
     [HttpGet("suggest")]
@@ -138,42 +248,31 @@ public sealed class SearchController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(q)) return Ok(new List<string>());
 
-        var response = await _client.SearchAsync<object>(new SearchRequest("offices")
+        var body = new Dictionary<string, object>
         {
-            Size = 5,
-            Query = new QueryContainer(new MultiMatchQuery
+            ["size"] = 5,
+            ["query"] = new
             {
-                Fields = new[] { "name^3" },
-                Query = q,
-                Fuzziness = Fuzziness.Auto
-            })
-        });
+                multi_match = new Dictionary<string, object>
+                {
+                    ["query"] = q,
+                    ["fields"] = new[] { "name^3" },
+                    ["fuzziness"] = "AUTO:4,6"
+                }
+            }
+        };
+
+        var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
+            "offices", PostData.String(JsonSerializer.Serialize(body)));
 
         var names = new List<string>();
-        var rawBody = response.ApiCall?.ResponseBodyInBytes;
-        if (rawBody != null && rawBody.Length > 0)
+        if (stringResponse.Body != null)
         {
-            using var doc = JsonDocument.Parse(rawBody);
+            using var doc = JsonDocument.Parse(stringResponse.Body);
             foreach (var hit in doc.RootElement.GetProperty("hits").GetProperty("hits").EnumerateArray())
                 names.Add(hit.GetProperty("_source").GetProperty("name").GetString() ?? "");
         }
         return Ok(names);
-    }
-
-    private List<object> ParseResponseItems(ISearchResponse<object> response)
-    {
-        var items = new List<object>();
-        var rawBody = response.ApiCall?.ResponseBodyInBytes;
-        if (rawBody != null && rawBody.Length > 0)
-        {
-            using var doc = JsonDocument.Parse(rawBody);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("hits", out var h1) && h1.TryGetProperty("hits", out var h2))
-                foreach (var hit in h2.EnumerateArray())
-                    if (hit.TryGetProperty("_source", out var src))
-                        items.Add(ParseSource(src));
-        }
-        return items;
     }
 
     private static object? ParseElement(JsonElement el) => el.ValueKind switch
