@@ -160,26 +160,24 @@ public sealed class SearchController : ControllerBase
                 {
                     should.Add(new Dictionary<string, object>
                     {
-                        ["script_score"] = new Dictionary<string, object>
+                        ["knn"] = new Dictionary<string, object>
                         {
-                            ["query"] = new { match_all = new { } },
-                            ["script"] = new Dictionary<string, object>
+                            ["nameVector"] = new Dictionary<string, object>
                             {
-                                ["source"] = "cosineSimilarity(params.query_vector, 'nameVector') + 1.0",
-                                ["params"] = new Dictionary<string, object> { ["query_vector"] = embedding }
+                                ["vector"] = embedding,
+                                ["k"] = 10
                             }
                         }
                     });
 
                     should.Add(new Dictionary<string, object>
                     {
-                        ["script_score"] = new Dictionary<string, object>
+                        ["knn"] = new Dictionary<string, object>
                         {
-                            ["query"] = new { match_all = new { } },
-                            ["script"] = new Dictionary<string, object>
+                            ["descriptionVector"] = new Dictionary<string, object>
                             {
-                                ["source"] = "cosineSimilarity(params.query_vector, 'descriptionVector') + 0.5",
-                                ["params"] = new Dictionary<string, object> { ["query_vector"] = embedding }
+                                ["vector"] = embedding,
+                                ["k"] = 10
                             }
                         }
                     });
