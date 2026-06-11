@@ -152,10 +152,10 @@ public sealed class SearchController : ControllerBase
                         .Query(q)
                         .Fuzziness(Fuzziness.Auto)
                         .Operator(Operator.Or)));
-                }
 
-                b.Should(sh => sh
-                    .Match(m => m.Field("amenities").Query(q ?? "").Boost(2)));
+                    b.Should(sh => sh
+                        .Match(m => m.Field("amenities").Query(q).Boost(2)));
+                }
 
                 AddFilters(b, city, country, minPrice, maxPrice, minCapacity, amenities, lat, lon, radius);
 
@@ -182,8 +182,6 @@ public sealed class SearchController : ControllerBase
         int? minCapacity, string? amenities, double? lat, double? lon,
         double? radius, int page, int pageSize, float[] embedding)
     {
-        var queryText = q ?? "";
-
         return s.Index("offices")
             .From((page - 1) * pageSize)
             .Size(pageSize)
@@ -193,13 +191,13 @@ public sealed class SearchController : ControllerBase
                 {
                     b.Must(mu => mu.MultiMatch(mm => mm
                         .Fields(new[] { "name^3", "description^2", "amenities^2", "address" })
-                        .Query(queryText)
+                        .Query(q)
                         .Fuzziness(Fuzziness.Auto)
                         .Operator(Operator.Or)));
-                }
 
-                b.Should(sh => sh
-                    .Match(m => m.Field("amenities").Query(queryText).Boost(2)));
+                    b.Should(sh => sh
+                        .Match(m => m.Field("amenities").Query(q).Boost(2)));
+                }
 
                 b.Should(sh => sh
                     .Script(scr => scr
