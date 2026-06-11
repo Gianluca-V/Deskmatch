@@ -21,7 +21,7 @@ import puppeteer from 'puppeteer';
           role: 'manager'
         }
       };
-      localStorage.setItem('session', JSON.stringify(fakeSession));
+      localStorage.setItem('dm_session', JSON.stringify(fakeSession));
     });
     
     await page.goto('http://localhost:5173/profile/company', { waitUntil: 'networkidle2', timeout: 30000 });

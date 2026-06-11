@@ -53,7 +53,9 @@ public sealed class CompanyProfileController : ControllerBase
             company.ContactEmail,
             company.WebsiteUrl,
             company.IsVerified,
-            company.LogoUrl));
+            company.LogoUrl,
+            company.PhoneNumber,
+            company.Location));
     }
 
     /// <summary>Actualiza el perfil de la empresa del usuario autenticado.</summary>
@@ -93,7 +95,9 @@ public sealed class CompanyProfileController : ControllerBase
             dto.Name,
             dto.Description,
             dto.ContactEmail,
-            dto.WebsiteUrl);
+            dto.WebsiteUrl,
+            dto.PhoneNumber,
+            dto.Location);
 
         var result = await _updateHandler.HandleAsync(command, cancellationToken);
         return Ok(result);

@@ -7,4 +7,6 @@ public sealed record CompanyProfileResponseDto(
     string? ContactEmail,
     string? WebsiteUrl,
     bool IsVerified,
-    string? LogoUrl);
+    string? LogoUrl,
+    string? PhoneNumber,
+    string? Location);

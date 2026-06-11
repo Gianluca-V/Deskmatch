@@ -17,6 +17,8 @@ public class Company : AggregateRoot<Guid>
     public string? LogoUrl { get; set; }
     public string? WebsiteUrl { get; set; }
     public string? ContactEmail { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Location { get; set; }
     public bool IsVerified { get; set; } = false;
     public Guid? OwnerId { get; set; }
     public bool IsActive { get; set; } = true;

@@ -34,6 +34,12 @@ public sealed class UpdateCompanyProfileCommandHandler
         company.WebsiteUrl = string.IsNullOrWhiteSpace(command.WebsiteUrl)
             ? null
             : command.WebsiteUrl.Trim();
+        company.PhoneNumber = string.IsNullOrWhiteSpace(command.PhoneNumber)
+            ? null
+            : command.PhoneNumber.Trim();
+        company.Location = string.IsNullOrWhiteSpace(command.Location)
+            ? null
+            : Sanitize(command.Location);
         company.MarkAsUpdated();
 
         _repository.Update(company);
@@ -46,7 +52,9 @@ public sealed class UpdateCompanyProfileCommandHandler
             company.ContactEmail,
             company.WebsiteUrl,
             company.IsVerified,
-            company.LogoUrl);
+            company.LogoUrl,
+            company.PhoneNumber,
+            company.Location);
     }
 
     private static string Sanitize(string value) =>

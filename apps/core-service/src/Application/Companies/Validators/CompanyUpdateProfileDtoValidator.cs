@@ -23,6 +23,14 @@ public class CompanyUpdateProfileDtoValidator : AbstractValidator<CompanyUpdateP
         RuleFor(x => x.WebsiteUrl)
             .Must(BeAValidUrl).WithMessage("El sitio web debe ser una URL válida con http o https.")
             .When(x => !string.IsNullOrEmpty(x.WebsiteUrl));
+
+        RuleFor(x => x.PhoneNumber)
+            .MaximumLength(20).WithMessage("El teléfono no puede superar los 20 caracteres.")
+            .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
+
+        RuleFor(x => x.Location)
+            .MaximumLength(200).WithMessage("La ubicación no puede superar los 200 caracteres.")
+            .When(x => !string.IsNullOrEmpty(x.Location));
     }
 
     private static bool BeAValidUrl(string? url)
