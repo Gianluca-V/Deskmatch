@@ -6,14 +6,14 @@ using OpenSearch.Client;
 namespace DeskMatch.SearchService.Api.Controllers;
 
 [ApiController]
-[Route("api/v2/search")]
+[Route("api/search")]
 [Produces("application/json")]
-public sealed class V2SearchController : ControllerBase
+public sealed class SearchController : ControllerBase
 {
     private readonly IOpenSearchClient _client;
-    private readonly ILogger<V2SearchController> _logger;
+    private readonly ILogger<SearchController> _logger;
 
-    public V2SearchController(IOpenSearchClient client, ILogger<V2SearchController> logger)
+    public SearchController(IOpenSearchClient client, ILogger<SearchController> logger)
     {
         _client = client;
         _logger = logger;
