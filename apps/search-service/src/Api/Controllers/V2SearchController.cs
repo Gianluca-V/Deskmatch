@@ -49,9 +49,9 @@ public sealed class SearchController : ControllerBase
         }
 
         if (!string.IsNullOrWhiteSpace(city))
-            filter.Add(new QueryContainer(new TermQuery { Field = "city", Value = city }));
+            filter.Add(new QueryContainer(new MatchQuery { Field = "city", Query = city }));
         if (!string.IsNullOrWhiteSpace(country))
-            filter.Add(new QueryContainer(new TermQuery { Field = "country", Value = country }));
+            filter.Add(new QueryContainer(new MatchQuery { Field = "country", Query = country }));
 
         if (minPrice.HasValue || maxPrice.HasValue)
         {
