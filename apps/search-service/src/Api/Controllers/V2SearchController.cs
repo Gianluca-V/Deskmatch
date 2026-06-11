@@ -150,10 +150,18 @@ public sealed class SearchController : ControllerBase
                     ["multi_match"] = new Dictionary<string, object>
                     {
                         ["query"] = q!,
-                        ["fields"] = new[] { "name^3", "description^2", "amenities^2", "address" },
+                        ["fields"] = new[] { "name^3", "description^2", "address" },
                         ["fuzziness"] = "AUTO:4,6",
                         ["operator"] = "or"
                     }
+                });
+
+                // Each word separately for keyword amenities field
+                foreach (var word in q!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = word } });
+                }
+            }
                 });
 
                 // k-NN boost: apenas se estabilice, descomentar
