@@ -63,7 +63,7 @@
         "type": "date"
       },
       "dynamicAttributes": {
-        "type": "flattened"
+        "type": "object"
       },
       "nameVector": {
         "type": "knn_vector",
