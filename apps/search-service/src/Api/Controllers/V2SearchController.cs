@@ -486,7 +486,13 @@ Given a user message describing what office they need, extract these fields as J
 - ""q"": search keywords about the space type/style (lowercase). If user says ""moderno"" or ""modern"", put that here.
 - ""city"": city name (e.g. ""Buenos Aires"", ""New York"", ""San Francisco"")
 - ""country"": country name  
-- ""minPrice"", ""maxPrice"": numeric price per hour. If user says ""barato"" put maxPrice 20. If ""menos de 50 dolares"" put maxPrice 50.
+- ""minPrice"", ""maxPrice"": numeric price per hour (decimal). Be VERY careful:
+  * ""maximo 10 dolares"", ""hasta 10"", ""no mas de 10"", ""max 10"", ""menos de 10"" -> maxPrice: 10
+  * ""minimo 5"", ""desde 5"", ""a partir de 5"", ""min 5"", ""mas de 5"" -> minPrice: 5
+  * ""entre 5 y 10"", ""de 5 a 10"" -> minPrice: 5, maxPrice: 10
+  * ""barato"", ""economico"" -> maxPrice: 20
+  * ""gratis"" -> maxPrice: 0
+  * ""caro"", ""premium"", ""lujo"" -> minPrice: 50
 - ""minCapacity"": minimum number of people the space must hold
 - ""amenities"": array of amenity names (ALWAYS extract). Use exact amenity names: wifi, coffee, gym, parking, ac, printer, meeting, cafeteria. If user says ""cafe"" or ""cafetería"" add ""coffee"" or ""cafeteria"". If user says ""gimnasio"" add ""gym"". RETURN AS ARRAY.
 - ""lat"", ""lon"", ""radius"": leave null
