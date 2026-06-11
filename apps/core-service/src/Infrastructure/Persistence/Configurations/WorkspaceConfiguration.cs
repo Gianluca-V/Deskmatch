@@ -61,5 +61,7 @@ public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.Property(w => w.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("NOW()");
+
+        builder.Ignore(w => w.DynamicAttributes);
     }
 }

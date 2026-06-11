@@ -30,6 +30,7 @@ public class Workspace : AggregateRoot<Guid>
     public int ReviewCount { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
+    public Dictionary<string, object>? DynamicAttributes { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
     public void MarkAsUpdated() => UpdatedAt = DateTime.UtcNow;
