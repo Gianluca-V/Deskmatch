@@ -120,29 +120,29 @@ function GuestProfileCard({ user, isLoading, error }) {
           </div>
         </div>
 
-        <div className="guest-profile-card__field">
-          <div className="guest-profile-card__field-icon">
-            <Phone size={18} />
+        {phone && (
+          <div className="guest-profile-card__field">
+            <div className="guest-profile-card__field-icon">
+              <Phone size={18} />
+            </div>
+            <div>
+              <label className="guest-profile-card__field-label">Teléfono</label>
+              <p className="guest-profile-card__field-value">{phone}</p>
+            </div>
           </div>
-          <div>
-            <label className="guest-profile-card__field-label">Teléfono</label>
-            <p className={`guest-profile-card__field-value ${!user?.phone ? 'guest-profile-card__field-value--empty' : ''}`}>
-              {phone}
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="guest-profile-card__field">
-          <div className="guest-profile-card__field-icon">
-            <MapPin size={18} />
+        {location && (
+          <div className="guest-profile-card__field">
+            <div className="guest-profile-card__field-icon">
+              <MapPin size={18} />
+            </div>
+            <div>
+              <label className="guest-profile-card__field-label">Ubicación</label>
+              <p className="guest-profile-card__field-value">{location}</p>
+            </div>
           </div>
-          <div>
-            <label className="guest-profile-card__field-label">Ubicación</label>
-            <p className={`guest-profile-card__field-value ${!user?.location ? 'guest-profile-card__field-value--empty' : ''}`}>
-              {location}
-            </p>
-          </div>
-        </div>
+        )}
         </div>
       </div>
 
