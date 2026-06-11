@@ -156,10 +156,14 @@ public sealed class SearchController : ControllerBase
                     }
                 });
 
-                // Each word separately for keyword amenities field
+                // Each word separately for keyword amenities field (both casings)
                 foreach (var word in q!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = word.ToLowerInvariant() } });
+                    var lw = word.ToLowerInvariant();
+                    var cw = char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant();
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = lw } });
+                    if (lw != cw)
+                        should.Add(new { match = new Dictionary<string, object> { ["amenities"] = cw } });
                 }
             }
 
