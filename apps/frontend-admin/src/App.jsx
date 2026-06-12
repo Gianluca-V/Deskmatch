@@ -2,6 +2,11 @@ import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminRoute from './components/AdminRoute';
+import AdminUsersView from './pages/admin/AdminUsersView';
+import AdminCompaniesView from './pages/admin/AdminCompaniesView';
+import AdminAuditLogsView from './pages/admin/AdminAuditLogsView';
 
 function Sidebar() {
   return (
@@ -120,6 +125,14 @@ function App() {
       <Route path="/offices/:id" element={<ProtectedRoute><OfficeDetail /></ProtectedRoute>} />
       <Route path="/reservations" element={<ProtectedRoute><Reservations /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="users" replace />} />
+          <Route path="users" element={<AdminUsersView />} />
+          <Route path="companies" element={<AdminCompaniesView />} />
+          <Route path="audit-logs" element={<AdminAuditLogsView />} />
+        </Route>
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
