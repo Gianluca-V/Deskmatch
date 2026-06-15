@@ -18,6 +18,7 @@ RUN dotnet build "AuthService.csproj" -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "AuthService.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN cp src/Api/appsettings.json /app/publish/
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
