@@ -1,6 +1,7 @@
 using DeskMatch.CoreService.Domain.Companies;
-using Microsoft.EntityFrameworkCore;
+using DeskMatch.CoreService.Domain.Reservations;
 using DeskMatch.CoreService.Domain.Workspaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeskMatch.CoreService.Infrastructure.Persistence;
 
@@ -11,6 +12,7 @@ public class CoreDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Workspace> Workspaces => Set<Workspace>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

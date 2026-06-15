@@ -88,6 +88,7 @@ public sealed class WorkspaceController : ControllerBase
     /// <summary>Lista los workspaces de una empresa.</summary>
     /// <response code="200">Lista de workspaces de la empresa.</response>
     [HttpGet("company/{companyId:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(IReadOnlyList<WorkspaceResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<WorkspaceResponse>>> GetByCompany(
         Guid companyId,
@@ -101,6 +102,7 @@ public sealed class WorkspaceController : ControllerBase
     /// <response code="200">Workspace encontrado.</response>
     /// <response code="404">Workspace no encontrado.</response>
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(WorkspaceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WorkspaceResponse>> GetById(
@@ -124,6 +126,7 @@ public sealed class WorkspaceController : ControllerBase
     /// <param name="cancellationToken">Token de cancelación.</param>
     /// <response code="200">Lista paginada de workspaces.</response>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(PagedResponse<WorkspaceResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<WorkspaceResponse>>> GetAll(
         [FromQuery] int page = 1,

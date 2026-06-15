@@ -12,16 +12,7 @@ import Offices from './pages/Offices';
 import MySpaces from './pages/MySpaces';
 import Profile from './pages/Profile';
 import Reservations from './pages/Reservations';
-
-
-function OfficeDetail() {
-  return (
-    <section>
-      <h1>Detalle de la Oficina</h1>
-      <p>Información detallada de la oficina seleccionada.</p>
-    </section>
-  );
-}
+import WorkspaceDetail from './pages/WorkspaceDetail';
 
 function Dashboard() {
   return (
@@ -74,7 +65,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/offices" element={<Offices />} />
-            <Route path="/offices/:id" element={<OfficeDetail />} />
+            <Route path="/offices/:id" element={<WorkspaceDetail />} />
+            <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<RegisterType />} />
             <Route path="/register/user" element={<Register />} />

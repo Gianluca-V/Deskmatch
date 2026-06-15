@@ -1,40 +1,25 @@
-import { History } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { History, Calendar } from 'lucide-react';
+import { useMyReservations } from '../hooks/useMyReservations';
 import './RecentActivity.css';
 
-function RecentActivity() {
-  // TODO: Obtener datos de actividad reciente desde API
-  const activities = [
-    {
-      id: 1,
-      name: 'Oficina Moderna Centro',
-      date: '4 jun 2026',
-      status: 'confirmed',
-      image: null,
-    },
-    {
-      id: 2,
-      name: 'Coworking Barcelona Tech',
-      date: '14 jun 2026',
-      status: 'pending',
-      image: null,
-    },
-    {
-      id: 3,
-      name: 'Sala de Reuniones Premium',
-      date: '19 may 2026',
-      status: 'cancelled',
-      image: null,
-    },
-  ];
+const STATUS_BADGE = {
+  1: { label: 'Confirmada', cls: 'activity-item__badge--confirmed' },
+  2: { label: 'Cancelada', cls: 'activity-item__badge--cancelled' },
+  3: { label: 'Completada', cls: 'activity-item__badge--pending' },
+};
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      confirmed: { label: 'Confirmada', class: 'activity-item__badge--confirmed' },
-      pending: { label: 'Pendiente', class: 'activity-item__badge--pending' },
-      cancelled: { label: 'Cancelada', class: 'activity-item__badge--cancelled' },
-    };
-    return badges[status] || badges.pending;
-  };
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('es-AR', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+}
+
+function RecentActivity() {
+  const navigate = useNavigate();
+  const { data: reservations = [], isLoading } = useMyReservations();
+
+  const recent = reservations.slice(0, 3);
 
   return (
     <div className="recent-activity">
@@ -44,29 +29,54 @@ function RecentActivity() {
       </div>
 
       <div className="recent-activity__list">
-        {activities.length > 0 ? (
-          activities.map((activity) => {
-            const badge = getStatusBadge(activity.status);
-            return (
-              <div key={activity.id} className="activity-item">
+        {isLoading && (
+          <>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="activity-item">
                 <div className="activity-item__image">
-                  {activity.image ? (
-                    <img src={activity.image} alt={activity.name} />
-                  ) : (
-                    <div className="activity-item__image-placeholder"></div>
-                  )}
+                  <div className="activity-item__image-placeholder" />
                 </div>
                 <div className="activity-item__content">
-                  <h4 className="activity-item__name">{activity.name}</h4>
-                  <p className="activity-item__date">{activity.date}</p>
+                  <div style={{ height: 13, background: '#e2e8f0', borderRadius: 5, marginBottom: 6, width: '70%' }} />
+                  <div style={{ height: 11, background: '#f1f5f9', borderRadius: 5, width: '45%' }} />
                 </div>
-                <span className={`activity-item__badge ${badge.class}`}>
+              </div>
+            ))}
+          </>
+        )}
+
+        {!isLoading && recent.length > 0 &&
+          recent.map((r) => {
+            const badge = STATUS_BADGE[r.status] ?? STATUS_BADGE[3];
+            return (
+              <div
+                key={r.id}
+                className="activity-item activity-item--clickable"
+                onClick={() => navigate(`/workspaces/${r.workspaceId}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/workspaces/${r.workspaceId}`)}
+              >
+                <div className="activity-item__image">
+                  <div className="activity-item__image-placeholder">
+                    <Calendar size={16} />
+                  </div>
+                </div>
+                <div className="activity-item__content">
+                  <h4 className="activity-item__name">
+                    Reserva #{r.id.slice(0, 6).toUpperCase()}
+                  </h4>
+                  <p className="activity-item__date">{formatDate(r.startTime)}</p>
+                </div>
+                <span className={`activity-item__badge ${badge.cls}`}>
                   {badge.label}
                 </span>
               </div>
             );
           })
-        ) : (
+        }
+
+        {!isLoading && recent.length === 0 && (
           <div className="recent-activity__empty">
             <p>No hay actividad reciente</p>
           </div>

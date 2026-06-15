@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 function RegisterCompany() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ companyName: '', email: '', website: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -181,7 +183,17 @@ function RegisterCompany() {
             </div>
             <div className="form-group auth-card__field">
               <label htmlFor="company-password">Contraseña</label>
-              <input id="company-password" name="password" value={formData.password} onChange={handleChange} disabled={loading} type="password" placeholder="********" required />
+              <div style={{ position: 'relative' }}>
+                <input id="company-password" name="password" value={formData.password} onChange={handleChange} disabled={loading} type={showPassword ? 'text' : 'password'} placeholder="********" required style={{ paddingRight: '44px' }} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', padding: 0 }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>{loading ? 'Creando cuenta...' : 'Crear cuenta'}</button>
           </form>
