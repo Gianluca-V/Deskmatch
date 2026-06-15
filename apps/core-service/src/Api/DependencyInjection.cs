@@ -13,6 +13,7 @@ using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Handlers;
 
+
 namespace DeskMatch.CoreService.Api;
 
 public static class DependencyInjection
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
+        services.AddScoped<IWorkspaceScheduleRepository, WorkspaceScheduleRepository>();
 
         return services;
     }
