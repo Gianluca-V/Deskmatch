@@ -17,7 +17,7 @@ function AdminLayout() {
 
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'A';
+    : '';
 
   const items = [
     { to: '/admin/companies', icon: Building2, label: 'Gestión de Empresas', subtext: 'KYB' },
@@ -43,12 +43,8 @@ function AdminLayout() {
         }}
       >
         <div style={{ height: '60px', display: 'flex', alignItems: 'center', paddingLeft: '16px', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: '#3a95df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}>
-            D
-          </div>
-          <div style={{ marginLeft: '12px', opacity: expanded ? 1 : 0, transition: 'opacity 150ms', whiteSpace: 'nowrap' }}>
-            <div style={{ fontWeight: 700, fontSize: '14px', color: '#1e2a3a' }}>DeskMatch</div>
-            <div style={{ fontSize: '10px', color: '#3a95df', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Admin</div>
+          <div style={{ opacity: expanded ? 1 : 0, transition: 'opacity 150ms', whiteSpace: 'nowrap' }}>
+            <div style={{ fontWeight: 700, fontSize: '14px', color: '#1a6fb5' }}>DeskMatch</div>            
           </div>
         </div>
 
@@ -92,7 +88,7 @@ function AdminLayout() {
               {initials}
             </div>
             <div style={{ opacity: expanded ? 1 : 0, transition: 'opacity 120ms', whiteSpace: 'nowrap' }}>
-              <div style={{ fontSize: '12.5px', fontWeight: 500, color: '#334155' }}>{user?.name || 'Admin'}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: 500, color: '#334155' }}>{user?.name}</div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>Administrador</div>
             </div>
           </div>
