@@ -29,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<IWorkspaceScheduleRepository, WorkspaceScheduleRepository>();
+        services.AddScoped<IWorkspaceBlockRepository, WorkspaceBlockRepository>();
+        
 
         return services;
     }

@@ -16,6 +16,10 @@ public class WorkspaceScheduleConfiguration : IEntityTypeConfiguration<Workspace
         builder.Property(x => x.CloseTime).IsRequired();
         builder.Property(x => x.IsAvailable).HasDefaultValue(true);
 
+        builder.HasIndex(x => new { x.WorkspaceId, x.DayOfWeek }).IsUnique();
+
+        builder.HasCheckConstraint("CK_WorkspaceSchedule_Times", "\"CloseTime\" > \"OpenTime\"");
+
         builder.HasOne(x => x.Workspace)
                .WithMany()
                .HasForeignKey(x => x.WorkspaceId)
