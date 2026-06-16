@@ -198,7 +198,7 @@ public sealed class ReservationController : ControllerBase
     {
         var workspace = await GetOwnedWorkspace(workspaceId, cancellationToken);
         var reservations = await _reservationRepository.GetByWorkspaceIdAsync(workspaceId, cancellationToken);
-        return Ok(reservations.Select(r => ToCompanyResponse(r, workspace.Name)).ToList());
+        return Ok(reservations.Select(r => ToCompanyResponse(r, workspace.Name, workspace.Images?.FirstOrDefault())).ToList());
     }
 
     private static ReservationResponseDto ToResponse(
@@ -222,21 +222,27 @@ public sealed class ReservationController : ControllerBase
     {
         var workspaceIds = reservations.Select(r => r.WorkspaceId).Distinct().ToList();
         var workspaceNames = new Dictionary<Guid, string?>();
+        var workspaceImages = new Dictionary<Guid, string?>();
 
         foreach (var wsId in workspaceIds)
         {
             var workspace = await _workspaceRepository.GetByIdAsync(wsId, cancellationToken);
             workspaceNames[wsId] = workspace?.Name;
+            workspaceImages[wsId] = workspace?.Images?.FirstOrDefault();
         }
 
         return reservations
-            .Select(r => ToCompanyResponse(r, workspaceNames.GetValueOrDefault(r.WorkspaceId)))
+            .Select(r => ToCompanyResponse(
+                r,
+                workspaceNames.GetValueOrDefault(r.WorkspaceId),
+                workspaceImages.GetValueOrDefault(r.WorkspaceId)))
             .ToList();
     }
 
     private static CompanyReservationResponseDto ToCompanyResponse(
         Domain.Reservations.Reservation r,
-        string? workspaceName) => new(
+        string? workspaceName,
+        string? workspaceImage = null) => new(
             r.Id,
             r.WorkspaceId,
             workspaceName,
@@ -245,7 +251,8 @@ public sealed class ReservationController : ControllerBase
             r.EndTime,
             r.TotalPrice,
             (int)r.Status,
-            r.CreatedAt);
+            r.CreatedAt,
+            workspaceImage);
 
     private static CompanyReservationSummaryDto ToSummary(IReadOnlyList<Domain.Reservations.Reservation> reservations)
     {

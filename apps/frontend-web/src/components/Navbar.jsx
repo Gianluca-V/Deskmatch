@@ -34,7 +34,6 @@ function Navbar() {
                   <Link to="/my-spaces" className="navbar__link">Mis Espacios</Link>
                   <Link to="/reservations" className="navbar__link">Reservas</Link>
                   <Link to="/dashboard" className="navbar__link">Dashboard</Link>
-                  <Link to="/profile/company" className="navbar__link">Gestionar Empresa</Link>
                   <Link to="/analytics" className="navbar__link">Analytics</Link>
                 </>
               ) : (

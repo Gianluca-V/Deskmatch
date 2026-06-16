@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using DeskMatch.CoreService.Application.Companies.Commands;
 using DeskMatch.CoreService.Application.Companies.Dtos;
@@ -46,6 +47,10 @@ public sealed class CompanyProfileController : ControllerBase
         var company = await _repository.GetByOwnerIdAsync(ownerId.Value, cancellationToken);
         if (company is null) return NotFound();
 
+        var ownerEmail = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value
+            ?? User.FindFirst(ClaimTypes.Email)?.Value
+            ?? User.FindFirst("email")?.Value;
+
         return Ok(new CompanyProfileResponseDto(
             company.Id,
             company.Name,
@@ -55,7 +60,8 @@ public sealed class CompanyProfileController : ControllerBase
             company.IsVerified,
             company.LogoUrl,
             company.PhoneNumber,
-            company.Location));
+            company.Location,
+            ownerEmail));
     }
 
     /// <summary>Actualiza el perfil de la empresa del usuario autenticado.</summary>

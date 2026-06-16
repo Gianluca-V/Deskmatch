@@ -52,7 +52,27 @@ function CompanyReservations({ reservations, isLoading }) {
   if (isLoading) {
     return (
       <div className="company-reservations">
-        <h3 className="company-reservations__title">Reservas Recientes</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 className="company-reservations__title">Reservas Recientes</h3>
+          <button
+            onClick={() => navigate('/reservations')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            Ver todas las reservas
+          </button>
+        </div>
         <div className="company-reservations__list">
           {[1, 2, 3].map((i) => (
             <div key={i} className="company-reservations__item skeleton">
@@ -71,14 +91,34 @@ function CompanyReservations({ reservations, isLoading }) {
   if (!reservations || reservations.length === 0) {
     return (
       <div className="company-reservations">
-        <h3 className="company-reservations__title">Reservas Recientes</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 className="company-reservations__title">Reservas Recientes</h3>
+          <button
+            onClick={() => navigate('/reservations')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            Ver todas las reservas
+          </button>
+        </div>
         <div className="company-reservations__empty">
           <p>No hay reservas recientes</p>
           <button
-            onClick={() => navigate('/company/reservations')}
+            onClick={() => navigate('/reservations')}
             className="company-reservations__view-all-btn"
           >
-            Ver todas las reservas <ArrowRight size={16} />
+            Ver todas las reservas
           </button>
         </div>
       </div>
@@ -87,7 +127,24 @@ function CompanyReservations({ reservations, isLoading }) {
 
   return (
     <div className="company-reservations">
-      <h3 className="company-reservations__title">Reservas Recientes</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 className="company-reservations__title">Reservas Recientes</h3>
+        <button
+          onClick={() => navigate('/reservations')}
+          style={{
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+          }}
+        >
+          Ver todas las reservas
+        </button>
+      </div>
       <div className="company-reservations__list">
         {reservations.slice(0, 5).map((reservation) => (
           <div key={reservation.id} className="company-reservations__item">
@@ -133,10 +190,10 @@ function CompanyReservations({ reservations, isLoading }) {
       </div>
       {reservations.length > 5 && (
         <button
-          onClick={() => navigate('/company/reservations')}
+          onClick={() => navigate('/reservations')}
           className="company-reservations__view-all-btn"
         >
-          Ver todas las reservas <ArrowRight size={16} />
+          Ver todas las reservas
         </button>
       )}
     </div>

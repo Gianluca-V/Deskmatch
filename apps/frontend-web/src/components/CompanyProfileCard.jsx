@@ -46,7 +46,8 @@ function CompanyProfileCard({ company, isLoading, error }) {
   }
 
   const companyName = company?.name || 'Mi Empresa';
-  const email = company?.contactEmail || 'No especificado';
+  const contactEmail = company?.contactEmail || 'No especificado';
+  const ownerEmail = company?.ownerEmail || 'No especificado';
   const phone = company?.phoneNumber || company?.phone || '';
   const location = company?.location || '';
   const description = company?.description || '';
@@ -75,7 +76,7 @@ function CompanyProfileCard({ company, isLoading, error }) {
                   </div>
                 )}
               </div>
-              <p className="company-profile-card__email">{email}</p>
+              <p className="company-profile-card__email">{ownerEmail}</p>
             </div>
           </div>
           <div className="company-profile-card__actions">
@@ -143,9 +144,19 @@ function CompanyProfileCard({ company, isLoading, error }) {
               <Mail size={18} />
             </div>
             <div>
-              <label className="company-profile-card__field-label">Correo de contacto</label>
+              <label className="company-profile-card__field-label">Email de la cuenta</label>
+              <p className="company-profile-card__field-value">{ownerEmail}</p>
+            </div>
+          </div>
+
+          <div className="company-profile-card__field">
+            <div className="company-profile-card__field-icon">
+              <Mail size={18} />
+            </div>
+            <div>
+              <label className="company-profile-card__field-label">Correo de contacto (empresa)</label>
               <p className={`company-profile-card__field-value ${!company?.contactEmail ? 'company-profile-card__field-value--empty' : ''}`}>
-                {email}
+                {contactEmail}
               </p>
             </div>
           </div>

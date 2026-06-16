@@ -9,4 +9,5 @@ public sealed record CompanyReservationResponseDto(
     DateTimeOffset EndTime,
     decimal TotalPrice,
     int Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? WorkspaceImage = null);

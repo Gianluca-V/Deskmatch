@@ -28,8 +28,10 @@ public static class DatabaseSeeder
     private static readonly Guid C4 = Guid.Parse("a1000000-0000-0000-0000-000000000004");
     private static readonly Guid C5 = Guid.Parse("a1000000-0000-0000-0000-000000000005");
 
-    // Manager dueño de las empresas seed (rogelio@datastar.com.ar)
-    private static readonly Guid SeedOwnerId = Guid.Parse("0673690c-4264-48db-b8e7-4258cca9445a");
+    // Owners de las empresas seed
+    private static readonly Guid RogelioId = Guid.Parse("0673690c-4264-48db-b8e7-4258cca9445a"); // rogelio@datastar.com.ar
+    private static readonly Guid Owner4 = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-000000000004");
+    private static readonly Guid Owner5 = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-000000000005");
 
     public static async Task SeedAsync(CoreDbContext db)
     {
@@ -51,7 +53,7 @@ public static class DatabaseSeeder
     [
         new Company(C1)
         {
-            OwnerId = SeedOwnerId,
+            OwnerId = RogelioId,
             Name = "Palermo Hub",
             Description = "Espacios modernos de trabajo en el corazón de Palermo. WiFi de alta velocidad, café incluido y comunidad de profesionales.",
             ContactEmail = "hola@palermohub.com.ar",
@@ -63,7 +65,7 @@ public static class DatabaseSeeder
         },
         new Company(C2)
         {
-            OwnerId = SeedOwnerId,
+            OwnerId = RogelioId,
             Name = "TechSpace BA",
             Description = "Coworking enfocado en tecnología y startups. Ambiente colaborativo, salas equipadas para videoconferencias y eventos.",
             ContactEmail = "info@techspaceba.com",
@@ -75,7 +77,7 @@ public static class DatabaseSeeder
         },
         new Company(C3)
         {
-            OwnerId = SeedOwnerId,
+            OwnerId = RogelioId,
             Name = "Corporate Center BA",
             Description = "Oficinas y salas de reunión en el microcentro porteño. Ideal para empresas que necesitan presencia en el centro financiero.",
             ContactEmail = "reservas@corporatecenterba.com",
@@ -87,7 +89,7 @@ public static class DatabaseSeeder
         },
         new Company(C4)
         {
-            OwnerId = SeedOwnerId,
+            OwnerId = Owner4,
             Name = "Belgrano Business",
             Description = "Espacios premium en Belgrano con recepción dedicada, estacionamiento privado y todas las comodidades ejecutivas.",
             ContactEmail = "contact@belgranobusiness.com.ar",
@@ -99,7 +101,7 @@ public static class DatabaseSeeder
         },
         new Company(C5)
         {
-            OwnerId = SeedOwnerId,
+            OwnerId = Owner5,
             Name = "Rosario Cowork",
             Description = "El espacio de coworking más grande de Rosario. Tarifas accesibles, 24 horas, ideal para freelancers y equipos remotos.",
             ContactEmail = "hola@rosariocowork.com",

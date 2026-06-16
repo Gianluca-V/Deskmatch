@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from './context/AuthContext';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -53,7 +54,8 @@ function Analytics() {
 
 function App() {
   const { isAuthenticated } = useAuth();
-  
+  useInactivityLogout();
+
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };

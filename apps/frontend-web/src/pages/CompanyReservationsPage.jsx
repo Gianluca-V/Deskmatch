@@ -126,7 +126,9 @@ function CompanyReservationsPage() {
                 return (
                   <div key={r.id} className="reservation-card">
                     <div className="reservation-card__image">
-                      <div className="reservation-card__image-placeholder" />
+                      {r.workspaceImage
+                        ? <img src={r.workspaceImage} alt={r.workspaceName ?? 'Espacio'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        : <div className="reservation-card__image-placeholder" />}
                     </div>
 
                     <div className="reservation-card__body">
