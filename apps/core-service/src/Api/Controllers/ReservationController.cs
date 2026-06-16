@@ -142,13 +142,18 @@ public sealed class ReservationController : ControllerBase
 
         var workspaceIds = reservations.Select(r => r.WorkspaceId).Distinct().ToList();
         var workspaceNames = new Dictionary<Guid, string?>();
+        var workspaceImages = new Dictionary<Guid, string?>();
         foreach (var wsId in workspaceIds)
         {
             var ws = await _workspaceRepository.GetByIdAsync(wsId, cancellationToken);
             workspaceNames[wsId] = ws?.Name;
+            workspaceImages[wsId] = ws?.Images?.FirstOrDefault();
         }
 
-        return Ok(reservations.Select(r => ToResponse(r, workspaceNames.GetValueOrDefault(r.WorkspaceId))).ToList());
+        return Ok(reservations.Select(r => ToResponse(
+            r,
+            workspaceNames.GetValueOrDefault(r.WorkspaceId),
+            workspaceImages.GetValueOrDefault(r.WorkspaceId))).ToList());
     }
 
     /// <summary>Lista las reservas recibidas en todos los espacios de la empresa del usuario autenticado.</summary>
@@ -196,7 +201,10 @@ public sealed class ReservationController : ControllerBase
         return Ok(reservations.Select(r => ToCompanyResponse(r, workspace.Name)).ToList());
     }
 
-    private static ReservationResponseDto ToResponse(Domain.Reservations.Reservation r, string? workspaceName = null) => new(
+    private static ReservationResponseDto ToResponse(
+        Domain.Reservations.Reservation r,
+        string? workspaceName = null,
+        string? workspaceImage = null) => new(
         r.Id,
         r.WorkspaceId,
         r.GuestId,
@@ -205,7 +213,8 @@ public sealed class ReservationController : ControllerBase
         r.TotalPrice,
         (int)r.Status,
         r.CreatedAt,
-        workspaceName);
+        workspaceName,
+        workspaceImage);
 
     private async Task<IReadOnlyList<CompanyReservationResponseDto>> ToCompanyResponses(
         IReadOnlyList<Domain.Reservations.Reservation> reservations,

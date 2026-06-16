@@ -39,11 +39,8 @@ public sealed class CreateReservationCommandHandler : ICommandHandler<CreateRese
         if (workspace is null || !workspace.IsActive)
             throw new NotFoundException("Workspace", command.WorkspaceId);
 
-        var company = await _companyRepository.GetByIdAsync(workspace.CompanyId, cancellationToken);
-        if (company is null)
-            throw new NotFoundException("Company", workspace.CompanyId);
-
-        if (company.OwnerId.HasValue && company.OwnerId.Value == command.GuestId)
+        var userCompany = await _companyRepository.GetByOwnerIdAsync(command.GuestId, cancellationToken);
+        if (userCompany is not null && userCompany.Id == workspace.CompanyId)
             throw new ForbiddenException("No podés reservar un espacio de tu propia empresa.");
 
         if (command.StartTime <= DateTimeOffset.UtcNow)

@@ -9,4 +9,5 @@ public sealed record ReservationResponseDto(
     decimal TotalPrice,
     int Status,
     DateTime CreatedAt,
-    string? WorkspaceName = null);
+    string? WorkspaceName = null,
+    string? WorkspaceImage = null);
