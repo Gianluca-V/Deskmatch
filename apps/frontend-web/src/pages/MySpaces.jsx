@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import OfficeModal from '../components/OfficeModal';
 import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 import { useDeleteOffice } from '../hooks/useDeleteOffice';
+import { useCompanyReservationsSummary } from '../hooks/useCompanyReservations';
 import { useAuth } from '../context/AuthContext';
 
 const STATUS_LABELS = {
@@ -16,6 +18,7 @@ const STATUS_CLASS = {
 };
 
 function MySpaces() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -38,6 +41,7 @@ function MySpaces() {
   const companyId = company?.id;
 
   const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
+  const { data: reservationSummary } = useCompanyReservationsSummary();
   const { mutate: deleteSpace } = useDeleteOffice();
 
   const filteredSpaces = useMemo(() => {
@@ -81,11 +85,13 @@ function MySpaces() {
         </article>
         <article className="my-spaces__metric-card">
           <p>Reservas este mes</p>
-          <strong>—</strong>
+          <strong>{reservationSummary?.thisMonth ?? '—'}</strong>
         </article>
         <article className="my-spaces__metric-card">
           <p>Ingresos del mes</p>
-          <strong>—</strong>
+          <strong>
+            {reservationSummary ? `$ ${Number(reservationSummary.revenueThisMonth).toLocaleString('es-AR')}` : '—'}
+          </strong>
         </article>
       </section>
 
@@ -154,7 +160,13 @@ function MySpaces() {
                     {canDelete && (
                       <button type="button" className="btn btn-danger" onClick={() => { if (window.confirm('¿Eliminar este espacio?')) deleteSpace(space.id); }}>Eliminar</button>
                     )}
-                    <button type="button" className="btn btn-primary">Ver reservas</button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => navigate(`/my-spaces/${space.id}/reservations`)}
+                    >
+                      Ver reservas
+                    </button>
                   </div>
                 </div>
               </article>

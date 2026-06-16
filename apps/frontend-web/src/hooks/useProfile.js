@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { profileAPI } from '../api/profile';
+import { getWorkspacesByCompany } from '../api/offices';
+import { getCompanyReservations } from '../api/reservations';
 
 export function useProfile() {
   const { user: authUser } = useAuth();
@@ -45,112 +47,15 @@ export function useProfileCompany() {
     queryFn: async () => {
       try {
         const data = await profileAPI.getCompany();
-
-        // En desarrollo, agregar datos de prueba si no hay espacios/reservas
-        if (import.meta.env.DEV && (!data.spaces || data.spaces.length === 0)) {
-          const mockData = {
-            id: 1,
-            name: 'WorkSpace Solutions',
-            contactEmail: 'owner@example.com',
-            phoneNumber: '+34 912 345 678',
-            phone: '+34 912 345 678',
-            location: 'Madrid, España',
-            description: 'Proveedor líder de espacios de trabajo flexibles en España.',
-            websiteUrl: 'https://www.workspacesolutions.es',
-            isVerified: true,
-            averageRating: 4.8,
-            reviewCount: 127,
-            spaces: [
-              {
-                id: 1,
-                name: 'Oficina Moderna Centro',
-                city: 'Madrid',
-                location: 'Madrid',
-                type: 'Oficina Privada',
-                price: '€250',
-                image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
-              },
-              {
-                id: 2,
-                name: 'Coworking Barcelona Tech',
-                city: 'Barcelona',
-                location: 'Barcelona',
-                type: 'Coworking',
-                price: '€35',
-                image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop'
-              },
-              {
-                id: 3,
-                name: 'Sala de Reuniones Premium',
-                city: 'Madrid',
-                location: 'Madrid',
-                type: 'Sala de Reuniones',
-                price: '€120',
-                image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=400&h=300&fit=crop'
-              }
-            ],
-            reservations: [
-              {
-                id: 1,
-                space: {
-                  id: 1,
-                  name: 'Oficina Moderna Centro',
-                  image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=100&h=100&fit=crop'
-                },
-                user: {
-                  firstName: 'María',
-                  lastName: 'González'
-                },
-                startDate: '2026-06-02',
-                endDate: '2026-06-07',
-                totalPrice: '€1250',
-                status: 'Confirmada'
-              },
-              {
-                id: 2,
-                space: {
-                  id: 2,
-                  name: 'Coworking Barcelona Tech',
-                  image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=100&h=100&fit=crop'
-                },
-                user: {
-                  firstName: 'María',
-                  lastName: 'González'
-                },
-                startDate: '2026-06-12',
-                endDate: '2026-06-17',
-                totalPrice: '€175',
-                status: 'Pendiente'
-              },
-              {
-                id: 3,
-                space: {
-                  id: 3,
-                  name: 'Sala de Reuniones Premium',
-                  image: 'https://images.unsplash.com/photo-1554224311-beee415c15cb?w=100&h=100&fit=crop'
-                },
-                user: {
-                  firstName: 'María',
-                  lastName: 'González'
-                },
-                startDate: '2026-05-18',
-                endDate: '2026-05-19',
-                totalPrice: '€120',
-                status: 'Cancelada'
-              }
-            ]
-          };
-          // Mantener datos reales pero usar espacios y reservas de prueba
-          return {
-            ...data,
-            spaces: mockData.spaces,
-            reservations: mockData.reservations,
-            phone: data.phoneNumber || data.phone,
-          };
-        }
+        const [spaces, reservations] = await Promise.all([
+          getWorkspacesByCompany(data.id),
+          getCompanyReservations(),
+        ]);
 
         return {
           ...data,
+          spaces,
+          reservations,
           phone: data.phoneNumber || data.phone,
         };
       } catch (error) {

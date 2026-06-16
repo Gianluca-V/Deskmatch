@@ -8,3 +8,12 @@ export const cancelReservation = (id) =>
 
 export const getMyReservations = () =>
   api.get('/api/reservations/me').then((r) => r.data);
+
+export const getCompanyReservations = () =>
+  api.get('/api/companies/me/reservations').then((r) => r.data);
+
+export const getCompanyReservationsSummary = () =>
+  api.get('/api/companies/me/reservations/summary').then((r) => r.data);
+
+export const getWorkspaceReservations = (workspaceId) =>
+  api.get(`/api/workspaces/${workspaceId}/reservations`).then((r) => r.data);

@@ -39,6 +39,25 @@ public class ReservationRepository : IReservationRepository
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Reservation>> GetByWorkspaceIdAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken = default)
+        => await _context.Reservations
+            .Where(r => r.WorkspaceId == workspaceId)
+            .OrderByDescending(r => r.StartTime)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Reservation>> GetByCompanyIdAsync(
+        Guid companyId,
+        CancellationToken cancellationToken = default)
+        => await (
+            from reservation in _context.Reservations
+            join workspace in _context.Workspaces on reservation.WorkspaceId equals workspace.Id
+            where workspace.CompanyId == companyId
+            orderby reservation.StartTime descending
+            select reservation)
+            .ToListAsync(cancellationToken);
+
     public async Task AddAsync(Reservation reservation, CancellationToken cancellationToken = default)
         => await _context.Reservations.AddAsync(reservation, cancellationToken);
 

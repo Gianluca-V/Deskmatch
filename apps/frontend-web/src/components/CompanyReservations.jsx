@@ -4,6 +4,18 @@ import './CompanyReservations.css';
 
 function CompanyReservations({ reservations, isLoading }) {
   const navigate = useNavigate();
+
+  const statusKey = (status) => {
+    if (typeof status === 'number') {
+      return {
+        1: 'confirmed',
+        2: 'cancelled',
+        3: 'completed',
+      }[status] ?? 'pending';
+    }
+    return status?.toLowerCase();
+  };
+
   const getStatusBadgeClass = (status) => {
     const statusMap = {
       confirmed: 'company-reservations__status--confirmed',
@@ -11,7 +23,7 @@ function CompanyReservations({ reservations, isLoading }) {
       cancelled: 'company-reservations__status--cancelled',
       completed: 'company-reservations__status--completed',
     };
-    return statusMap[status?.toLowerCase()] || 'company-reservations__status--pending';
+    return statusMap[statusKey(status)] || 'company-reservations__status--pending';
   };
 
   const getStatusLabel = (status) => {
@@ -21,7 +33,7 @@ function CompanyReservations({ reservations, isLoading }) {
       cancelled: 'Cancelada',
       completed: 'Completada',
     };
-    return statusMap[status?.toLowerCase()] || status;
+    return statusMap[statusKey(status)] || status;
   };
 
   const formatDate = (dateString) => {
@@ -63,7 +75,7 @@ function CompanyReservations({ reservations, isLoading }) {
         <div className="company-reservations__empty">
           <p>No hay reservas recientes</p>
           <button
-            onClick={() => navigate('/reservations')}
+            onClick={() => navigate('/company/reservations')}
             className="company-reservations__view-all-btn"
           >
             Ver todas las reservas <ArrowRight size={16} />
@@ -80,8 +92,11 @@ function CompanyReservations({ reservations, isLoading }) {
         {reservations.slice(0, 5).map((reservation) => (
           <div key={reservation.id} className="company-reservations__item">
             <div className="company-reservations__item-image">
-              {reservation.space?.image ? (
-                <img src={reservation.space.image} alt={reservation.space.name} />
+              {reservation.space?.image || reservation.workspaceImage ? (
+                <img
+                  src={reservation.space?.image ?? reservation.workspaceImage}
+                  alt={reservation.space?.name ?? reservation.workspaceName}
+                />
               ) : (
                 <div className="company-reservations__image-placeholder"></div>
               )}
@@ -90,10 +105,12 @@ function CompanyReservations({ reservations, isLoading }) {
               <div className="company-reservations__header">
                 <div>
                   <h4 className="company-reservations__space-name">
-                    {reservation.space?.name || 'Espacio desconocido'}
+                    {reservation.space?.name || reservation.workspaceName || 'Espacio desconocido'}
                   </h4>
                   <p className="company-reservations__user-name">
-                    {reservation.user?.firstName} {reservation.user?.lastName}
+                    {reservation.user?.firstName
+                      ? `${reservation.user.firstName} ${reservation.user.lastName ?? ''}`.trim()
+                      : `Huésped ${reservation.guestId?.slice(0, 8).toUpperCase() ?? 'N/D'}`}
                   </p>
                 </div>
                 <span className={`company-reservations__status ${getStatusBadgeClass(reservation.status)}`}>
@@ -103,7 +120,7 @@ function CompanyReservations({ reservations, isLoading }) {
               <div className="company-reservations__details">
                 <div className="company-reservations__detail">
                   <Calendar size={14} />
-                  <span>{formatDateRange(reservation.startDate, reservation.endDate)}</span>
+                  <span>{formatDateRange(reservation.startDate ?? reservation.startTime, reservation.endDate ?? reservation.endTime)}</span>
                 </div>
               </div>
               <div className="company-reservations__price">
@@ -116,7 +133,7 @@ function CompanyReservations({ reservations, isLoading }) {
       </div>
       {reservations.length > 5 && (
         <button
-          onClick={() => navigate('/reservations')}
+          onClick={() => navigate('/company/reservations')}
           className="company-reservations__view-all-btn"
         >
           Ver todas las reservas <ArrowRight size={16} />

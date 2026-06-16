@@ -12,6 +12,7 @@ import Offices from './pages/Offices';
 import MySpaces from './pages/MySpaces';
 import Profile from './pages/Profile';
 import Reservations from './pages/Reservations';
+import CompanyReservationsPage from './pages/CompanyReservationsPage';
 import WorkspaceDetail from './pages/WorkspaceDetail';
 
 function Dashboard() {
@@ -77,6 +78,8 @@ function App() {
             <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/reservations" element={<ProtectedRoute><Reservations /></ProtectedRoute>} />
+            <Route path="/company/reservations" element={<ProtectedRoute><CompanyReservationsPage /></ProtectedRoute>} />
+            <Route path="/my-spaces/:workspaceId/reservations" element={<ProtectedRoute><CompanyReservationsPage /></ProtectedRoute>} />
             <Route path="/profile/user" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/company" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           </Routes>
