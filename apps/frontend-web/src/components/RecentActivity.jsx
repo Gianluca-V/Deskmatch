@@ -15,6 +15,13 @@ function formatDate(iso) {
   });
 }
 
+function formatDateRange(startDate, endDate) {
+  if (!startDate) return '';
+  const start = formatDate(startDate);
+  const end = endDate ? formatDate(endDate) : '';
+  return `${start} ${end ? `- ${end}` : ''}`;
+}
+
 function RecentActivity() {
   const navigate = useNavigate();
   const { data: reservations = [], isLoading } = useMyReservations();
@@ -58,15 +65,16 @@ function RecentActivity() {
                 onKeyDown={(e) => e.key === 'Enter' && navigate(`/workspaces/${r.workspaceId}`)}
               >
                 <div className="activity-item__image">
-                  <div className="activity-item__image-placeholder">
-                    <Calendar size={16} />
-                  </div>
+                  {r.workspaceImage
+                    ? <img src={r.workspaceImage} alt={r.workspaceName ?? 'Espacio'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    : <div className="activity-item__image-placeholder"><Calendar size={16} /></div>}
                 </div>
                 <div className="activity-item__content">
                   <h4 className="activity-item__name">
-                    Reserva #{r.id.slice(0, 6).toUpperCase()}
+                    {r.workspaceName ?? 'Espacio de trabajo'}
                   </h4>
-                  <p className="activity-item__date">{formatDate(r.startTime)}</p>
+                  <p className="activity-item__date">{formatDateRange(r.startTime, r.endTime)}</p>
+                  <p className="activity-item__price">€ {r.totalPrice}</p>
                 </div>
                 <span className={`activity-item__badge ${badge.cls}`}>
                   {badge.label}
