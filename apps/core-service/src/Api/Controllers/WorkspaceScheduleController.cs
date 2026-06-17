@@ -49,21 +49,43 @@ public sealed class WorkspaceScheduleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<WorkspaceScheduleResponse>> Create(
         Guid workspaceId,
-        [FromBody] CreateWorkspaceScheduleRequest request,
+        [FromBody] UpdateWorkspaceScheduleRequest request,
         CancellationToken cancellationToken)
     {
         var schedule = new WorkspaceSchedule(Guid.NewGuid())
         {
             WorkspaceId = workspaceId,
             DayOfWeek = request.DayOfWeek,
-            OpenTime = request.OpenTime,
-            CloseTime = request.CloseTime,
+            OpenTime = TimeOnly.Parse(request.OpenTime),
+            CloseTime = TimeOnly.Parse(request.CloseTime),
             IsAvailable = request.IsAvailable
         };
 
         var id = await _repository.AddAsync(schedule, cancellationToken);
         var created = await _repository.GetByIdAsync(id, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { workspaceId, id }, ToResponse(created!));
+    }
+
+    /// <summary>Actualiza un horario.</summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(WorkspaceScheduleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<WorkspaceScheduleResponse>> Update(
+    Guid workspaceId,
+    Guid id,
+    [FromBody] UpdateWorkspaceScheduleRequest request,
+    CancellationToken cancellationToken)
+    {
+    var schedule = await _repository.GetByIdAsync(id, cancellationToken);
+    if (schedule is null) return NotFound();
+
+    schedule.DayOfWeek = request.DayOfWeek;
+    schedule.OpenTime = TimeOnly.Parse(request.OpenTime);
+    schedule.CloseTime = TimeOnly.Parse(request.CloseTime);
+    schedule.IsAvailable = request.IsAvailable;
+
+    await _repository.UpdateAsync(schedule, cancellationToken);
+    return Ok(ToResponse(schedule));
     }
 
     /// <summary>Elimina un horario.</summary>

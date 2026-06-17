@@ -14,6 +14,9 @@ using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Handlers;
 
 
+
+
+
 namespace DeskMatch.CoreService.Api;
 
 public static class DependencyInjection
@@ -30,7 +33,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<IWorkspaceScheduleRepository, WorkspaceScheduleRepository>();
         services.AddScoped<IWorkspaceBlockRepository, WorkspaceBlockRepository>();
-        
+        services.AddScoped<ICommandHandler<CreateWorkspaceScheduleCommand, Guid>, CreateWorkspaceScheduleCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateWorkspaceScheduleCommand>, UpdateWorkspaceScheduleCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteWorkspaceScheduleCommand>, DeleteWorkspaceScheduleCommandHandler>();
 
         return services;
     }

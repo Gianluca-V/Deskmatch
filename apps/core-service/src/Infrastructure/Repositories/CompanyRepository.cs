@@ -35,4 +35,7 @@ public class CompanyRepository : ICompanyRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => await _context.SaveChangesAsync(cancellationToken);
+
+    public async Task<Company?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
+    => await _context.Companies.FirstOrDefaultAsync(c => c.OwnerId == ownerId, cancellationToken);    
 }
