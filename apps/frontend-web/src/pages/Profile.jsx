@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useProfile, useProfileCompany } from '../hooks/useProfile';
+import { useMyReservations } from '../hooks/useMyReservations';
 import GuestProfileCard from '../components/GuestProfileCard';
 import CompanyProfileCard from '../components/CompanyProfileCard';
 import CompanyStats from '../components/CompanyStats';
@@ -15,6 +16,7 @@ function Profile() {
 
   const { data: userProfile, isLoading: userLoading, error: userError } = useProfile();
   const { data: companyProfile, isLoading: companyLoading, error: companyError } = useProfileCompany();
+  const { data: userReservations = [], isLoading: reservationsLoading } = useMyReservations();
 
   const companyStats = companyProfile ? {
     publishedSpaces: companyProfile.spaces?.length || 0,
@@ -77,8 +79,8 @@ function Profile() {
 
                   <section className="profile-page__section">
                     <CompanyReservations
-                      reservations={companyProfile.reservations}
-                      isLoading={companyLoading}
+                      reservations={userReservations.slice(0, 3)}
+                      isLoading={reservationsLoading}
                     />
                   </section>
                 </div>

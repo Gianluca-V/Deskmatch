@@ -34,8 +34,12 @@ function UserMenu() {
 
   const getProfileRoute = () => {
     // Manager = empresa/company user, User = regular user
-    return user.role === 'Manager' ? '/profile/company' : '/profile/user';
+    return user.role === 'Manager' || user.role === 'Company' || user.role === 'Admin'
+      ? '/profile/company'
+      : '/profile/user';
   };
+
+  const isCompanyUser = user.role === 'Manager' || user.role === 'Company' || user.role === 'Admin';
 
   // Obtener inicial del usuario
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
@@ -88,12 +92,12 @@ function UserMenu() {
           </Link>
 
           <Link
-            to="/reservations"
+            to={isCompanyUser ? '/company/reservations' : '/reservations'}
             className="user-menu__item"
             onClick={() => setIsOpen(false)}
           >
             <Calendar size={18} />
-            <span>Mis Reservas</span>
+            <span>{isCompanyUser ? 'Reservas recibidas' : 'Mis Reservas'}</span>
           </Link>
 
           <Link

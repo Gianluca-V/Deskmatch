@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from './context/AuthContext';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,16 +13,8 @@ import Offices from './pages/Offices';
 import MySpaces from './pages/MySpaces';
 import Profile from './pages/Profile';
 import Reservations from './pages/Reservations';
-
-
-function OfficeDetail() {
-  return (
-    <section>
-      <h1>Detalle de la Oficina</h1>
-      <p>Información detallada de la oficina seleccionada.</p>
-    </section>
-  );
-}
+import CompanyReservationsPage from './pages/CompanyReservationsPage';
+import WorkspaceDetail from './pages/WorkspaceDetail';
 
 function Dashboard() {
   return (
@@ -61,7 +54,8 @@ function Analytics() {
 
 function App() {
   const { isAuthenticated } = useAuth();
-  
+  useInactivityLogout();
+
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
@@ -74,7 +68,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/offices" element={<Offices />} />
-            <Route path="/offices/:id" element={<OfficeDetail />} />
+            <Route path="/offices/:id" element={<WorkspaceDetail />} />
+            <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<RegisterType />} />
             <Route path="/register/user" element={<Register />} />
@@ -85,6 +80,8 @@ function App() {
             <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/reservations" element={<ProtectedRoute><Reservations /></ProtectedRoute>} />
+            <Route path="/company/reservations" element={<ProtectedRoute><CompanyReservationsPage /></ProtectedRoute>} />
+            <Route path="/my-spaces/:workspaceId/reservations" element={<ProtectedRoute><CompanyReservationsPage /></ProtectedRoute>} />
             <Route path="/profile/user" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/company" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           </Routes>

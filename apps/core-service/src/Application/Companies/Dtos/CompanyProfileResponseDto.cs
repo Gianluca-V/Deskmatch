@@ -9,4 +9,5 @@ public sealed record CompanyProfileResponseDto(
     bool IsVerified,
     string? LogoUrl,
     string? PhoneNumber,
-    string? Location);
+    string? Location,
+    string? OwnerEmail = null);

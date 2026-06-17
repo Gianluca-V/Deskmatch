@@ -51,6 +51,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
     await db.Database.MigrateAsync();
+
+    if (app.Environment.IsDevelopment())
+        await DatabaseSeeder.SeedAsync(db);
 }
 
 app.UseBuildingBlocksMiddleware();
