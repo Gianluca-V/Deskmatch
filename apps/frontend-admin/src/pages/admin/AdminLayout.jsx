@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Building2, Users, Shield, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 function AdminLayout() {
@@ -20,6 +20,7 @@ function AdminLayout() {
     : '';
 
   const items = [
+    { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/companies', icon: Building2, label: 'Gestión de Empresas', subtext: 'KYB' },
     { to: '/admin/users', icon: Users, label: 'Gestión de Usuarios' },
     { to: '/admin/audit-logs', icon: Shield, label: 'Historial de Auditoría', subtext: 'Solo lectura' },

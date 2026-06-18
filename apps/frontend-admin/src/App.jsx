@@ -7,6 +7,7 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminUsersView from './pages/admin/AdminUsersView';
 import AdminCompaniesView from './pages/admin/AdminCompaniesView';
 import AdminAuditLogsView from './pages/admin/AdminAuditLogsView';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function ProtectedRoute() {
   const { isAuthenticated, user } = useAuth();
@@ -29,7 +30,8 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<Navigate to="users" replace />} />
+          <Route path="/admin" element={<Navigate to="dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsersView />} />
           <Route path="/admin/companies" element={<AdminCompaniesView />} />
           <Route path="/admin/audit-logs" element={<AdminAuditLogsView />} />
