@@ -23,4 +23,5 @@ public class ApplicationUser : IdentityUser<Guid>
     public DateTime? UpdatedAt { get; set; }
 
     public DateTime? RefreshTokenExpiryTime { get; set; }
+    public bool IsSuspended { get; set; } = false;
 }

@@ -38,5 +38,18 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("NOW()");
+        
+        builder.Property(c => c.KybStatus)
+            .IsRequired()
+            .HasDefaultValue(KybStatus.NotSubmitted);
+
+        builder.Property(c => c.TaxId)
+            .HasMaxLength(64);
+
+        builder.Property(c => c.LegalName)
+            .HasMaxLength(256);
+
+        builder.Property(c => c.RegistrationDocumentUrl)
+            .HasMaxLength(512);
     }
 }

@@ -20,6 +20,16 @@ public class CompanyRepository : ICompanyRepository
     public async Task<Company?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
         => await _context.Companies.FirstOrDefaultAsync(c => c.OwnerId == ownerId, cancellationToken);
 
+    public async Task<(IReadOnlyList<Company> Items, int Total)> GetPagedAsync(int skip, int take, CancellationToken ct = default)
+    {
+        var total = await _context.Companies.CountAsync(ct);
+        var items = await _context.Companies
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(ct);
+        return (items, total);
+    }
     public async Task<IReadOnlyList<Company>> GetAllAsync(CancellationToken cancellationToken = default)
         => await _context.Companies.ToListAsync(cancellationToken);
 

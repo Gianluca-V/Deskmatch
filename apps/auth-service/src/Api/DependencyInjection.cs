@@ -8,6 +8,8 @@ using DeskMatch.SDK.Redis;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using DeskMatch.AuthService.Application.Admin;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,12 +34,33 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Events.OnRedirectToLogin = context =>
+            {
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            };
+        });
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        });
+
+
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IUserProfileService, UserProfileService>();
         services.AddRedisSdk(configuration);
         services.AddSingleton<ICacheService, CacheService>();
         services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
         services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
 
         return services;
     }
