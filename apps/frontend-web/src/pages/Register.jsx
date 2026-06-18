@@ -18,21 +18,8 @@ function Register() {
     if (typeof error === 'string') {
       const lowerError = error.toLowerCase();
 
-      if (lowerError.includes('passwordrequiresnonalphanumeric') ||
-          lowerError.includes('non alphanumeric')) {
-        return 'La contraseña debe incluir al menos un carácter especial como: ! @ # $ % ^ & *';
-      }
-      if (lowerError.includes('passwordrequiresupper') ||
-          lowerError.includes('uppercase')) {
-        return 'La contraseña debe incluir al menos una letra mayúscula';
-      }
-      if (lowerError.includes('passwordrequireslower') ||
-          lowerError.includes('lowercase')) {
-        return 'La contraseña debe incluir al menos una letra minúscula';
-      }
-      if (lowerError.includes('passwordrequiresdigit') ||
-          lowerError.includes('digit')) {
-        return 'La contraseña debe incluir al menos un número';
+      if (lowerError.includes('password')) {
+        return 'La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *';
       }
       if (lowerError.includes('email')) {
         return 'El correo electrónico es inválido o ya está registrado';
@@ -53,8 +40,8 @@ function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 8) {
+      setError('La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *');
       setLoading(false);
       return;
     }
@@ -186,7 +173,7 @@ function Register() {
                 <input
                   id="register-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}

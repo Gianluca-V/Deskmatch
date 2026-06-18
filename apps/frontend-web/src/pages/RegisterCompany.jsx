@@ -20,17 +20,8 @@ function RegisterCompany() {
     if (typeof error === 'string') {
       const lowerError = error.toLowerCase();
 
-      if (lowerError.includes('passwordrequiresnonalphanumeric') || lowerError.includes('non alphanumeric')) {
-        return 'La contraseña debe incluir al menos un carácter especial como: ! @ # $ % ^ & *';
-      }
-      if (lowerError.includes('passwordrequiresupper') || lowerError.includes('uppercase')) {
-        return 'La contraseña debe incluir al menos una letra mayúscula';
-      }
-      if (lowerError.includes('passwordrequireslower') || lowerError.includes('lowercase')) {
-        return 'La contraseña debe incluir al menos una letra minúscula';
-      }
-      if (lowerError.includes('passwordrequiresdigit') || lowerError.includes('digit')) {
-        return 'La contraseña debe incluir al menos un número';
+      if (lowerError.includes('password')) {
+        return 'La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *';
       }
       if (lowerError.includes('email')) {
         return 'El correo electrónico es inválido o ya está registrado';
@@ -53,8 +44,8 @@ function RegisterCompany() {
         return;
       }
 
-      if (formData.password.length < 6) {
-        setError('La contraseña debe tener al menos 6 caracteres');
+      if (formData.password.length < 8) {
+        setError('La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *');
         setLoading(false);
         return;
       }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OfficeModal from '../components/OfficeModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 import { useDeleteOffice } from '../hooks/useDeleteOffice';
@@ -23,6 +24,8 @@ function MySpaces() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [spaceToDelete, setSpaceToDelete] = useState(null);
 
   function handleEdit(space) {
     setEditingSpace(space);
@@ -32,6 +35,23 @@ function MySpaces() {
   function handleCloseModal() {
     setModalOpen(false);
     setEditingSpace(null);
+  }
+
+  function handleOpenDeleteModal(space) {
+    setSpaceToDelete(space);
+    setDeleteModalOpen(true);
+  }
+
+  function handleCloseDeleteModal() {
+    setDeleteModalOpen(false);
+    setSpaceToDelete(null);
+  }
+
+  function handleConfirmDelete() {
+    if (spaceToDelete) {
+      deleteSpace(spaceToDelete.id);
+      handleCloseDeleteModal();
+    }
   }
 
   const { user } = useAuth();
@@ -158,7 +178,7 @@ function MySpaces() {
                   <div className="my-spaces__actions">
                     <button type="button" className="btn btn-secondary" onClick={() => handleEdit(space)}>Editar</button>
                     {canDelete && (
-                      <button type="button" className="btn btn-danger" onClick={() => { if (window.confirm('¿Eliminar este espacio?')) deleteSpace(space.id); }}>Eliminar</button>
+                      <button type="button" className="btn btn-danger" onClick={() => handleOpenDeleteModal(space)}>Eliminar</button>
                     )}
                     <button
                       type="button"
@@ -180,6 +200,15 @@ function MySpaces() {
         onClose={handleCloseModal}
         companyId={companyId ?? ''}
         initialValues={editingSpace}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar espacio"
+        message={spaceToDelete ? `¿Estás seguro de que querés eliminar "${spaceToDelete.name}"? Esta acción no se puede deshacer.` : ''}
+        isPending={false}
       />
     </section>
   );

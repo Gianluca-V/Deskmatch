@@ -354,25 +354,14 @@
   border-top: 1px solid var(--color-border);
 }
 
-.ws-card__price {
+.ws-card__prices {
   display: flex;
-  align-items: baseline;
-  gap: 3px;
+  gap: 16px;
+  align-items: center;
 }
 
-.ws-card__price strong {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--color-text);
-}
-
-.ws-card__price span {
+.ws-card__price-item {
   font-size: 12px;
-  color: var(--color-muted);
-}
-
-.ws-card__price-alt {
-  font-size: 11px;
   color: var(--color-muted);
   white-space: nowrap;
 }

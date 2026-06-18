@@ -92,15 +92,18 @@ function WorkspaceCard({ workspace }) {
         </div>
 
         <div className="ws-card__footer">
-          <div className="ws-card__price">
-            <strong>${workspace.pricePerHour?.toFixed(0)}</strong>
-            <span>/ hora</span>
+          <div className="ws-card__prices">
+            {workspace.pricePerHour && (
+              <span className="ws-card__price-item">
+                ${workspace.pricePerHour?.toFixed(0)} / hora
+              </span>
+            )}
+            {workspace.pricePerDay && (
+              <span className="ws-card__price-item">
+                ${workspace.pricePerDay?.toFixed(0)} / día
+              </span>
+            )}
           </div>
-          {workspace.pricePerDay && (
-            <div className="ws-card__price-alt">
-              ${workspace.pricePerDay?.toFixed(0)} / día
-            </div>
-          )}
           <button className="ws-card__btn">Ver espacio</button>
         </div>
       </div>
