@@ -1,4 +1,15 @@
 import { useMemo } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useHostDashboard } from '../hooks/useHostDashboard';
 import './AnalyticsDashboard.css';
 
@@ -43,6 +54,14 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? String(value) : dateFormatter.format(date);
 }
 
+function formatShortDate(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+}
+
 function toArray(value) {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null || value === '') return [];
@@ -57,6 +76,8 @@ function getStatusMeta(status) {
 function normalizeDashboard(data) {
   const popularWorkspaces = toArray(data?.PopularWorkspaces);
   const recentActivity = toArray(data?.RecentActivity);
+  const dailyReservationsChart = toArray(data?.DailyReservationsChart);
+  const revenueByWorkspaceChart = toArray(data?.RevenueByWorkspaceChart);
 
   return {
     totalRevenue: data?.TotalRevenue ?? 0,
@@ -75,7 +96,19 @@ function normalizeDashboard(data) {
       createdAt: reservation?.CreatedAt,
       status: reservation?.Status,
     })),
+    dailyReservationsChart: dailyReservationsChart.map((item) => ({
+      date: item?.Date ?? '',
+      count: Number(item?.Count ?? 0),
+    })),
+    revenueByWorkspaceChart: revenueByWorkspaceChart.map((item) => ({
+      workspaceName: item?.WorkspaceName ?? '-',
+      totalRevenue: Number(item?.TotalRevenue ?? 0),
+    })),
   };
+}
+
+function hasPositiveValue(data, key) {
+  return data.some((item) => Number(item[key] ?? 0) > 0);
 }
 
 function DashboardSkeleton() {
@@ -113,6 +146,20 @@ function DashboardSkeleton() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="analytics-charts" aria-label="Cargando gráficos">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <article className="analytics-chart-card" key={index}>
+            <div className="analytics-panel__header">
+              <div className="analytics-skeleton analytics-skeleton--panel-title" />
+              <div className="analytics-skeleton analytics-skeleton--hint" />
+            </div>
+            <div className="analytics-chart-skeleton">
+              <div className="analytics-skeleton analytics-skeleton--chart" />
+            </div>
+          </article>
+        ))}
       </section>
     </section>
   );
@@ -168,6 +215,80 @@ function RecentActivityTable({ activity }) {
   );
 }
 
+function ChartEmptyState() {
+  return (
+    <div className="analytics-chart-empty">
+      Aún no tienes datos para graficar
+    </div>
+  );
+}
+
+function ReservationsLineChart({ data }) {
+  if (!hasPositiveValue(data, 'count')) return <ChartEmptyState />;
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 12, right: 18, bottom: 8, left: 0 }}>
+        <CartesianGrid stroke="#dbe0e8" strokeDasharray="4 4" vertical={false} />
+        <XAxis
+          dataKey="date"
+          tickFormatter={formatShortDate}
+          tickLine={false}
+          axisLine={false}
+          minTickGap={18}
+        />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={36} />
+        <Tooltip
+          formatter={(value) => [Number(value).toLocaleString('es-AR'), 'Reservas']}
+          labelFormatter={(label) => `Fecha: ${formatShortDate(label)}`}
+        />
+        <Line
+          type="monotone"
+          dataKey="count"
+          stroke="var(--color-primary)"
+          strokeWidth={3}
+          dot={{ r: 3 }}
+          activeDot={{ r: 5 }}
+          name="Reservas"
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function RevenueBarChart({ data }) {
+  if (!hasPositiveValue(data, 'totalRevenue')) return <ChartEmptyState />;
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 12, right: 18, bottom: 8, left: 0 }}>
+        <CartesianGrid stroke="#dbe0e8" strokeDasharray="4 4" vertical={false} />
+        <XAxis
+          dataKey="workspaceName"
+          tickLine={false}
+          axisLine={false}
+          interval={0}
+          minTickGap={10}
+          tickFormatter={(value) => (
+            String(value).length > 14 ? `${String(value).slice(0, 14)}…` : value
+          )}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={58}
+          tickFormatter={(value) => `$ ${Number(value).toLocaleString('en-US')}`}
+        />
+        <Tooltip
+          formatter={(value) => [formatMoney(value), 'Ingresos']}
+          labelFormatter={(label) => `Oficina: ${label}`}
+        />
+        <Bar dataKey="totalRevenue" fill="var(--color-accent)" radius={[8, 8, 0, 0]} name="Ingresos" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 function AnalyticsDashboard() {
   const { data, isLoading, isError } = useHostDashboard();
   const dashboard = useMemo(() => normalizeDashboard(data), [data]);
@@ -210,6 +331,32 @@ function AnalyticsDashboard() {
           </div>
         </header>
         <RecentActivityTable activity={dashboard.recentActivity} />
+      </section>
+
+      <section className="analytics-charts" aria-label="Gráficos analíticos">
+        <article className="analytics-chart-card">
+          <header className="analytics-panel__header">
+            <div>
+              <h2>Reservas por día</h2>
+              <p>Volumen de reservas de los últimos 30 días.</p>
+            </div>
+          </header>
+          <div className="analytics-chart">
+            <ReservationsLineChart data={dashboard.dailyReservationsChart} />
+          </div>
+        </article>
+
+        <article className="analytics-chart-card">
+          <header className="analytics-panel__header">
+            <div>
+              <h2>Ingresos por oficina</h2>
+              <p>Rentabilidad acumulada por espacio publicado.</p>
+            </div>
+          </header>
+          <div className="analytics-chart">
+            <RevenueBarChart data={dashboard.revenueByWorkspaceChart} />
+          </div>
+        </article>
       </section>
     </section>
   );
