@@ -40,7 +40,7 @@ public class CompanyProfileTests
             .Returns(Task.CompletedTask);
 
         var command = new UpdateCompanyProfileCommand(
-            ownerId, "Acme Corp", "Descripción", "contacto@acme.com", "https://acme.com");
+            ownerId, "Acme Corp", "Descripción", "contacto@acme.com", "https://acme.com", null, null);
 
         var result = await _handler.HandleAsync(command);
 
@@ -65,7 +65,7 @@ public class CompanyProfileTests
             .Returns(Task.CompletedTask);
 
         var command = new UpdateCompanyProfileCommand(
-            ownerId, "Nuevo Nombre", "Nueva descripción", "nuevo@email.com", "https://nuevo.com");
+            ownerId, "Nuevo Nombre", "Nueva descripción", "nuevo@email.com", "https://nuevo.com", null, null);
 
         var result = await _handler.HandleAsync(command);
 
@@ -80,7 +80,7 @@ public class CompanyProfileTests
     public void Validator_WhenDescriptionExceeds500Chars_HasValidationError()
     {
         var dto = new Application.Companies.Dtos.CompanyUpdateProfileDto(
-            "Empresa", new string('A', 501), null, null);
+            "Empresa", new string('A', 501), null, null, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -95,7 +95,7 @@ public class CompanyProfileTests
     public void Validator_WhenContactEmailInvalid_HasValidationError(string email)
     {
         var dto = new Application.Companies.Dtos.CompanyUpdateProfileDto(
-            "Empresa", "Desc", email, null);
+            "Empresa", "Desc", email, null, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -110,7 +110,7 @@ public class CompanyProfileTests
     public void Validator_WhenWebsiteUrlInvalid_HasValidationError(string url)
     {
         var dto = new Application.Companies.Dtos.CompanyUpdateProfileDto(
-            "Empresa", "Desc", null, url);
+            "Empresa", "Desc", null, url, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -124,7 +124,7 @@ public class CompanyProfileTests
     public void Validator_WhenWebsiteUrlValid_HasNoValidationError(string url)
     {
         var dto = new Application.Companies.Dtos.CompanyUpdateProfileDto(
-            "Empresa", "Desc", null, url);
+            "Empresa", "Desc", null, url, null, null);
 
         var result = _validator.TestValidate(dto);
 
@@ -140,7 +140,7 @@ public class CompanyProfileTests
             .Setup(r => r.GetByOwnerIdAsync(ownerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Company?)null);
 
-        var command = new UpdateCompanyProfileCommand(ownerId, "Nombre", "Desc", null, null);
+        var command = new UpdateCompanyProfileCommand(ownerId, "Nombre", "Desc", null, null, null, null);
 
         var act = () => _handler.HandleAsync(command);
 
@@ -163,7 +163,7 @@ public class CompanyProfileTests
             .Returns(Task.CompletedTask);
 
         var command = new UpdateCompanyProfileCommand(
-            ownerId, "Empresa", "Desc", null, null);
+            ownerId, "Empresa", "Desc", null, null, null, null);
 
         var result = await _handler.HandleAsync(command);
 
@@ -189,6 +189,8 @@ public class CompanyProfileTests
             ownerId,
             "<b>Empresa</b>",
             "<script>alert('xss')</script>Descripción legítima",
+            null,
+            null,
             null,
             null);
 

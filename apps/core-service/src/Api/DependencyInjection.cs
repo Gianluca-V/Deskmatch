@@ -3,6 +3,7 @@ using DeskMatch.CoreService.Application.Companies.Dtos;
 using DeskMatch.CoreService.Application.Companies.Handlers;
 using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Companies.Validators;
+using DeskMatch.CoreService.Application.Testimonials.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Handlers;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
@@ -31,6 +32,7 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssemblyContaining<CompanyUpdateProfileDtoValidator>();
 
+        services.AddScoped<ITestimonialRepository, TestimonialRepository>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();

@@ -53,6 +53,9 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
+// Seed initial data
+await app.SeedTestimonialsAsync();
+
 app.UseBuildingBlocksMiddleware();
 
 if (app.Environment.IsDevelopment())
