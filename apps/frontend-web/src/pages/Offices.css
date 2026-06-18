@@ -70,16 +70,23 @@
   border: 1.5px solid white;
 }
 
-/* ── Search ──────────────────────────────────────────────────── */
+/* ── Search Row ──────────────────────────────────────────────── */
+.offices-page__search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
 .offices-page__search {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 10px 14px;
-  margin-bottom: 24px;
   color: var(--color-muted);
   transition: border-color 0.2s;
 }
@@ -107,6 +114,102 @@
   color: var(--color-muted);
   display: flex;
   align-items: center;
+}
+
+/* ── AI Button ───────────────────────────────────────────────── */
+.offices-page__ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.offices-page__ai-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.offices-page__ai-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── AI Banner ───────────────────────────────────────────────── */
+.offices-page__ai-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.offices-page__ai-banner > svg {
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.offices-page__ai-banner__label {
+  font-weight: 700;
+  color: #7c3aed;
+  white-space: nowrap;
+}
+
+.offices-page__ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.offices-page__ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.offices-page__ai-chip svg { flex-shrink: 0; }
+
+.offices-page__ai-banner__clear {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.offices-page__ai-banner__clear:hover {
+  background: rgba(0,0,0,0.06);
 }
 
 /* ── Layout ──────────────────────────────────────────────────── */
@@ -226,6 +329,85 @@
   height: 14px;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.offices-filters__amenity-add {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.offices-filters__amenity-add input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: inherit;
+}
+
+.offices-filters__amenity-add input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.offices-filters__amenity-add button {
+  padding: 6px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.offices-filters__amenity-add button:hover:not(:disabled) {
+  background: rgba(58, 149, 223, 0.08);
+  border-color: var(--color-primary);
+}
+
+.offices-filters__amenity-add button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.offices-filters__custom-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.offices-filters__amenity-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(58, 149, 223, 0.1);
+  color: var(--color-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.offices-filters__amenity-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  opacity: 0.6;
+}
+
+.offices-filters__amenity-tag button:hover {
+  opacity: 1;
 }
 
 /* ── Grid ────────────────────────────────────────────────────── */

@@ -128,6 +128,22 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
     }));
   }
 
+  function handleAmenityAdd(value) {
+    const val = value.trim();
+    if (!val) return;
+    setForm((prev) => {
+      if (prev.amenities.includes(val)) return prev;
+      return { ...prev, amenities: [...prev.amenities, val] };
+    });
+  }
+
+  function handleAmenityRemove(key) {
+    setForm((prev) => ({
+      ...prev,
+      amenities: prev.amenities.filter((a) => a !== key),
+    }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate(form);
@@ -186,6 +202,8 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
         form={form}
         onChange={handleChange}
         onAmenityToggle={handleAmenityToggle}
+        onAmenityAdd={handleAmenityAdd}
+        onAmenityRemove={handleAmenityRemove}
         onImagesChange={handleImagesChange}
         onLocationSelect={handleLocationSelect}
         onSubmit={handleSubmit}

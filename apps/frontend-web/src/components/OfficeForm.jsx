@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { X } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 import AddressAutocomplete from './AddressAutocomplete';
 
@@ -18,7 +20,31 @@ const AMENITIES = [
   { key: 'Pet Friendly', label: 'Mascotas permitidas' },
 ];
 
-export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesChange, onLocationSelect, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
+const PRESET_KEYS = AMENITIES.map((a) => a.key);
+
+export default function OfficeForm({ form, onChange, onAmenityToggle, onAmenityAdd, onAmenityRemove, onImagesChange, onLocationSelect, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
+  const [customAmenity, setCustomAmenity] = useState('');
+
+  const presetAmenities = form.amenities.filter((a) => PRESET_KEYS.includes(a));
+  const customAmenities = form.amenities.filter((a) => !PRESET_KEYS.includes(a));
+
+  function handleAdd() {
+    const val = customAmenity.trim();
+    if (!val || form.amenities.includes(val)) {
+      setCustomAmenity('');
+      return;
+    }
+    onAmenityAdd(val);
+    setCustomAmenity('');
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAdd();
+    }
+  }
+
   return (
     <form onSubmit={onSubmit} noValidate>
 
@@ -111,10 +137,37 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
 
       <div className="form-section">
         <p className="form-section__title">Amenidades</p>
+
+        <div className="amenities-custom">
+          <input
+            type="text"
+            placeholder="Agregar otra amenidad..."
+            value={customAmenity}
+            onChange={(e) => setCustomAmenity(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <button type="button" onClick={handleAdd} disabled={!customAmenity.trim()}>
+            + Agregar
+          </button>
+        </div>
+
+        {customAmenities.length > 0 && (
+          <div className="amenities-tags">
+            {customAmenities.map((a) => (
+              <span className="amenities-tag" key={a}>
+                {a}
+                <button type="button" onClick={() => onAmenityRemove(a)}>
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="amenities-grid">
           {AMENITIES.map(({ key, label }) => (
             <label key={key} className="amenity-item">
-              <input type="checkbox" checked={form.amenities.includes(key)} onChange={() => onAmenityToggle(key)} />
+              <input type="checkbox" checked={presetAmenities.includes(key)} onChange={() => onAmenityToggle(key)} />
               {label}
             </label>
           ))}
