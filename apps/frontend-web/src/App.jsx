@@ -15,15 +15,7 @@ import Profile from './pages/Profile';
 import Reservations from './pages/Reservations';
 import CompanyReservationsPage from './pages/CompanyReservationsPage';
 import WorkspaceDetail from './pages/WorkspaceDetail';
-
-function Dashboard() {
-  return (
-    <section>
-      <h1>Dashboard</h1>
-      <p>Resumen de tu actividad y accesos recientes.</p>
-    </section>
-  );
-}
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 
 function Spaces() {
   return (
@@ -74,7 +66,7 @@ function App() {
             <Route path="/register" element={<RegisterType />} />
             <Route path="/register/user" element={<Register />} />
             <Route path="/register/company" element={<RegisterCompany />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
             <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
             <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
             <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />
