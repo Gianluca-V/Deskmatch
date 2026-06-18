@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button } from '@mui/material';
+import { toast } from 'react-hot-toast';
 import { adminUsersRows as initialRows } from '../../mock/adminData';
 
 const ACTION_TYPES = { SUSPEND: 'suspend', ACTIVATE: 'activate' };
@@ -151,18 +152,21 @@ function AdminUsersView() {
             : u
         )
       );
+      toast.success(modal.action === ACTION_TYPES.SUSPEND ? 'Usuario suspendido' : 'Usuario reactivado');
       setIsSubmitting(false);
       setModal({ open: false, user: null, action: ACTION_TYPES.SUSPEND, reason: '' });
     }, 500);
   }, [modal]);
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'id', headerName: 'ID', width: 70, align: 'center', headerAlign: 'center' },
     {
       field: 'name',
       headerName: 'Nombre',
       flex: 1,
       minWidth: 140,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span style={{ color: '#1e2a3a', fontWeight: 600, fontSize: '13.5px' }}>{params.value}</span>
       ),
@@ -172,6 +176,8 @@ function AdminUsersView() {
       headerName: 'Email',
       flex: 1,
       minWidth: 180,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span style={{ color: '#475569', fontSize: '13px' }}>{params.value}</span>
       ),
@@ -181,6 +187,8 @@ function AdminUsersView() {
       headerName: 'Rol',
       flex: 1,
       minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span className="badge badge--role">{params.value}</span>
       ),
@@ -190,6 +198,8 @@ function AdminUsersView() {
       headerName: 'Estado',
       flex: 1,
       minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => {
         const isActive = params.value === 'Activo';
         return (
@@ -204,6 +214,8 @@ function AdminUsersView() {
       headerName: 'Acciones',
       width: 130,
       sortable: false,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => {
         const isActive = params.row.status === 'Activo';
         return (

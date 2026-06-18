@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Building2, Users, Shield, LogOut } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 
 function AdminLayout() {
@@ -119,6 +120,18 @@ function AdminLayout() {
       <main style={{ flex: 1, padding: '32px', backgroundColor: '#f0f4f8', overflow: 'hidden', minWidth: 0 }}>
         <Outlet />
       </main>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#fff',
+            color: '#1e2a3a',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            fontSize: '14px',
+          },
+        }}
+      />
     </div>
   );
 }

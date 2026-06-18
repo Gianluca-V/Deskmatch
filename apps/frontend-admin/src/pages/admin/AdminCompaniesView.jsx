@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { toast } from 'react-hot-toast';
 import { adminCompaniesRows as initialRows } from '../../mock/adminData';
 
 const formatDate = (dateStr) => {
@@ -76,6 +77,7 @@ function AdminCompaniesView() {
             : r
         )
       );
+      toast.success(modal.action === 'verify' ? 'Empresa verificada' : 'Verificación revocada');
       setModal({ open: false, company: null, action: 'verify' });
       setIsSubmitting(false);
     }, 500);
@@ -87,12 +89,14 @@ function AdminCompaniesView() {
   }, [isSubmitting]);
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'id', headerName: 'ID', width: 70, align: 'center', headerAlign: 'center' },
     {
       field: 'name',
       headerName: 'Nombre',
       flex: 1,
       minWidth: 140,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span style={{ color: '#1e2a3a', fontWeight: 600, fontSize: '13.5px' }}>{params.value}</span>
       ),
@@ -102,6 +106,8 @@ function AdminCompaniesView() {
       headerName: 'Owner',
       flex: 1,
       minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span style={{ color: '#475569', fontSize: '13px' }}>{params.value}</span>
       ),
@@ -111,6 +117,8 @@ function AdminCompaniesView() {
       headerName: 'Contacto',
       flex: 1,
       minWidth: 150,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <span style={{ color: '#475569', fontSize: '13px' }}>{params.value}</span>
       ),
@@ -119,6 +127,8 @@ function AdminCompaniesView() {
       field: 'verification',
       headerName: 'Verificación',
       width: 150,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => {
         const isVerified = params.value === 'Verificada';
         return (
@@ -134,6 +144,8 @@ function AdminCompaniesView() {
       width: 110,
       sortable: false,
       filterable: false,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <ActionsCell row={params.row} onVerify={handleVerify} onRevoke={handleRevoke} />
       ),
