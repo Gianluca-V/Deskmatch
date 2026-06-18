@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceScheduleCommand, Guid>, CreateWorkspaceScheduleCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceScheduleCommand>, UpdateWorkspaceScheduleCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceScheduleCommand>, DeleteWorkspaceScheduleCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateWeeklyScheduleCommand>, UpdateWeeklyScheduleCommandHandler>();
 
         return services;
     }
