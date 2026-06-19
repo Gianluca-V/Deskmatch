@@ -61,5 +61,8 @@ public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.Property(w => w.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("NOW()");
+
+        builder.Property(w => w.DynamicAttributes)
+            .HasColumnType("jsonb");
     }
 }

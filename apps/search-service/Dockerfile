@@ -10,6 +10,7 @@ COPY ["nuget.config", "."]
 COPY ["shared/domain/DeskMatch.Domain.csproj", "shared/domain/"]
 COPY ["shared/building-blocks/DeskMatch.BuildingBlocks.csproj", "shared/building-blocks/"]
 COPY ["shared/sdk/src/OpenSearch/DeskMatch.SDK.OpenSearch.csproj", "shared/sdk/src/OpenSearch/"]
+COPY ["shared/sdk/src/Ollama/DeskMatch.SDK.Ollama.csproj", "shared/sdk/src/Ollama/"]
 
 COPY ["apps/search-service/SearchService.csproj", "apps/search-service/"]
 
@@ -18,6 +19,7 @@ RUN dotnet restore "apps/search-service/SearchService.csproj"
 COPY ["shared/domain/", "shared/domain/"]
 COPY ["shared/building-blocks/", "shared/building-blocks/"]
 COPY ["shared/sdk/src/OpenSearch/", "shared/sdk/src/OpenSearch/"]
+COPY ["shared/sdk/src/Ollama/", "shared/sdk/src/Ollama/"]
 
 COPY ["apps/search-service/", "apps/search-service/"]
 

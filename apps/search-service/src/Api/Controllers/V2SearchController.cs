@@ -224,13 +224,16 @@ public sealed class SearchController : ControllerBase
                 {
                     var expanded = ExpandQuery(am);
                     var terms = expanded.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                    foreach (var term in terms)
+                    var allTerms = new List<string>(terms.Length * 2);
+                    foreach (var t in terms)
                     {
-                        filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = term.ToLowerInvariant() } });
-                        var tc = char.ToUpperInvariant(term[0]) + term[1..].ToLowerInvariant();
-                        if (tc != term.ToLowerInvariant())
-                            filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = tc } });
+                        var lw = t.ToLowerInvariant();
+                        allTerms.Add(lw);
+                        var tc = char.ToUpperInvariant(t[0]) + t[1..].ToLowerInvariant();
+                        if (tc != lw)
+                            allTerms.Add(tc);
                     }
+                    filter.Add(new { terms = new Dictionary<string, object> { ["amenities"] = allTerms.Distinct().ToArray() } });
                 }
             }
 
