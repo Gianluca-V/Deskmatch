@@ -3,6 +3,7 @@
 
 using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch;
+using DeskMatch.SDK.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,9 @@ public static class DependencyInjection
         services.AddOpenSearchSdk(configuration);
 
         services.AddOllamaClient();
+
+        services.AddRedisSdk(configuration);
+        services.AddSingleton<ICacheService, CacheService>();
 
         // TODO: Register document repositories
         // services.AddSingleton(typeof(IOpenSearchRepository<>), typeof(OpenSearchRepository<>));

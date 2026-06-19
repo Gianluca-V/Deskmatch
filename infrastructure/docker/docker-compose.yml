@@ -308,9 +308,12 @@ services:
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://192.168.1.47:11434}
       Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
       Ollama__ChatModel: ${OLLAMA_CHAT_MODEL:-qwen2.5:3b}
+      Redis__ConnectionString: redis:6379,password=,ssl=false,abortConnect=false
     depends_on:
       opensearch:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - deskmatch-network
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using DeskMatch.SDK.Ollama;
+using DeskMatch.SDK.Redis;
 using Microsoft.AspNetCore.Mvc;
 using OpenSearch.Client;
 using OpenSearch.Net;
@@ -15,6 +16,7 @@ public sealed class SearchController : ControllerBase
 {
     private readonly IOpenSearchClient _client;
     private readonly IOllamaClient _ollama;
+    private readonly ICacheService _cache;
     private readonly ILogger<SearchController> _logger;
 
     private static readonly Dictionary<string, string> QueryExpansions = new(StringComparer.OrdinalIgnoreCase)
@@ -59,6 +61,23 @@ public sealed class SearchController : ControllerBase
         ["office"] = "office oficina workspace despacho",
         ["espacio"] = "espacio space workspace area room",
         ["space"] = "space espacio workspace area room",
+        ["programador"] = "programador desarrollador developer dev escritorio silla wifi cafe",
+        ["developer"] = "developer programador desarrollador dev escritorio silla",
+        ["dev"] = "dev developer programador desarrollador escritorio",
+        ["desarrollador"] = "desarrollador programador developer dev escritorio silla",
+        ["reunion"] = "reunion meeting sala proyector videoconferencia pizarra",
+        ["capacitacion"] = "capacitacion training aula proyector pizarra silla",
+        ["training"] = "training capacitacion aula proyector pizarra silla",
+        ["estudio"] = "estudio study quieto silencioso escritorio silla",
+        ["entrevista"] = "entrevista interview privado silencioso sala",
+        ["disenador"] = "disenador designer creativo luz escritorio silla",
+        ["designer"] = "designer disenador creativo luz escritorio",
+        ["creativo"] = "creativo creative disenador luz escritorio",
+        ["creative"] = "creative creativo disenador luz escritorio",
+        ["quieto"] = "quieto quiet silent silencioso",
+        ["quiet"] = "quiet quieto silent silencioso",
+        ["silla"] = "silla sillas ergonomica escritorio",
+        ["escritorios"] = "escritorios escritorio desk silla",
     };
 
     private static string Normalize(string text)
@@ -96,10 +115,11 @@ public sealed class SearchController : ControllerBase
         return string.Join(" ", expanded).Trim();
     }
 
-    public SearchController(IOpenSearchClient client, IOllamaClient ollama, ILogger<SearchController> logger)
+    public SearchController(IOpenSearchClient client, IOllamaClient ollama, ICacheService cache, ILogger<SearchController> logger)
     {
         _client = client;
         _ollama = ollama;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -125,8 +145,25 @@ public sealed class SearchController : ControllerBase
             || minPrice.HasValue || maxPrice.HasValue || minCapacity.HasValue
             || !string.IsNullOrWhiteSpace(amenities) || (lat.HasValue && lon.HasValue);
 
+        string[]? aiAmenities = null;
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var cacheKey = "ai:searchparams:" + q.Trim().ToLowerInvariant();
+            try
+            {
+                var aiParams = await _cache.GetOrSetAsync(cacheKey,
+                    async () => await ExtractSearchParams(q),
+                    TimeSpan.FromMinutes(10));
+                aiAmenities = aiParams?.amenities;
+            }
+            catch
+            {
+                // AI extraction failed silently — proceed without it
+            }
+        }
+
         var body = BuildSearchBody(expandedQ, embedding, city, country, minPrice, maxPrice,
-            minCapacity, amenities, lat, lon, radius, page, pageSize, hasQuery, hasFilters);
+            minCapacity, amenities, lat, lon, radius, page, pageSize, hasQuery, hasFilters, aiAmenities);
 
         var stringResponse = await _client.LowLevel.SearchAsync<StringResponse>(
             "offices", PostData.String(JsonSerializer.Serialize(body)));
@@ -149,6 +186,9 @@ public sealed class SearchController : ControllerBase
             }
         }
 
+        _logger.LogInformation("Search: q='{Q}', aiAmenities={AiAmenities}, total={Total}",
+            q, aiAmenities != null ? string.Join(",", aiAmenities) : "none", total);
+
         var totalPages = total > 0 ? (int)Math.Ceiling(total / (double)pageSize) : 0;
         return Ok(new { items, page, pageSize, totalCount = total, totalPages });
     }
@@ -156,7 +196,8 @@ public sealed class SearchController : ControllerBase
     private static object BuildSearchBody(string? q, float[]? embedding,
         string? city, string? country, decimal? minPrice, decimal? maxPrice,
         int? minCapacity, string? amenities, double? lat, double? lon,
-        double? radius, int page, int pageSize, bool hasQuery, bool hasFilters)
+        double? radius, int page, int pageSize, bool hasQuery, bool hasFilters,
+        string[]? aiAmenities = null)
     {
         var body = new Dictionary<string, object>
         {
@@ -213,6 +254,16 @@ public sealed class SearchController : ControllerBase
                         }
                     }
                 });
+            }
+
+            // AI-inferred amenities booster
+            if (aiAmenities is { Length: > 0 })
+            {
+                foreach (var am in aiAmenities)
+                {
+                    var normalized = Normalize(am).ToLowerInvariant();
+                    should.Add(new { match = new Dictionary<string, object> { ["amenities"] = normalized } });
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(city))
@@ -534,14 +585,31 @@ Given a user message describing what office they need, extract these fields as J
   * ""gratis"" -> maxPrice: 0
   * ""caro"", ""premium"", ""lujo"" -> minPrice: 50
 - ""minCapacity"": minimum number of people the space must hold
-- ""amenities"": array of amenity names (ALWAYS extract). Use exact amenity names: wifi, coffee, gym, parking, ac, printer, meeting, cafeteria. If user says ""cafe"" or ""cafetería"" add ""coffee"" or ""cafeteria"". If user says ""gimnasio"" add ""gym"". RETURN AS ARRAY.
+- ""amenities"": INFER from context. RETURN AS ARRAY of exact amenity names. Use ONLY: wifi, ac, coffee, cafe, cafeteria, gym, parking, printer, meeting, videoconferencia, pizarra, escritorio, silla, cocina, terraza, estacionamiento, recepcion, proyector, tv, baño, accesible, silencioso.
+  Examples of context-based inference:
+  * ""programador"", ""developer"", ""desarrollador"" -> [""wifi"", ""ac"", ""escritorio"", ""silla"", ""cafe""]
+  * ""reunion"", ""meeting"" -> [""meeting"", ""wifi"", ""proyector"", ""cafe""]
+  * ""capacitacion"", ""training"", ""curso"" -> [""proyector"", ""wifi"", ""pizarra"", ""silla"", ""ac""]
+  * ""entrevista"" -> [""privado"", ""silencioso"", ""wifi""]
+  * ""diseñador"", ""designer"", ""creativo"" -> [""wifi"", ""escritorio"", ""silla"", ""cafe""]
+  * ""estudio"", ""study"" -> [""silencioso"", ""wifi"", ""escritorio"", ""silla""]
+  * If user mentions ""cafe"" or ""cafetería"", add ""coffee"" or ""cafeteria"".
+  * If user mentions ""gimnasio"", add ""gym"".
+  * If user mentions ""coche"" or ""auto"", add ""parking"" or ""estacionamiento"".
+  BE GENEROUS — include at least 3-4 relevant amenities based on context.
 - ""lat"", ""lon"", ""radius"": leave null
 
 IMPORTANT: Always extract whatever you can. Leave unknown fields as null.
 Return ONLY valid JSON. Do NOT wrap in backticks.
 
-Example input: ""necesito oficina moderna con wifi y cafe para 5 personas maximo 30 dolares""
-Example output: {""q"":""oficina moderna"",""city"":null,""country"":null,""minPrice"":null,""maxPrice"":30,""minCapacity"":5,""amenities"":[""wifi"",""coffee""],""lat"":null,""lon"":null,""radius"":null}
+Example 1: ""necesito oficina moderna con wifi y cafe para 5 personas maximo 30 dolares""
+Output: {""q"":""oficina moderna"",""city"":null,""country"":null,""minPrice"":null,""maxPrice"":30,""minCapacity"":5,""amenities"":[""wifi"",""coffee""],""lat"":null,""lon"":null,""radius"":null}
+
+Example 2: ""oficina para programadores""
+Output: {""q"":""oficina para programadores"",""city"":null,""country"":null,""minPrice"":null,""maxPrice"":null,""minCapacity"":null,""amenities"":[""wifi"",""ac"",""escritorio"",""silla"",""cafe""],""lat"":null,""lon"":null,""radius"":null}
+
+Example 3: ""sala de reunion con capacidad para 10 personas""
+Output: {""q"":""sala de reunion"",""city"":null,""country"":null,""minPrice"":null,""maxPrice"":null,""minCapacity"":10,""amenities"":[""meeting"",""wifi"",""proyector"",""cafe""],""lat"":null,""lon"":null,""radius"":null}
 
 Input: """ + userText + @"""
 Output:";

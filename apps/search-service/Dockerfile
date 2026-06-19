@@ -11,6 +11,7 @@ COPY ["shared/domain/DeskMatch.Domain.csproj", "shared/domain/"]
 COPY ["shared/building-blocks/DeskMatch.BuildingBlocks.csproj", "shared/building-blocks/"]
 COPY ["shared/sdk/src/OpenSearch/DeskMatch.SDK.OpenSearch.csproj", "shared/sdk/src/OpenSearch/"]
 COPY ["shared/sdk/src/Ollama/DeskMatch.SDK.Ollama.csproj", "shared/sdk/src/Ollama/"]
+COPY ["shared/sdk/src/Redis/DeskMatch.SDK.Redis.csproj", "shared/sdk/src/Redis/"]
 
 COPY ["apps/search-service/SearchService.csproj", "apps/search-service/"]
 
@@ -20,6 +21,7 @@ COPY ["shared/domain/", "shared/domain/"]
 COPY ["shared/building-blocks/", "shared/building-blocks/"]
 COPY ["shared/sdk/src/OpenSearch/", "shared/sdk/src/OpenSearch/"]
 COPY ["shared/sdk/src/Ollama/", "shared/sdk/src/Ollama/"]
+COPY ["shared/sdk/src/Redis/", "shared/sdk/src/Redis/"]
 
 COPY ["apps/search-service/", "apps/search-service/"]
 
