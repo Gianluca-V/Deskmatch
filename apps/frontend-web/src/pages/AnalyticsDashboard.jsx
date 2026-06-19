@@ -50,7 +50,7 @@ const statusMeta = {
   pendiente: { label: 'Pendiente', tone: 'pending' },
 };
 
-const USE_MOCK_DASHBOARD = true;
+const USE_MOCK_DASHBOARD = false;
 
 const MOCK_HOST_DASHBOARD = {
   TotalRevenue: 148750.5,
@@ -170,35 +170,44 @@ function getStatusMeta(status) {
 }
 
 function normalizeDashboard(data) {
-  const popularWorkspaces = toArray(data?.PopularWorkspaces);
-  const recentActivity = toArray(data?.RecentActivity);
-  const dailyReservationsChart = toArray(data?.DailyReservationsChart);
-  const revenueByWorkspaceChart = toArray(data?.RevenueByWorkspaceChart);
+  // Try camelCase (backend) first, then PascalCase (mock fallback)
+  const popularWorkspaces = toArray(
+    data?.popularWorkspaces ?? data?.PopularWorkspaces
+  );
+  const recentActivity = toArray(
+    data?.recentActivity ?? data?.RecentActivity
+  );
+  const dailyReservationsChart = toArray(
+    data?.dailyReservationsChart ?? data?.DailyReservationsChart
+  );
+  const revenueByWorkspaceChart = toArray(
+    data?.revenueByWorkspaceChart ?? data?.RevenueByWorkspaceChart
+  );
 
   return {
-    totalRevenue: data?.TotalRevenue ?? 0,
-    activeReservationsCount: data?.ActiveReservationsCount ?? 0,
-    totalWorkspacesCount: data?.TotalWorkspacesCount ?? 0,
+    totalRevenue: data?.totalRevenue ?? data?.TotalRevenue ?? 0,
+    activeReservationsCount: data?.activeReservationsCount ?? data?.ActiveReservationsCount ?? 0,
+    totalWorkspacesCount: data?.totalWorkspacesCount ?? data?.TotalWorkspacesCount ?? 0,
     popularWorkspaces: popularWorkspaces
       .map((workspace) => (
         typeof workspace === 'string'
           ? workspace
-          : workspace?.WorkspaceName ?? workspace?.Name
+          : workspace?.workspaceName ?? workspace?.WorkspaceName ?? workspace?.Name ?? workspace?.name
       ))
       .filter(Boolean),
     recentActivity: recentActivity.map((reservation, index) => ({
-      id: reservation?.Id ?? index,
-      workspaceName: reservation?.WorkspaceName ?? '-',
-      createdAt: reservation?.CreatedAt,
-      status: reservation?.Status,
+      id: reservation?.id ?? reservation?.Id ?? index,
+      workspaceName: reservation?.workspaceName ?? reservation?.WorkspaceName ?? '-',
+      createdAt: reservation?.createdAt ?? reservation?.CreatedAt,
+      status: reservation?.status ?? reservation?.Status,
     })),
     dailyReservationsChart: dailyReservationsChart.map((item) => ({
-      date: item?.Date ?? '',
-      count: Number(item?.Count ?? 0),
+      date: item?.date ?? item?.Date ?? '',
+      count: Number(item?.count ?? item?.Count ?? 0),
     })),
     revenueByWorkspaceChart: revenueByWorkspaceChart.map((item) => ({
-      workspaceName: item?.WorkspaceName ?? '-',
-      totalRevenue: Number(item?.TotalRevenue ?? 0),
+      workspaceName: item?.workspaceName ?? item?.WorkspaceName ?? '-',
+      totalRevenue: Number(item?.totalRevenue ?? item?.TotalRevenue ?? 0),
     })),
   };
 }

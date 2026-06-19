@@ -3,6 +3,8 @@ using DeskMatch.CoreService.Application.Companies.Dtos;
 using DeskMatch.CoreService.Application.Companies.Handlers;
 using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Companies.Validators;
+using DeskMatch.CoreService.Application.Dashboard.Interfaces;
+using DeskMatch.CoreService.Application.Dashboard.Services;
 using DeskMatch.CoreService.Application.Reservations.Commands;
 using DeskMatch.CoreService.Application.Reservations.Handlers;
 using DeskMatch.CoreService.Application.Reservations.Interfaces;
@@ -42,6 +44,9 @@ public static class DependencyInjection
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<ICommandHandler<CreateReservationCommand, Guid>, CreateReservationCommandHandler>();
         services.AddScoped<ICommandHandler<CancelReservationCommand>, CancelReservationCommandHandler>();
+
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
