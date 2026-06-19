@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { adminUsersRows as initialRows } from '../../mock/adminData';
+import api from '../../lib/api';
 
 const ACTION_TYPES = { SUSPEND: 'suspend', ACTIVATE: 'activate' };
 
@@ -116,9 +117,52 @@ function ConfirmModal({ modal, onClose, onConfirm, isSubmitting }) {
 function AdminUsersView() {
   const containerRef = useRef(null);
   const [, forceRender] = useState(0);
-  const [rows, setRows] = useState(initialRows);
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [modal, setModal] = useState({ open: false, user: null, action: ACTION_TYPES.SUSPEND, reason: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-users', paginationModel],
+    queryFn: async () => {
+      const res = await api.get('/api/admin/users', {
+        params: {
+          skip: paginationModel.page * paginationModel.pageSize,
+          take: paginationModel.pageSize,
+        },
+      });
+      return res.data;
+    },
+  });
+
+  const rows = data?.items ?? [];
+  const rowCount = data?.total ?? 0;
+
+  const queryClient = useQueryClient();
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, reason }) => {
+      const res = await api.put(`/api/admin/users/${id}/toggle-suspension`, null, {
+        params: { reason },
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.isSuspended ? 'Usuario suspendido' : 'Usuario reactivado');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setModal({ open: false, user: null, action: ACTION_TYPES.SUSPEND, reason: '' });
+      setIsSubmitting(false);
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('No tenés permisos para realizar esta acción');
+      } else if (error.response?.status === 404) {
+        toast.error('Usuario no encontrado');
+      } else {
+        toast.error('Error al cambiar el estado del usuario');
+      }
+      setIsSubmitting(false);
+    },
+  });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -143,19 +187,10 @@ function AdminUsersView() {
 
   const handleConfirm = useCallback(() => {
     setIsSubmitting(true);
-    // TODO: reemplazar por mutación real con TanStack Query, enviando { userId, reason } cuando el backend esté listo
-    setTimeout(() => {
-      setRows((prev) =>
-        prev.map((u) =>
-          u.id === modal.user.id
-            ? { ...u, status: modal.action === ACTION_TYPES.SUSPEND ? 'Suspendido' : 'Activo' }
-            : u
-        )
-      );
-      toast.success(modal.action === ACTION_TYPES.SUSPEND ? 'Usuario suspendido' : 'Usuario reactivado');
-      setIsSubmitting(false);
-      setModal({ open: false, user: null, action: ACTION_TYPES.SUSPEND, reason: '' });
-    }, 500);
+    toggleMutation.mutate({
+      id: modal.user.id,
+      reason: modal.action === ACTION_TYPES.SUSPEND ? modal.reason : undefined,
+    });
   }, [modal]);
 
   const columns = [
@@ -201,10 +236,10 @@ function AdminUsersView() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => {
-        const isActive = params.value === 'Activo';
+        const active = params.row.isActive && !params.row.isSuspended;
         return (
-          <span className={`badge ${isActive ? 'badge--verified' : 'badge--unverified'}`}>
-            {isActive ? 'Activo' : 'Suspendido'}
+          <span className={`badge ${active ? 'badge--verified' : 'badge--unverified'}`}>
+            {active ? 'Activo' : 'Suspendido'}
           </span>
         );
       },
@@ -217,14 +252,14 @@ function AdminUsersView() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => {
-        const isActive = params.row.status === 'Activo';
+        const active = params.row.isActive && !params.row.isSuspended;
         return (
           <button
-            onClick={() => handleOpenModal(params.row, isActive ? ACTION_TYPES.SUSPEND : ACTION_TYPES.ACTIVATE)}
+            onClick={() => handleOpenModal(params.row, active ? ACTION_TYPES.SUSPEND : ACTION_TYPES.ACTIVATE)}
             style={{
-              background: isActive ? 'transparent' : '#3a95df',
-              color: isActive ? '#991b1b' : '#fff',
-              border: isActive ? '1.5px solid #fca5a5' : 'none',
+              background: active ? 'transparent' : '#3a95df',
+              color: active ? '#991b1b' : '#fff',
+              border: active ? '1.5px solid #fca5a5' : 'none',
               borderRadius: '6px',
               padding: '4px 14px',
               fontSize: '12px',
@@ -232,7 +267,7 @@ function AdminUsersView() {
               cursor: 'pointer',
             }}
           >
-            {isActive ? 'Suspender' : 'Activar'}
+            {active ? 'Suspender' : 'Activar'}
           </button>
         );
       },
@@ -255,12 +290,16 @@ function AdminUsersView() {
           autoHeight
           rows={rows}
           columns={columns}
+          rowCount={rowCount}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[5, 10, 25]}
-          initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
           disableRowSelectionOnClick
           disableColumnFilter
           disableColumnMenu
           hideFooterSelectedRowCount
+          loading={isLoading}
           sx={{
             border: 'none',
             '& .MuiDataGrid-columnHeaders': {

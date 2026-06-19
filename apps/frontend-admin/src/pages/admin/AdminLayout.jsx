@@ -23,8 +23,7 @@ function AdminLayout() {
   const items = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/companies', icon: Building2, label: 'Gestión de Empresas', subtext: 'KYB' },
-    { to: '/admin/users', icon: Users, label: 'Gestión de Usuarios' },
-    { to: '/admin/audit-logs', icon: Shield, label: 'Historial de Auditoría', subtext: 'Solo lectura' },
+    { to: '/admin/users', icon: Users, label: 'Gestión de Usuarios' },    
   ];
 
   return (

@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { adminCompaniesRows as initialRows } from '../../mock/adminData';
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}/${m}/${y}`;
-};
+import api from '../../lib/api';
 
 const ActionsCell = ({ row, onVerify, onRevoke }) => {
-  const isVerified = row.verification === 'Verificada';
-  return isVerified ? (
+  return row.isVerified ? (
     <button
       onClick={() => onRevoke(row)}
       style={{
@@ -49,11 +43,50 @@ const ActionsCell = ({ row, onVerify, onRevoke }) => {
 function AdminCompaniesView() {
   const containerRef = useRef(null);
   const [, forceRender] = useState(0);
-  const [rows, setRows] = useState(() =>
-    initialRows.map((r) => ({ ...r }))
-  );
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [modal, setModal] = useState({ open: false, company: null, action: 'verify' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-companies', paginationModel],
+    queryFn: async () => {
+      const res = await api.get('/api/admin/companies', {
+        params: {
+          skip: paginationModel.page * paginationModel.pageSize,
+          take: paginationModel.pageSize,
+        },
+      });
+      return res.data;
+    },
+  });
+
+  const rows = data?.items ?? [];
+  const rowCount = data?.total ?? 0;
+
+  const queryClient = useQueryClient();
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id }) => {
+      const res = await api.put(`/api/admin/companies/${id}/toggle-verification`, null);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.isVerified ? 'Empresa verificada' : 'Verificación revocada');
+      queryClient.invalidateQueries({ queryKey: ['admin-companies'] });
+      setModal({ open: false, company: null, action: 'verify' });
+      setIsSubmitting(false);
+    },
+    onError: (error) => {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('No tenés permisos para realizar esta acción');
+      } else if (error.response?.status === 404) {
+        toast.error('Empresa no encontrada');
+      } else {
+        toast.error('Error al cambiar la verificación de la empresa');
+      }
+      setIsSubmitting(false);
+    },
+  });
 
   const handleVerify = useCallback((company) => {
     setModal({ open: true, company, action: 'verify' });
@@ -65,22 +98,7 @@ function AdminCompaniesView() {
 
   const handleConfirm = useCallback(() => {
     setIsSubmitting(true);
-    // TODO: reemplazar por mutación real con TanStack Query cuando el backend esté listo
-    setTimeout(() => {
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === modal.company.id
-            ? {
-                ...r,
-                verification: modal.action === 'verify' ? 'Verificada' : 'Pendiente',
-              }
-            : r
-        )
-      );
-      toast.success(modal.action === 'verify' ? 'Empresa verificada' : 'Verificación revocada');
-      setModal({ open: false, company: null, action: 'verify' });
-      setIsSubmitting(false);
-    }, 500);
+    toggleMutation.mutate({ id: modal.company.id });
   }, [modal]);
 
   const handleCloseModal = useCallback(() => {
@@ -101,26 +119,16 @@ function AdminCompaniesView() {
         <span style={{ color: '#1e2a3a', fontWeight: 600, fontSize: '13.5px' }}>{params.value}</span>
       ),
     },
+    // TODO: agregar columna Owner cuando el backend incluya el nombre del propietario
     {
-      field: 'owner',
-      headerName: 'Owner',
-      flex: 1,
-      minWidth: 120,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <span style={{ color: '#475569', fontSize: '13px' }}>{params.value}</span>
-      ),
-    },
-    {
-      field: 'email',
+      field: 'contactEmail',
       headerName: 'Contacto',
       flex: 1,
       minWidth: 150,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
-        <span style={{ color: '#475569', fontSize: '13px' }}>{params.value}</span>
+        <span style={{ color: '#475569', fontSize: '13px' }}>{params.value ?? '-'}</span>
       ),
     },
     {
@@ -129,13 +137,25 @@ function AdminCompaniesView() {
       width: 150,
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (
+        <span className={`badge ${params.row.isVerified ? 'badge--verified' : 'badge--unverified'}`}>
+          {params.row.isVerified ? 'Verificada' : 'No Verificada'}
+        </span>
+      ),
+    },
+    {
+      field: 'kybSubmittedAt',
+      headerName: 'Creado',
+      width: 120,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => {
-        const isVerified = params.value === 'Verificada';
-        return (
-          <span className={`badge ${isVerified ? 'badge--verified' : 'badge--unverified'}`}>
-            {isVerified ? 'Verificada' : 'No Verificada'}
-          </span>
-        );
+        if (!params.value) return <span style={{ color: '#94a3b8' }}>-</span>;
+        const d = new Date(params.value);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return <span style={{ color: '#64748b', fontSize: '13px' }}>{`${day}/${month}/${year}`}</span>;
       },
     },
     {
@@ -178,12 +198,16 @@ function AdminCompaniesView() {
           autoHeight
           rows={rows}
           columns={columns}
+          rowCount={rowCount}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[5, 10, 25]}
-          initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
           disableRowSelectionOnClick
           disableColumnFilter
           disableColumnMenu
           hideFooterSelectedRowCount
+          loading={isLoading}
           getRowId={(row) => row.id}
           sx={{
             border: 'none',

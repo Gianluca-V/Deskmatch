@@ -6,7 +6,6 @@ import Forbidden from './pages/Forbidden';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminUsersView from './pages/admin/AdminUsersView';
 import AdminCompaniesView from './pages/admin/AdminCompaniesView';
-import AdminAuditLogsView from './pages/admin/AdminAuditLogsView';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 function ProtectedRoute() {
@@ -34,8 +33,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsersView />} />
           <Route path="/admin/companies" element={<AdminCompaniesView />} />
-          <Route path="/admin/audit-logs" element={<AdminAuditLogsView />} />
-        </Route>
+          </Route>
       </Route>
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
