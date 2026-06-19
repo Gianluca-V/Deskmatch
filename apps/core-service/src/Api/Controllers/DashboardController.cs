@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DeskMatch.CoreService.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/hosts/me/dashboard")]
+[Route("api/hosts/me/dashboard")]
 [Authorize]
 [Produces("application/json")]
 public sealed class DashboardController : ControllerBase
