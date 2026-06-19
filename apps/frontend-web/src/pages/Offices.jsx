@@ -2,9 +2,10 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, MapPin, Users, Clock, Star, SlidersHorizontal,
-  X, ChevronLeft, ChevronRight, Building2, Wifi
+  X, ChevronLeft, ChevronRight, Building2, Wifi, Sparkles
 } from 'lucide-react';
 import { useWorkspaces } from '../hooks/useWorkspaces';
+import { aiSearch } from '../api/offices';
 import './Offices.css';
 
 const AMENITY_OPTIONS = [
@@ -114,7 +115,11 @@ function WorkspaceCard({ workspace }) {
 export default function Offices() {
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState('');
+  const [aiInterpretation, setAiInterpretation] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [customAmenity, setCustomAmenity] = useState('');
   const [filters, setFilters] = useState({
+    q: '',
     city: '',
     minPrice: '',
     maxPrice: '',
@@ -127,6 +132,7 @@ export default function Offices() {
   const queryParams = {
     page: filters.page,
     pageSize: filters.pageSize,
+    q: filters.q || undefined,
     city: filters.city || undefined,
     minPrice: filters.minPrice || undefined,
     maxPrice: filters.maxPrice || undefined,
@@ -142,11 +148,6 @@ export default function Offices() {
   const hasPrev = data?.hasPreviousPage ?? false;
   const hasNext = data?.hasNextPage ?? false;
 
-  // client-side search on name (servidor no tiene query by name aún)
-  const displayed = search.trim()
-    ? items.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()))
-    : items;
-
   const setFilter = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   }, []);
@@ -159,14 +160,79 @@ export default function Offices() {
     });
   }
 
+  function handleAddCustomAmenity() {
+    const val = customAmenity.trim();
+    if (!val || filters.amenities.includes(val)) {
+      setCustomAmenity('');
+      return;
+    }
+    setFilters((prev) => ({ ...prev, amenities: [...prev.amenities, val], page: 1 }));
+    setCustomAmenity('');
+  }
+
+  function handleCustomAmenityKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddCustomAmenity();
+    }
+  }
+
+  function handleRemoveAmenity(a) {
+    setFilters((prev) => ({
+      ...prev,
+      amenities: prev.amenities.filter((x) => x !== a),
+      page: 1,
+    }));
+  }
+
+  const isPresetAmenity = (a) => AMENITY_OPTIONS.includes(a);
+  const presetAmenities = filters.amenities.filter(isPresetAmenity);
+  const customAmenities = filters.amenities.filter((a) => !isPresetAmenity(a));
+
   function clearFilters() {
-    setFilters({ city: '', minPrice: '', maxPrice: '', minCapacity: '', amenities: [], page: 1, pageSize: 12 });
+    setFilters({ q: '', city: '', minPrice: '', maxPrice: '', minCapacity: '', amenities: [], page: 1, pageSize: 12 });
     setSearch('');
+    setAiInterpretation(null);
+  }
+
+  async function handleAiSearch() {
+    const text = search.trim();
+    if (!text || aiLoading) return;
+    setAiLoading(true);
+    setAiInterpretation(null);
+    try {
+      const result = await aiSearch(text, 1, 12);
+      const ai = result.aiInterpretation;
+      if (ai) {
+        setAiInterpretation(ai);
+        setFilters((prev) => ({
+          ...prev,
+          q: ai.q || text,
+          city: ai.city || '',
+          minPrice: ai.minPrice != null ? String(ai.minPrice) : '',
+          maxPrice: ai.maxPrice != null ? String(ai.maxPrice) : '',
+          minCapacity: ai.minCapacity != null ? String(ai.minCapacity) : '',
+          amenities: Array.isArray(ai.amenities) ? ai.amenities : [],
+          page: 1,
+        }));
+      }
+    } catch {
+      setAiInterpretation(null);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function handleSearchKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setFilter('q', search);
+    }
   }
 
   const hasActiveFilters =
-    filters.city || filters.minPrice || filters.maxPrice ||
-    filters.minCapacity || filters.amenities.length > 0;
+    filters.q || filters.city || filters.minPrice || filters.maxPrice ||
+    filters.minCapacity || filters.amenities.length > 0 || aiInterpretation;
 
   return (
     <div className="offices-page">
@@ -189,18 +255,70 @@ export default function Offices() {
         </div>
 
         {/* Search bar */}
-        <div className="offices-page__search">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button onClick={() => setSearch('')}><X size={16} /></button>
-          )}
+        <div className="offices-page__search-row">
+          <div className="offices-page__search">
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setFilter('q', ''); }}>
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          <button
+            className="offices-page__ai-btn"
+            onClick={handleAiSearch}
+            disabled={aiLoading || !search.trim()}
+            title="Buscar con IA"
+          >
+            <Sparkles size={18} />
+            {aiLoading ? 'Analizando...' : 'IA'}
+          </button>
         </div>
+
+        {/* AI Interpretation Banner */}
+        {aiInterpretation && (
+          <div className="offices-page__ai-banner">
+            <Sparkles size={15} />
+            <span className="offices-page__ai-banner__label">Búsqueda IA:</span>
+            <div className="offices-page__ai-chips">
+              {aiInterpretation.city && (
+                <span className="offices-page__ai-chip">
+                  <MapPin size={11} /> {aiInterpretation.city}
+                </span>
+              )}
+              {aiInterpretation.minPrice != null && (
+                <span className="offices-page__ai-chip">
+                  Mín ${aiInterpretation.minPrice}/h
+                </span>
+              )}
+              {aiInterpretation.maxPrice != null && (
+                <span className="offices-page__ai-chip">
+                  Máx ${aiInterpretation.maxPrice}/h
+                </span>
+              )}
+              {aiInterpretation.minCapacity != null && (
+                <span className="offices-page__ai-chip">
+                  <Users size={11} /> {aiInterpretation.minCapacity}+ pers.
+                </span>
+              )}
+              {aiInterpretation.amenities?.map((a) => (
+                <span className="offices-page__ai-chip" key={a}>
+                  <Wifi size={11} /> {a}
+                </span>
+              ))}
+            </div>
+            <button className="offices-page__ai-banner__clear" onClick={clearFilters}>
+              <X size={13} /> Limpiar
+            </button>
+          </div>
+        )}
 
         <div className="offices-page__layout">
 
@@ -279,12 +397,39 @@ export default function Offices() {
                 <label className="offices-filters__label">
                   <Wifi size={14} /> Amenities
                 </label>
+
+                <div className="offices-filters__amenity-add">
+                  <input
+                    type="text"
+                    placeholder="Agregar amenity..."
+                    value={customAmenity}
+                    onChange={(e) => setCustomAmenity(e.target.value)}
+                    onKeyDown={handleCustomAmenityKeyDown}
+                  />
+                  <button type="button" onClick={handleAddCustomAmenity} disabled={!customAmenity.trim()}>
+                    + Agregar
+                  </button>
+                </div>
+
+                {customAmenities.length > 0 && (
+                  <div className="offices-filters__custom-amenities">
+                    {customAmenities.map((a) => (
+                      <span className="offices-filters__amenity-tag" key={a}>
+                        {a}
+                        <button onClick={() => handleRemoveAmenity(a)}>
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="offices-filters__amenities">
                   {AMENITY_OPTIONS.map((a) => (
                     <label key={a} className="offices-filters__amenity">
                       <input
                         type="checkbox"
-                        checked={filters.amenities.includes(a)}
+                        checked={presetAmenities.includes(a)}
                         onChange={() => toggleAmenity(a)}
                       />
                       {a}
@@ -311,16 +456,16 @@ export default function Offices() {
               </div>
             )}
 
-            {!isLoading && !error && displayed.length === 0 && (
+            {!isLoading && !error && items.length === 0 && (
               <div className="offices-page__empty">
                 <Building2 size={48} />
                 <h3>Sin resultados</h3>
                 <p>
-                  {hasActiveFilters || search
+                  {hasActiveFilters
                     ? 'No encontramos espacios con esos filtros. Probá con otros criterios.'
                     : 'No hay espacios disponibles por el momento.'}
                 </p>
-                {(hasActiveFilters || search) && (
+                {hasActiveFilters && (
                   <button className="btn btn-primary" onClick={clearFilters} style={{ marginTop: 12 }}>
                     Limpiar filtros
                   </button>
@@ -328,9 +473,9 @@ export default function Offices() {
               </div>
             )}
 
-            {!isLoading && !error && displayed.length > 0 && (
+            {!isLoading && !error && items.length > 0 && (
               <div className="offices-grid">
-                {displayed.map((w) => <WorkspaceCard key={w.id} workspace={w} />)}
+                {items.map((w) => <WorkspaceCard key={w.id} workspace={w} />)}
               </div>
             )}
 

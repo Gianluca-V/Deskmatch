@@ -2,9 +2,6 @@ import api from '../lib/api';
 
 export const createOffice = (data) => api.post('/api/workspaces', data).then((r) => r.data);
 
-// GET /api/workspaces?page=1&pageSize=20&city=...&minPrice=...&maxPrice=...&minCapacity=...&amenities=WiFi,AC
-export const getWorkspaces = (params) => api.get('/api/workspaces', { params }).then((r) => r.data);
-
 export const getWorkspace = (id) => api.get(`/api/workspaces/${id}`).then((r) => r.data);
 
 export const getWorkspacesByCompany = (companyId) =>
@@ -15,3 +12,9 @@ export const updateOffice = (id, data) =>
 
 export const deleteOffice = (id) =>
   api.delete(`/api/workspaces/${id}`);
+
+export const searchOffices = (params) =>
+  api.get('/api/search/offices', { params }).then((r) => r.data);
+
+export const aiSearch = (text, page = 1, pageSize = 12) =>
+  api.get('/api/search/ai', { params: { text, page, pageSize } }).then((r) => r.data);

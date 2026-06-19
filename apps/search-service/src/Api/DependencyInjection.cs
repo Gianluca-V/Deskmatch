@@ -12,6 +12,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // TODO: Add OpenSearch SDK
         services.AddOpenSearchSdk(configuration);
 
         services.AddOllamaClient();

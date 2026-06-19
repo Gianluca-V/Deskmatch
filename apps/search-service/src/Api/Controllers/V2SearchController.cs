@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using DeskMatch.SDK.Ollama;
@@ -60,6 +61,18 @@ public sealed class SearchController : ControllerBase
         ["space"] = "space espacio workspace area room",
     };
 
+    private static string Normalize(string text)
+    {
+        var normalized = text.Normalize(NormalizationForm.FormKD);
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
     private static string ExpandQuery(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return "";
@@ -69,7 +82,8 @@ public sealed class SearchController : ControllerBase
 
         foreach (var word in words)
         {
-            if (QueryExpansions.TryGetValue(word, out var expansion))
+            var key = Normalize(word);
+            if (QueryExpansions.TryGetValue(key, out var expansion))
             {
                 foreach (var term in expansion.Split(' '))
                 {
