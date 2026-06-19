@@ -26,6 +26,24 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
 
         builder.Property(c => c.ContactEmail)
             .HasMaxLength(256);
+        
+        builder.Property(c => c.PhoneNumber)
+            .HasMaxLength(32);
+
+        builder.Property(c => c.Address)
+            .HasMaxLength(512);
+        
+        builder.Property(c => c.City)
+            .HasMaxLength(128);
+        
+        builder.Property(c => c.Country)
+            .HasMaxLength(128);
+        
+        builder.Property(c => c.Latitude)
+            .HasPrecision(10, 7);
+
+        builder.Property(c => c.Longitude)
+            .HasPrecision(10, 7);
 
         builder.Property(c => c.IsVerified)
             .IsRequired()
