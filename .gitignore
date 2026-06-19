@@ -109,3 +109,4 @@ coveragereport/
 
 # Local development
 .override.yml
+appsettings.Development.json
