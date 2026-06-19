@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.CoreService.Domain.Workspaces;
@@ -79,7 +81,7 @@ public sealed class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorksp
         Address = w.Address,
         Capacity = w.Capacity,
         PricePerHour = (double)w.PricePerHour,
-        Amenities = w.Amenities,
+        Amenities = w.Amenities?.Select(a => Normalize(a).ToLowerInvariant()).ToList(),
         Images = w.Images,
         Location = w.Latitude.HasValue && w.Longitude.HasValue
             ? new GeoLocation(w.Latitude.Value, w.Longitude.Value)
@@ -91,4 +93,16 @@ public sealed class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorksp
         DynamicAttributes = w.DynamicAttributes?
             .ToDictionary(a => a.Key, a => (object)(a.Value ?? ""))
     };
+
+    private static string Normalize(string text)
+    {
+        var normalized = text.Normalize(NormalizationForm.FormKD);
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        return sb.ToString();
+    }
 }
