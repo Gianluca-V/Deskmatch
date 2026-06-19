@@ -18,28 +18,46 @@ public sealed class SearchController : ControllerBase
 
     private static readonly Dictionary<string, string> QueryExpansions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["cafe"] = "cafe cafe coffee cafeteria",
+        ["cafe"] = "cafe coffee cafeteria",
         ["coffe"] = "coffee",
-        ["cafeteria"] = "cafeteria cafeteria coffee cafe",
+        ["coffee"] = "coffee cafe",
+        ["cafeteria"] = "cafeteria coffee cafe",
         ["gim"] = "gym",
         ["gimnasio"] = "gimnasio gym fitness",
+        ["gym"] = "gym gimnasio fitness",
+        ["fitness"] = "fitness gym gimnasio",
         ["wifi"] = "wifi internet wireless",
+        ["internet"] = "internet wifi wireless",
+        ["wireless"] = "wireless wifi internet",
         ["estacionamiento"] = "estacionamiento parking cochera garage",
         ["parking"] = "parking estacionamiento cochera",
+        ["cochera"] = "cochera estacionamiento parking garage",
+        ["garage"] = "garage estacionamiento parking cochera",
         ["pet"] = "pet mascotas mascota petfriendly pet-friendly",
+        ["mascota"] = "mascota mascotas pet petfriendly pet-friendly",
         ["reunion"] = "reunion reuniones meeting sala boardroom",
         ["meeting"] = "meeting reuniones sala boardroom conference",
         ["escritorio"] = "escritorio desk workspace puesto",
+        ["desk"] = "desk escritorio workspace puesto",
         ["privado"] = "privado private exclusivo vip",
+        ["private"] = "private privado exclusivo vip",
         ["silencioso"] = "silencioso silent quiet tranquilo",
+        ["silent"] = "silent silencioso quiet tranquilo",
         ["terraza"] = "terraza rooftop terraza outdoor exterior",
-        ["cocina"] = "cocina kitchen cocina kitchenette",
+        ["rooftop"] = "rooftop terraza outdoor exterior",
+        ["cocina"] = "cocina kitchen kitchenette",
+        ["kitchen"] = "kitchen cocina kitchenette",
         ["impresora"] = "impresora printer printing impresion",
+        ["printer"] = "printer impresora printing impresion",
         ["accesible"] = "accesible accessible access wheelchair",
+        ["accessible"] = "accessible accesible access wheelchair",
         ["24"] = "24 24horas 24-horas horarioextendido",
         ["moderno"] = "moderno modern contemporary sleek",
+        ["modern"] = "modern moderno contemporary sleek",
         ["oficina"] = "oficina office workspace despacho",
+        ["office"] = "office oficina workspace despacho",
         ["espacio"] = "espacio space workspace area room",
+        ["space"] = "space espacio workspace area room",
     };
 
     private static string ExpandQuery(string? raw)
@@ -167,23 +185,21 @@ public sealed class SearchController : ControllerBase
                 }
             }
 
-            // k-NN boost: apenas se estabilice, descomentar
-                /*
-                if (embedding != null && embedding.Length == 768)
+            // k-NN boost
+            if (embedding != null && embedding.Length == 768)
+            {
+                should.Add(new Dictionary<string, object>
                 {
-                    should.Add(new Dictionary<string, object>
+                    ["knn"] = new Dictionary<string, object>
                     {
-                        ["knn"] = new Dictionary<string, object>
+                        ["nameVector"] = new Dictionary<string, object>
                         {
-                            ["nameVector"] = new Dictionary<string, object>
-                            {
-                                ["vector"] = embedding,
-                                ["k"] = 10
-                            }
+                            ["vector"] = embedding,
+                            ["k"] = 10
                         }
-                    });
-                }
-                 */
+                    }
+                });
+            }
 
             if (!string.IsNullOrWhiteSpace(city))
                 filter.Add(new { match = new Dictionary<string, object> { ["city"] = city } });
@@ -205,7 +221,17 @@ public sealed class SearchController : ControllerBase
             if (amList?.Length > 0)
             {
                 foreach (var am in amList)
-                    filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = am } });
+                {
+                    var expanded = ExpandQuery(am);
+                    var terms = expanded.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    foreach (var term in terms)
+                    {
+                        filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = term.ToLowerInvariant() } });
+                        var tc = char.ToUpperInvariant(term[0]) + term[1..].ToLowerInvariant();
+                        if (tc != term.ToLowerInvariant())
+                            filter.Add(new { match = new Dictionary<string, object> { ["amenities"] = tc } });
+                    }
+                }
             }
 
             if (lat.HasValue && lon.HasValue)
