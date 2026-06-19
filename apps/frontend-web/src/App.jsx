@@ -44,6 +44,12 @@ function Analytics() {
   );
 }
 
+function DashboardRouter() {
+  const { user } = useAuth();
+  const isCompany = user?.role === 'Manager' || user?.role === 'Company' || user?.role === 'Admin';
+  return isCompany ? <AnalyticsDashboard /> : <Reservations />;
+}
+
 function App() {
   const { isAuthenticated } = useAuth();
   useInactivityLogout();
@@ -66,7 +72,7 @@ function App() {
             <Route path="/register" element={<RegisterType />} />
             <Route path="/register/user" element={<Register />} />
             <Route path="/register/company" element={<RegisterCompany />} />
-            <Route path="/dashboard" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
             <Route path="/my-spaces" element={<ProtectedRoute><MySpaces /></ProtectedRoute>} />
             <Route path="/spaces" element={<ProtectedRoute><Spaces /></ProtectedRoute>} />
             <Route path="/manage-company" element={<ProtectedRoute><ManageCompany /></ProtectedRoute>} />

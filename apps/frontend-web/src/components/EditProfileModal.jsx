@@ -1,16 +1,17 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { X, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../lib/api';
+import AddressAutocomplete from './AddressAutocomplete';
 import './EditProfileModal.css';
 
 function EditProfileModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth();
   const { data: profileData, refetch } = useProfile();
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, control } = useForm({
     defaultValues: {
       fullName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : '',
       phoneNumber: profileData?.phoneNumber || '',
@@ -108,14 +109,17 @@ function EditProfileModal({ isOpen, onClose, onSuccess }) {
 
           <div className="edit-profile-modal__form-group">
             <label htmlFor="location">Ubicación</label>
-            <input
-              id="location"
-              type="text"
-              placeholder="Ej: Buenos Aires, Argentina"
-              {...register('location', {
-                maxLength: { value: 100, message: 'Máximo 100 caracteres' },
-              })}
-              className="edit-profile-modal__input"
+            <Controller
+              name="location"
+              control={control}
+              render={({ field }) => (
+                <AddressAutocomplete
+                  value={field.value || ''}
+                  onChange={(val) => field.onChange(val)}
+                  onSelect={(result) => field.onChange(result.displayName)}
+                  placeholder="Ej: Buenos Aires, Argentina"
+                />
+              )}
             />
             {errors.location && <span className="edit-profile-modal__error">{errors.location.message}</span>}
           </div>

@@ -36,7 +36,7 @@ function Navbar() {
                   <Link to="/dashboard" className="navbar__link">Dashboard</Link>
                 </>
               ) : (
-                <Link to="/dashboard" className="navbar__link">Dashboard</Link>
+                <Link to="/dashboard" className="navbar__link">Mis Reservas</Link>
               )}
             </>
           )}
