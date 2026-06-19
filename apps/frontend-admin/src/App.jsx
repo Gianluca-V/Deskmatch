@@ -15,7 +15,7 @@ function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== 'Admin') {
+  if (user?.role !== 'Admin' && user?.role !== 'SystemAdmin') {
     return <Forbidden />;
   }
 
