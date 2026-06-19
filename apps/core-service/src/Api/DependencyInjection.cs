@@ -13,6 +13,8 @@ using DeskMatch.CoreService.Infrastructure.Persistence;
 using DeskMatch.CoreService.Infrastructure.Repositories;
 using DeskMatch.Domain.CQRS;
 using DeskMatch.SDK.Geocoding;
+using DeskMatch.SDK.Ollama;
+using DeskMatch.SDK.OpenSearch;
 using DeskMatch.SDK.Storage;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +40,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateWorkspaceCommand, Guid>, CreateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<ReindexWorkspacesCommand>, ReindexWorkspacesCommandHandler>();
+
+        services.AddOpenSearchSdk(configuration);
+        services.AddOllamaClient();
 
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<ICommandHandler<CreateReservationCommand, Guid>, CreateReservationCommandHandler>();

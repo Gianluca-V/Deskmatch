@@ -1,16 +1,27 @@
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
 using DeskMatch.Domain.CQRS;
+using DeskMatch.SDK.Ollama;
+using DeskMatch.SDK.OpenSearch;
+using DeskMatch.SDK.OpenSearch.Documents;
+using OpenSearch.Client;
 
 namespace DeskMatch.CoreService.Application.Workspaces.Handlers;
 
 public sealed class UpdateWorkspaceCommandHandler : ICommandHandler<UpdateWorkspaceCommand>
 {
     private readonly IWorkspaceRepository _repository;
+    private readonly IOpenSearchRepository<WorkspaceDocument> _searchRepo;
+    private readonly IOllamaClient _ollama;
 
-    public UpdateWorkspaceCommandHandler(IWorkspaceRepository repository)
+    public UpdateWorkspaceCommandHandler(
+        IWorkspaceRepository repository,
+        IOpenSearchRepository<WorkspaceDocument> searchRepo,
+        IOllamaClient ollama)
     {
         _repository = repository;
+        _searchRepo = searchRepo;
+        _ollama = ollama;
     }
 
     public async Task HandleAsync(
@@ -37,5 +48,15 @@ public sealed class UpdateWorkspaceCommandHandler : ICommandHandler<UpdateWorksp
 
         _repository.Update(workspace);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        var doc = CreateWorkspaceCommandHandler.ToDocument(workspace);
+
+        if (_ollama.IsAvailable)
+        {
+            doc.NameVector = await _ollama.GetEmbeddingAsync(workspace.Name);
+            doc.DescriptionVector = await _ollama.GetEmbeddingAsync(workspace.Description ?? "");
+        }
+
+        await _searchRepo.IndexAsync(doc, index: "offices");
     }
 }

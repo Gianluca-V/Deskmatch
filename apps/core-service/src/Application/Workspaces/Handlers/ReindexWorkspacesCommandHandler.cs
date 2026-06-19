@@ -12,15 +12,18 @@ public sealed class ReindexWorkspacesCommandHandler : ICommandHandler<ReindexWor
 {
     private readonly IWorkspaceRepository _repository;
     private readonly IOpenSearchRepository<WorkspaceDocument> _searchRepo;
+    private readonly IOpenSearchClient _client;
     private readonly IOllamaClient _ollama;
 
     public ReindexWorkspacesCommandHandler(
         IWorkspaceRepository repository,
         IOpenSearchRepository<WorkspaceDocument> searchRepo,
+        IOpenSearchClient client,
         IOllamaClient ollama)
     {
         _repository = repository;
         _searchRepo = searchRepo;
+        _client = client;
         _ollama = ollama;
     }
 
@@ -34,27 +37,9 @@ public sealed class ReindexWorkspacesCommandHandler : ICommandHandler<ReindexWor
 
         foreach (var w in workspaces)
         {
-            var doc = new WorkspaceDocument
-            {
-                Id = w.Id.ToString(),
-                Name = w.Name,
-                Description = w.Description,
-                City = w.City,
-                Country = w.Country,
-                Address = w.Address,
-                Capacity = w.Capacity,
-                PricePerHour = (double)w.PricePerHour,
-                Amenities = w.Amenities,
-                Location = w.Latitude.HasValue && w.Longitude.HasValue
-                    ? new GeoLocation(w.Latitude.Value, w.Longitude.Value)
-                    : null,
-                Rating = w.Rating,
-                ReviewCount = w.ReviewCount,
-                CreatedAt = w.CreatedAt,
-                UpdatedAt = w.UpdatedAt,
-                DynamicAttributes = w.DynamicAttributes?
-                    .ToDictionary(a => a.Key, a => (object)(a.Value ?? ""))
-            };
+            if (w.IsActive is false) continue;
+
+            var doc = CreateWorkspaceCommandHandler.ToDocument(w);
 
             if (_ollama.IsAvailable)
             {
@@ -64,6 +49,10 @@ public sealed class ReindexWorkspacesCommandHandler : ICommandHandler<ReindexWor
 
             documents.Add(doc);
         }
+
+        await _client.DeleteByQueryAsync<WorkspaceDocument>(d => d
+            .Index("offices")
+            .Query(q => q.MatchAll()));
 
         if (documents.Count > 0)
         {
