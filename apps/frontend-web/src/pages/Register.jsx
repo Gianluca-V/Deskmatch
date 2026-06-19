@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../lib/api';
 
 function Register() {
@@ -7,6 +8,7 @@ function Register() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -16,21 +18,8 @@ function Register() {
     if (typeof error === 'string') {
       const lowerError = error.toLowerCase();
 
-      if (lowerError.includes('passwordrequiresnonalphanumeric') ||
-          lowerError.includes('non alphanumeric')) {
-        return 'La contraseña debe incluir al menos un carácter especial como: ! @ # $ % ^ & *';
-      }
-      if (lowerError.includes('passwordrequiresupper') ||
-          lowerError.includes('uppercase')) {
-        return 'La contraseña debe incluir al menos una letra mayúscula';
-      }
-      if (lowerError.includes('passwordrequireslower') ||
-          lowerError.includes('lowercase')) {
-        return 'La contraseña debe incluir al menos una letra minúscula';
-      }
-      if (lowerError.includes('passwordrequiresdigit') ||
-          lowerError.includes('digit')) {
-        return 'La contraseña debe incluir al menos un número';
+      if (lowerError.includes('password')) {
+        return 'La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *';
       }
       if (lowerError.includes('email')) {
         return 'El correo electrónico es inválido o ya está registrado';
@@ -51,8 +40,8 @@ function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 8) {
+      setError('La contraseña debe incluir al menos 8 caracteres, una letra mayúscula, una minúscula, un número y un carácter especial como: ! @ # $ % ^ & *');
       setLoading(false);
       return;
     }
@@ -180,15 +169,26 @@ function Register() {
             </div>
             <div className="form-group auth-card__field">
               <label htmlFor="register-password">Contraseña</label>
-              <input
-                id="register-password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="register-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  style={{ paddingRight: '44px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', padding: 0 }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button
               type="submit"

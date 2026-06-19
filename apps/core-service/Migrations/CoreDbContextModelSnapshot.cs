@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DeskMatch.CoreService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -80,6 +81,50 @@ namespace DeskMatch.CoreService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies", "core");
+                });
+
+            modelBuilder.Entity("DeskMatch.CoreService.Domain.Reservations.Reservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTimeOffset>("EndTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId", "StartTime", "EndTime")
+                        .HasDatabaseName("IX_Reservations_Workspace_Dates");
+
+                    b.ToTable("Reservations", "core", t =>
+                        {
+                            t.HasCheckConstraint("CK_Reservation_Dates", "\"EndTime\" > \"StartTime\"");
+                        });
                 });
 
             modelBuilder.Entity("DeskMatch.CoreService.Domain.Workspaces.Workspace", b =>
@@ -167,6 +212,15 @@ namespace DeskMatch.CoreService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Workspaces", "core");
+                });
+
+            modelBuilder.Entity("DeskMatch.CoreService.Domain.Reservations.Reservation", b =>
+                {
+                    b.HasOne("DeskMatch.CoreService.Domain.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

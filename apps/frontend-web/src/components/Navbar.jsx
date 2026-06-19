@@ -14,35 +14,33 @@ function Navbar() {
   }
 
   // Determinar el tipo de usuario
-  const isCompany = user?.role === 'Company' || user?.role === 'Admin';
+  const isCompany = user?.role === 'Manager' || user?.role === 'Company' || user?.role === 'Admin';
 
   return (
     <header className="navbar">
       <nav className="navbar__container">
         {/* Logo/Home */}
-        <Link to="/" className="navbar__logo">
+        <Link to={isAuthenticated ? '/dashboard' : '/'} className="navbar__logo">
           DeskMatch
         </Link>
 
-        {/* Navigation Links - Center (only for authenticated users) */}
-        {isAuthenticated && (
-          <div className="navbar__links">
-            {isCompany ? (
-              <>
-                <Link to="/spaces" className="navbar__link">Espacios</Link>
+        {/* Navigation Links - Center */}
+        <div className="navbar__links">
+          <Link to="/offices" className="navbar__link">Oficinas</Link>
+          {isAuthenticated && (
+            <>
+              {isCompany ? (
+                <>
+                  <Link to="/my-spaces" className="navbar__link">Mis Espacios</Link>
+                  <Link to="/reservations" className="navbar__link">Reservas</Link>
+                  <Link to="/dashboard" className="navbar__link">Dashboard</Link>
+                </>
+              ) : (
                 <Link to="/dashboard" className="navbar__link">Dashboard</Link>
-                <Link to="/manage-company" className="navbar__link">Gestionar Empresa</Link>
-                <Link to="/analytics" className="navbar__link">Analytics</Link>
-              </>
-            ) : (
-              <>
-                <Link to="/offices" className="navbar__link">Oficinas</Link>
-                <Link to="/dashboard" className="navbar__link">Dashboard</Link>
-                <Link to="/my-spaces" className="navbar__link">Mis Espacios</Link>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
 
         {/* Auth Actions - Right */}
         <div className="navbar__actions">

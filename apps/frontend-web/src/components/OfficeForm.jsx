@@ -62,11 +62,11 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onImagesCh
         <div className="form-row form-row--2">
           <div className="form-group">
             <label htmlFor="latitude">Latitud</label>
-            <input id="latitude" name="latitude" type="number" value={form.latitude} onChange={onChange} placeholder="-34.603722" step="any" min={-90} max={90} />
+            <input id="latitude" name="latitude" type="number" value={form.latitude} onChange={onChange} placeholder="-34.603722" step="any" min={-90} max={90} disabled />
           </div>
           <div className="form-group">
             <label htmlFor="longitude">Longitud</label>
-            <input id="longitude" name="longitude" type="number" value={form.longitude} onChange={onChange} placeholder="-58.381592" step="any" min={-180} max={180} />
+            <input id="longitude" name="longitude" type="number" value={form.longitude} onChange={onChange} placeholder="-58.381592" step="any" min={-180} max={180} disabled />
           </div>
         </div>
       </div>

@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import OfficeModal from '../components/OfficeModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 import { useDeleteOffice } from '../hooks/useDeleteOffice';
+import { useCompanyReservationsSummary } from '../hooks/useCompanyReservations';
 import { useAuth } from '../context/AuthContext';
 
 const STATUS_LABELS = {
@@ -16,10 +19,13 @@ const STATUS_CLASS = {
 };
 
 function MySpaces() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [spaceToDelete, setSpaceToDelete] = useState(null);
 
   function handleEdit(space) {
     setEditingSpace(space);
@@ -31,6 +37,23 @@ function MySpaces() {
     setEditingSpace(null);
   }
 
+  function handleOpenDeleteModal(space) {
+    setSpaceToDelete(space);
+    setDeleteModalOpen(true);
+  }
+
+  function handleCloseDeleteModal() {
+    setDeleteModalOpen(false);
+    setSpaceToDelete(null);
+  }
+
+  function handleConfirmDelete() {
+    if (spaceToDelete) {
+      deleteSpace(spaceToDelete.id);
+      handleCloseDeleteModal();
+    }
+  }
+
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const canDelete = isAdmin || user?.role === 'Manager';
@@ -38,6 +61,7 @@ function MySpaces() {
   const companyId = company?.id;
 
   const { data: spaces = [], isLoading } = useWorkspacesByCompany(companyId);
+  const { data: reservationSummary } = useCompanyReservationsSummary();
   const { mutate: deleteSpace } = useDeleteOffice();
 
   const filteredSpaces = useMemo(() => {
@@ -81,11 +105,13 @@ function MySpaces() {
         </article>
         <article className="my-spaces__metric-card">
           <p>Reservas este mes</p>
-          <strong>—</strong>
+          <strong>{reservationSummary?.thisMonth ?? '—'}</strong>
         </article>
         <article className="my-spaces__metric-card">
           <p>Ingresos del mes</p>
-          <strong>—</strong>
+          <strong>
+            {reservationSummary ? `$ ${Number(reservationSummary.revenueThisMonth).toLocaleString('es-AR')}` : '—'}
+          </strong>
         </article>
       </section>
 
@@ -152,9 +178,15 @@ function MySpaces() {
                   <div className="my-spaces__actions">
                     <button type="button" className="btn btn-secondary" onClick={() => handleEdit(space)}>Editar</button>
                     {canDelete && (
-                      <button type="button" className="btn btn-danger" onClick={() => { if (window.confirm('¿Eliminar este espacio?')) deleteSpace(space.id); }}>Eliminar</button>
+                      <button type="button" className="btn btn-danger" onClick={() => handleOpenDeleteModal(space)}>Eliminar</button>
                     )}
-                    <button type="button" className="btn btn-primary">Ver reservas</button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => navigate(`/my-spaces/${space.id}/reservations`)}
+                    >
+                      Ver reservas
+                    </button>
                   </div>
                 </div>
               </article>
@@ -168,6 +200,15 @@ function MySpaces() {
         onClose={handleCloseModal}
         companyId={companyId ?? ''}
         initialValues={editingSpace}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar espacio"
+        message={spaceToDelete ? `¿Estás seguro de que querés eliminar "${spaceToDelete.name}"? Esta acción no se puede deshacer.` : ''}
+        isPending={false}
       />
     </section>
   );
