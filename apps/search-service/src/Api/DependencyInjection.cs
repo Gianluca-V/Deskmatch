@@ -1,6 +1,8 @@
 // Register your application services here.
 // Called from Program.cs via: builder.Services.AddApplicationServices(builder.Configuration);
 
+using DeskMatch.SDK.Ollama;
+using DeskMatch.SDK.OpenSearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,8 +12,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // TODO: Add OpenSearch SDK
-        // services.AddOpenSearchSdk(configuration);
+        services.AddOpenSearchSdk(configuration);
+
+        services.AddOllamaClient();
 
         // TODO: Register document repositories
         // services.AddSingleton(typeof(IOpenSearchRepository<>), typeof(OpenSearchRepository<>));
