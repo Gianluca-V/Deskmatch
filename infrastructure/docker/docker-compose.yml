@@ -269,7 +269,7 @@ services:
       Storage__BucketName: ${MINIO_BUCKET:-deskmatch}
       Storage__UseSsl: ${STORAGE_USE_SSL:-false}
       Storage__PublicUrl: ${STORAGE_PUBLIC_URL:-http://localhost:9000}
-      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://192.168.1.47:11434}
       Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
       Ollama__ChatModel: ${OLLAMA_CHAT_MODEL:-qwen2.5:3b}
     depends_on:
@@ -305,7 +305,7 @@ services:
       OpenSearch__Uri: http://opensearch:9200
       OpenSearch__User: admin
       OpenSearch__Password: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-DeskMatch123!}
-      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://192.168.1.47:11434}
       Ollama__Model: ${OLLAMA_MODEL:-nomic-embed-text-v2-moe}
       Ollama__ChatModel: ${OLLAMA_CHAT_MODEL:-qwen2.5:3b}
     depends_on:
