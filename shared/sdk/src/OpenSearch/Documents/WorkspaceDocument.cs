@@ -18,6 +18,7 @@ public sealed class WorkspaceDocument
     public int ReviewCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<string>? Images { get; set; }
     public Dictionary<string, object>? DynamicAttributes { get; set; }
     public float[]? NameVector { get; set; }
     public float[]? DescriptionVector { get; set; }

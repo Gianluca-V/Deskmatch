@@ -80,6 +80,7 @@ public sealed class CreateWorkspaceCommandHandler : ICommandHandler<CreateWorksp
         Capacity = w.Capacity,
         PricePerHour = (double)w.PricePerHour,
         Amenities = w.Amenities,
+        Images = w.Images,
         Location = w.Latitude.HasValue && w.Longitude.HasValue
             ? new GeoLocation(w.Latitude.Value, w.Longitude.Value)
             : null,
