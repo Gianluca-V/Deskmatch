@@ -145,8 +145,8 @@ export default function Offices() {
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const hasPrev = data?.hasPreviousPage ?? false;
-  const hasNext = data?.hasNextPage ?? false;
+  const hasPrev = (data?.page ?? 1) > 1;
+  const hasNext = (data?.page ?? 1) < (data?.totalPages ?? 1);
 
   const setFilter = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
