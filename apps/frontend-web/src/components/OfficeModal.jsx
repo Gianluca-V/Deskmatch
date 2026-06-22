@@ -65,10 +65,10 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
   const [form, setForm] = useState(() => fromWorkspace(initialValues, companyId));
 
   useEffect(() => {
-    if (isOpen && !isPending) {
+    if (isOpen) {
       setForm(fromWorkspace(initialValues, companyId));
     }
-  }, [isOpen, initialValues?.id, companyId, isPending]);
+  }, [isOpen, initialValues?.id, companyId]);
   const [errors, setErrors] = useState({});
 
   const [rollback, setRollback] = useState(null);
