@@ -13,9 +13,6 @@ export const updateOffice = (id, data) =>
 export const deleteOffice = (id) =>
   api.delete(`/api/workspaces/${id}`);
 
-export const getWorkspaces = (params) =>
-  api.get('/api/workspaces', { params }).then((r) => r.data);
-
 export const searchOffices = (params) =>
   api.get('/api/search/offices', { params }).then((r) => r.data);
 
