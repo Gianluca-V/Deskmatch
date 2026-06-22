@@ -58,11 +58,11 @@ function CompanySpaces({ spaces, isLoading }) {
           <div
             key={space.id}
             className="company-spaces__card"
-            onClick={() => navigate(`/space/${space.id}`)}
+            onClick={() => navigate(`/workspaces/${space.id}`)}
           >
             <div className="company-spaces__image">
-              {space.image ? (
-                <img src={space.image} alt={space.name} />
+              {space.images && space.images.length > 0 ? (
+                <img src={space.images[0]} alt={space.name} />
               ) : (
                 <div className="company-spaces__image-placeholder"></div>
               )}
@@ -78,7 +78,7 @@ function CompanySpaces({ spaces, isLoading }) {
               </div>
               <div className="company-spaces__price">
                 <Euro size={14} />
-                <span>{space.price}</span>
+                <span>€ {space.pricePerDay}</span>
                 <span className="company-spaces__price-period"> por día</span>
               </div>
             </div>
