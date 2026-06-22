@@ -94,6 +94,7 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
   const { mutate: update, isPending: isUpdating, isError: isUpdateError, error: updateError } = useUpdateOffice({
     onSuccess: onMutationSuccess,
     onError: onMutationError,
+    companyId,
   });
 
   const isPending = isCreating || isUpdating;
