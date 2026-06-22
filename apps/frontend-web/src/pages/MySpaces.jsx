@@ -28,7 +28,7 @@ function MySpaces() {
   const [spaceToDelete, setSpaceToDelete] = useState(null);
 
   function handleEdit(space) {
-    setEditingSpace(space);
+    setEditingSpace({ ...space });
     setModalOpen(true);
   }
 

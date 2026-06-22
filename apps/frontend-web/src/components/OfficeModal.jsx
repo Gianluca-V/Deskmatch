@@ -48,11 +48,11 @@ function fromWorkspace(w, companyId) {
     country: w.country ?? '',
     latitude: w.latitude ?? '',
     longitude: w.longitude ?? '',
-    capacity: w.capacity ?? '',
-    pricePerHour: w.pricePerHour ?? '',
-    pricePerDay: w.pricePerDay ?? '',
-    pricePerMonth: w.pricePerMonth ?? '',
-    depositPercentage: '30',
+    capacity: w.capacity || '',
+    pricePerHour: w.pricePerHour || '',
+    pricePerDay: w.pricePerDay || '',
+    pricePerMonth: w.pricePerMonth || '',
+    depositPercentage: w.depositPercentage ?? '30',
     amenities: w.amenities ?? [],
     images: Array.isArray(w.images)
       ? w.images.filter(Boolean).map((url) => ({ url, preview: url, file: null }))
@@ -65,8 +65,10 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
   const [form, setForm] = useState(() => fromWorkspace(initialValues, companyId));
 
   useEffect(() => {
-    if (isOpen) setForm(fromWorkspace(initialValues, companyId));
-  }, [isOpen, initialValues, companyId]);
+    if (isOpen && !isPending) {
+      setForm(fromWorkspace(initialValues, companyId));
+    }
+  }, [isOpen, initialValues?.id, companyId, isPending]);
   const [errors, setErrors] = useState({});
 
   const [rollback, setRollback] = useState(null);

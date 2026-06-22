@@ -8,6 +8,7 @@ export function useUpdateOffice({ onSuccess, onError } = {}) {
     mutationFn: ({ id, ...data }) => updateOffice(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: ['profile-company'] });
       onSuccess?.(data);
     },
     onError: (err) => onError?.(err),
