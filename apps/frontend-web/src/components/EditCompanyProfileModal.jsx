@@ -9,7 +9,7 @@ import './EditCompanyProfileModal.css';
 
 function EditCompanyProfileModal({ isOpen, onClose, onSuccess }) {
   const queryClient = useQueryClient();
-  const { data: companyData, refetch } = useProfileCompany();
+  const { data: companyData } = useProfileCompany();
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     defaultValues: {
       name: companyData?.name || '',

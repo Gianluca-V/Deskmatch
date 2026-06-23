@@ -68,7 +68,7 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
     if (isOpen) {
       setForm(fromWorkspace(initialValues, companyId));
     }
-  }, [isOpen, initialValues?.id, companyId]);
+  }, [isOpen, initialValues, companyId]);
   const [errors, setErrors] = useState({});
 
   const [rollback, setRollback] = useState(null);
