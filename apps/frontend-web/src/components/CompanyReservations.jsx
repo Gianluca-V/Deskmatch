@@ -1,4 +1,4 @@
-import { Calendar, Euro, ArrowRight } from 'lucide-react';
+import { Calendar, Euro } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './CompanyReservations.css';
 

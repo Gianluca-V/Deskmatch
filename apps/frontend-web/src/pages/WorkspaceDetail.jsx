@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  MapPin, Users, Star, Wifi, Clock, ArrowLeft,
+  MapPin, Users, Star, Clock, ArrowLeft,
   Building2, ChevronRight
 } from 'lucide-react';
 import api from '../lib/api';

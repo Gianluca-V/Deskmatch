@@ -1,33 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 function CounterStat({ targetValue, label, suffix = '' }) {
   const [currentValue, setCurrentValue] = useState(0);
   const elementRef = useRef(null);
   const hasAnimatedRef = useRef(false);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !hasAnimatedRef.current) {
-          hasAnimatedRef.current = true;
-          animateCounter();
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.5 }
-    );
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && !hasAnimatedRef.current) {
+            hasAnimatedRef.current = true;
+            animateCounter();
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.5 }
+      );
 
-    if (elementRef.current) {
-      observer.observe(elementRef.current);
-    }
+      if (elementRef.current) {
+        observer.observe(elementRef.current);
+      }
 
-    return () => observer.disconnect();
-  }, []);
+      return () => observer.disconnect();
+    }, [animateCounter]);
 
-  const animateCounter = () => {
-    // Extraer el número del targetValue (soporta decimales)
+    const animateCounter = useCallback(() => {
     const numericValue = parseFloat(targetValue.toString().replace(/[^0-9.]/g, ''));
-    const duration = 2000; // 2 segundos
+    const duration = 2000;
     const steps = 60;
     const stepDuration = duration / steps;
 
@@ -36,7 +35,7 @@ function CounterStat({ targetValue, label, suffix = '' }) {
     const interval = setInterval(() => {
       currentStep++;
       const progress = currentStep / steps;
-      const easeOutValue = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+      const easeOutValue = 1 - Math.pow(1 - progress, 3);
       const newValue = numericValue * easeOutValue;
 
       if (currentStep >= steps) {
@@ -46,7 +45,7 @@ function CounterStat({ targetValue, label, suffix = '' }) {
         setCurrentValue(newValue);
       }
     }, stepDuration);
-  };
+  }, [targetValue]);
 
   // Formatear el valor para mostrar
   const formatValue = (value) => {
