@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   MapPin, Users, Star, Clock, ArrowLeft,
-  Building2, ChevronRight, ChevronLeft, ChevronRight as ChevronRightIcon
+  Building2, ChevronRight, Maximize2
 } from 'lucide-react';
 import api from '../lib/api';
 import Modal from '../components/Modal';
