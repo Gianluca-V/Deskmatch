@@ -3,6 +3,8 @@ using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Dtos;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
+using DeskMatch.CoreService.Application.Workspaces.Models;
+using DeskMatch.CoreService.Application.Workspaces.Services;
 using DeskMatch.Domain.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +21,9 @@ public sealed class WorkspaceController : ControllerBase
     private readonly ICommandHandler<UpdateWorkspaceCommand> _updateHandler;
     private readonly ICommandHandler<DeleteWorkspaceCommand> _deleteHandler;
     private readonly ICommandHandler<ReindexWorkspacesCommand> _reindexHandler;
+    private readonly ICommandHandler<BulkConfirmCommand, BulkCreateResponse> _bulkConfirmHandler;
+    private readonly IWorkspacePreviewService _previewService;
+    private readonly IExcelTemplateService _excelTemplateService;
     private readonly IWorkspaceRepository _repository;
     private readonly ICompanyRepository _companyRepository;
 
@@ -27,6 +32,9 @@ public sealed class WorkspaceController : ControllerBase
         ICommandHandler<UpdateWorkspaceCommand> updateHandler,
         ICommandHandler<DeleteWorkspaceCommand> deleteHandler,
         ICommandHandler<ReindexWorkspacesCommand> reindexHandler,
+        ICommandHandler<BulkConfirmCommand, BulkCreateResponse> bulkConfirmHandler,
+        IWorkspacePreviewService previewService,
+        IExcelTemplateService excelTemplateService,
         IWorkspaceRepository repository,
         ICompanyRepository companyRepository)
     {
@@ -34,6 +42,9 @@ public sealed class WorkspaceController : ControllerBase
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
         _reindexHandler = reindexHandler;
+        _bulkConfirmHandler = bulkConfirmHandler;
+        _previewService = previewService;
+        _excelTemplateService = excelTemplateService;
         _repository = repository;
         _companyRepository = companyRepository;
     }
@@ -228,6 +239,102 @@ public sealed class WorkspaceController : ControllerBase
         await _deleteHandler.HandleAsync(command, cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>Descarga plantilla Excel para carga masiva.</summary>
+    /// <response code="200">Archivo .xlsx con plantilla.</response>
+    [HttpGet("bulk/template")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public IActionResult DownloadBulkTemplate()
+    {
+        var bytes = _excelTemplateService.GenerateTemplate();
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "plantilla_espacios.xlsx");
+    }
+
+    /// <summary>Previsualiza los datos del Excel sin crear workspaces.</summary>
+    /// <response code="200">Datos previsualizados.</response>
+    /// <response code="400">Error de validación.</response>
+    [HttpPost("bulk/preview")]
+    [RequestSizeLimit(10_485_760)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(BulkPreviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkPreviewResponse>> BulkPreview(
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest();
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext != ".xlsx")
+            return BadRequest();
+
+        if (file.Length > 10 * 1024 * 1024)
+            return BadRequest();
+
+        var company = await _companyRepository.GetByOwnerIdAsync(GetCurrentUserId(), cancellationToken);
+        if (company is null)
+            return BadRequest();
+
+        await using var stream = file.OpenReadStream();
+        var result = await _previewService.PreviewAsync(stream, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Confirma la creación masiva de workspaces.</summary>
+    /// <response code="200">Resultado de la creación.</response>
+    /// <response code="400">Error de validación.</response>
+    [HttpPost("bulk/confirm")]
+    [RequestSizeLimit(260_000_000)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(BulkCreateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkCreateResponse>> BulkConfirm(
+        [FromForm] string offices,
+        [FromForm] List<IFormFile>? images,
+        CancellationToken cancellationToken)
+    {
+        var officeData = System.Text.Json.JsonSerializer.Deserialize<List<OfficeData>>(offices, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        if (officeData is null || officeData.Count == 0)
+            return BadRequest();
+
+        var allowedImageExts = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var imageFiles = new List<BulkImageFile>();
+
+        if (images is not null)
+        {
+            if (images.Count > 50)
+                return BadRequest();
+
+            foreach (var img in images)
+            {
+                if (img is null || img.Length == 0) continue;
+
+                var imgExt = Path.GetExtension(img.FileName).ToLowerInvariant();
+                if (!allowedImageExts.Contains(imgExt))
+                    return BadRequest();
+
+                if (img.Length > 5 * 1024 * 1024)
+                    return BadRequest();
+
+                await using var imgStream = img.OpenReadStream();
+                using var ms = new MemoryStream();
+                await imgStream.CopyToAsync(ms, cancellationToken);
+                imageFiles.Add(new BulkImageFile(img.FileName, ms.ToArray()));
+            }
+        }
+
+        var company = await _companyRepository.GetByOwnerIdAsync(GetCurrentUserId(), cancellationToken);
+        if (company is null)
+            return BadRequest();
+
+        var command = new BulkConfirmCommand(company.Id, officeData, imageFiles);
+        var result = await _bulkConfirmHandler.HandleAsync(command, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>Re-indexa todos los workspaces en OpenSearch.</summary>

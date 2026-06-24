@@ -11,6 +11,8 @@ using DeskMatch.CoreService.Application.Reservations.Interfaces;
 using DeskMatch.CoreService.Application.Workspaces.Commands;
 using DeskMatch.CoreService.Application.Workspaces.Handlers;
 using DeskMatch.CoreService.Application.Workspaces.Interfaces;
+using DeskMatch.CoreService.Application.Workspaces.Models;
+using DeskMatch.CoreService.Application.Workspaces.Services;
 using DeskMatch.CoreService.Infrastructure.Persistence;
 using DeskMatch.CoreService.Infrastructure.Repositories;
 using DeskMatch.Domain.CQRS;
@@ -43,6 +45,11 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateWorkspaceCommand>, UpdateWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteWorkspaceCommand>, DeleteWorkspaceCommandHandler>();
         services.AddScoped<ICommandHandler<ReindexWorkspacesCommand>, ReindexWorkspacesCommandHandler>();
+        services.AddScoped<ICommandHandler<BulkConfirmCommand, BulkCreateResponse>, BulkCreateWorkspaceCommandHandler>();
+
+        services.AddScoped<IExcelTemplateService, ExcelTemplateService>();
+        services.AddScoped<IExcelWorkspaceParser, ExcelWorkspaceParser>();
+        services.AddScoped<IWorkspacePreviewService, WorkspacePreviewService>();
 
         services.AddOpenSearchSdk(configuration);
         services.AddOllamaClient();

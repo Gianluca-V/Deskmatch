@@ -21,3 +21,25 @@ export const searchOffices = (params) =>
 
 export const aiSearch = (text, page = 1, pageSize = 12) =>
   api.get('/api/search/ai', { params: { text, page, pageSize } }).then((r) => r.data);
+
+export const downloadBulkTemplate = () =>
+  api.get('/api/workspaces/bulk/template', { responseType: 'blob' }).then((r) => {
+    const url = window.URL.createObjectURL(new Blob([r.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'plantilla_espacios.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  });
+
+export const bulkPreview = (formData) =>
+  api.post('/api/workspaces/bulk/preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data);
+
+export const bulkConfirm = (formData) =>
+  api.post('/api/workspaces/bulk/confirm', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data);

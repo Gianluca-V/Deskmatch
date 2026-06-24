@@ -123,12 +123,18 @@ export default function OfficeModal({ isOpen, onClose, companyId = '', initialVa
   }
 
   function handleAmenityToggle(key) {
-    setForm((prev) => ({
-      ...prev,
-      amenities: prev.amenities.includes(key)
-        ? prev.amenities.filter((a) => a !== key)
-        : [...prev.amenities, key],
-    }));
+    setForm((prev) => {
+      const label = AMENITIES.find((a) => a.key === key)?.label?.toLowerCase();
+      const matchValues = [key.toLowerCase(), label].filter(Boolean);
+      const hasMatch = prev.amenities.some((a) => matchValues.includes(a.toLowerCase()));
+      if (hasMatch) {
+        return {
+          ...prev,
+          amenities: prev.amenities.filter((a) => !matchValues.includes(a.toLowerCase())),
+        };
+      }
+      return { ...prev, amenities: [...prev.amenities, key] };
+    });
   }
 
   function handleAmenityAdd(value) {

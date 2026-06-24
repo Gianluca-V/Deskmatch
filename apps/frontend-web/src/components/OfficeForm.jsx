@@ -21,16 +21,22 @@ const AMENITIES = [
 ];
 
 const PRESET_KEYS = AMENITIES.map((a) => a.key);
+const PRESET_LOWER_VALUES = new Map();
+AMENITIES.forEach(({ key, label }) => {
+  PRESET_LOWER_VALUES.set(key.toLowerCase(), key);
+  PRESET_LOWER_VALUES.set(label.toLowerCase(), key);
+});
 
 export default function OfficeForm({ form, onChange, onAmenityToggle, onAmenityAdd, onAmenityRemove, onImagesChange, onLocationSelect, onSubmit, onCancel, errors = {}, isPending, isError, errorMessage }) {
   const [customAmenity, setCustomAmenity] = useState('');
 
-  const presetAmenities = form.amenities.filter((a) => PRESET_KEYS.includes(a));
-  const customAmenities = form.amenities.filter((a) => !PRESET_KEYS.includes(a));
+  const amenitiesLower = form.amenities.map((a) => a.toLowerCase());
+  const presetAmenities = form.amenities.filter((a) => PRESET_LOWER_VALUES.has(a.toLowerCase()));
+  const customAmenities = form.amenities.filter((a) => !PRESET_LOWER_VALUES.has(a.toLowerCase()));
 
   function handleAdd() {
     const val = customAmenity.trim();
-    if (!val || form.amenities.includes(val)) {
+    if (!val || form.amenities.some((a) => a.toLowerCase() === val.toLowerCase())) {
       setCustomAmenity('');
       return;
     }
@@ -167,7 +173,7 @@ export default function OfficeForm({ form, onChange, onAmenityToggle, onAmenityA
         <div className="amenities-grid">
           {AMENITIES.map(({ key, label }) => (
             <label key={key} className="amenity-item">
-              <input type="checkbox" checked={presetAmenities.includes(key)} onChange={() => onAmenityToggle(key)} />
+              <input type="checkbox" checked={amenitiesLower.includes(key.toLowerCase()) || amenitiesLower.includes(AMENITIES.find((a) => a.key === key)?.label?.toLowerCase() ?? '')} onChange={() => onAmenityToggle(key)} />
               {label}
             </label>
           ))}

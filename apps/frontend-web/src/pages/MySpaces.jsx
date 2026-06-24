@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OfficeModal from '../components/OfficeModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import BulkUploadSection from '../components/BulkUploadSection';
 import { useMyCompany } from '../hooks/useMyCompany';
 import { useWorkspacesByCompany } from '../hooks/useWorkspacesByCompany';
 import { useDeleteOffice } from '../hooks/useDeleteOffice';
@@ -135,6 +136,8 @@ function MySpaces() {
           </select>
         </label>
       </section>
+
+      <BulkUploadSection />
 
       {isLoading ? (
         <p style={{ textAlign: 'center', color: 'var(--color-muted)', marginTop: '48px' }}>Cargando espacios...</p>
