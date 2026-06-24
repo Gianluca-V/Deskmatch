@@ -662,3 +662,126 @@
   .offices-grid { grid-template-columns: 1fr; }
   .offices-page__header { flex-direction: column; }
 }
+
+/* ── LocationFilter ── */
+.location-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.location-filter__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.location-filter__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.location-filter__btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+
+.location-filter__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.location-filter__btn--clear { color: var(--color-muted); }
+
+.location-filter__btn--clear:hover:not(:disabled) { border-color: #dc2626; color: #dc2626; }
+
+.location-filter__error {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 0;
+}
+
+.location-filter__radii {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.location-filter__radius-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.location-filter__radius-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.location-filter__radius-btn--active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.location-filter__search {
+  margin-bottom: 2px;
+}
+
+.location-filter__search .address-autocomplete input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.location-filter__search .address-autocomplete input:focus {
+  border-color: var(--color-primary);
+}
+
+.location-filter__search .address-autocomplete__list {
+  position: absolute;
+  z-index: 10000;
+  width: 100%;
+  margin-top: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.location-filter__search .address-autocomplete {
+  position: relative;
+}
+
+.location-filter__map {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.location-filter__leaflet {
+  width: 100%;
+  height: 220px;
+}
+
+.location-filter__coords {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-muted);
+  margin: 0;
+}
