@@ -44,7 +44,10 @@ function CompanyReservationsPage() {
   const companyQuery = useCompanyReservations();
   const workspaceQuery = useWorkspaceReservations(workspaceId);
   const activeQuery = workspaceId ? workspaceQuery : companyQuery;
-  const reservations = activeQuery.data ?? [];
+  const reservations = useMemo(
+  () => activeQuery.data ?? [],
+  [activeQuery.data]
+);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
