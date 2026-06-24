@@ -1,10 +1,12 @@
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  MapPin, Users, Star, Wifi, Clock, ArrowLeft,
-  Building2, ChevronRight
+  MapPin, Users, Star, Clock, ArrowLeft,
+  Building2, ChevronRight, ChevronLeft, ChevronRight as ChevronRightIcon
 } from 'lucide-react';
 import api from '../lib/api';
+import Modal from '../components/Modal';
 import BookingWidget from '../components/BookingWidget';
 import './WorkspaceDetail.css';
 
@@ -51,6 +53,36 @@ export default function WorkspaceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: workspace, isLoading, error } = useWorkspace(id);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
+  const allImages = workspace?.images || [];
+
+  const openGallery = useCallback((idx) => {
+    setGalleryIndex(idx);
+    setGalleryOpen(true);
+  }, []);
+
+  const closeGallery = useCallback(() => setGalleryOpen(false), []);
+
+  const galleryPrev = useCallback(() => {
+    setGalleryIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1));
+  }, [allImages.length]);
+
+  const galleryNext = useCallback(() => {
+    setGalleryIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0));
+  }, [allImages.length]);
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+    const handleKey = (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); galleryPrev(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); galleryNext(); }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [galleryOpen, galleryPrev, galleryNext]);
 
   if (isLoading) return <div className="wd-page"><SkeletonDetail /></div>;
 
@@ -69,7 +101,10 @@ export default function WorkspaceDetail() {
     );
   }
 
-  const heroImage = workspace.images?.[0];
+  const heroImage = allImages[activeIndex];
+  const maxThumbs = 5;
+  const visibleThumbs = allImages.slice(0, maxThumbs);
+  const extraCount = allImages.length - maxThumbs;
   const location = [workspace.city, workspace.country].filter(Boolean).join(', ');
 
   return (
@@ -89,20 +124,56 @@ export default function WorkspaceDetail() {
         {/* Hero */}
         <div className="wd-hero">
           {heroImage ? (
-            <img src={heroImage} alt={workspace.name} className="wd-hero__img" />
+            <img
+              src={heroImage}
+              alt={workspace.name}
+              className="wd-hero__img"
+              onClick={() => openGallery(activeIndex)}
+            />
           ) : (
             <div className="wd-hero__placeholder">
               <Building2 size={64} />
             </div>
           )}
-          {workspace.images?.length > 1 && (
-            <div className="wd-hero__thumbnails">
-              {workspace.images.slice(1, 4).map((img, i) => (
-                <img key={i} src={img} alt={`${workspace.name} ${i + 2}`} className="wd-hero__thumb" />
+          {allImages.length > 1 && (
+            <div className="wd-hero__thumbs">
+              {visibleThumbs.map((img, i) => (
+                <button
+                  key={i}
+                  className={`wd-hero__thumb ${i === activeIndex ? 'wd-hero__thumb--active' : ''}`}
+                  onClick={() => setActiveIndex(i)}
+                >
+                  <img src={img} alt={`${workspace.name} ${i + 1}`} />
+                </button>
               ))}
+              {extraCount > 0 && (
+                <button className="wd-hero__thumb wd-hero__thumb--more" onClick={() => openGallery(activeIndex)}>
+                  +{extraCount}
+                </button>
+              )}
             </div>
           )}
         </div>
+
+        {/* Full-screen gallery modal */}
+        <Modal isOpen={galleryOpen} onClose={closeGallery} className="wd-gallery-modal">
+          <div className="wd-gallery">
+            <div className="wd-gallery__counter">
+              {galleryIndex + 1} / {allImages.length}
+            </div>
+            <button className="wd-gallery__nav wd-gallery__nav--prev" onClick={galleryPrev}>
+              <ChevronLeft size={28} />
+            </button>
+            <img
+              className="wd-gallery__img"
+              src={allImages[galleryIndex]}
+              alt={`${workspace.name} ${galleryIndex + 1}`}
+            />
+            <button className="wd-gallery__nav wd-gallery__nav--next" onClick={galleryNext}>
+              <ChevronRightIcon size={28} />
+            </button>
+          </div>
+        </Modal>
 
         {/* Layout: info + widget */}
         <div className="wd-layout">
