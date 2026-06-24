@@ -3,12 +3,13 @@ import { geocode } from '../api/geocoding';
 
 const DEBOUNCE_MS = 500;
 
-export default function AddressAutocomplete({ value, onChange, onSelect, placeholder }) {
+export default function AddressAutocomplete({ value, onChange, onSelect, placeholder, maxLength }) {
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef(null);
   const wrapRef = useRef(null);
+  const initialSearchDone = useRef(false);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -16,6 +17,23 @@ export default function AddressAutocomplete({ value, onChange, onSelect, placeho
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  /* Buscar ubicación al cargar con una dirección pre-cargada */
+  useEffect(() => {
+    if (value && value.length >= 3 && !initialSearchDone.current) {
+      initialSearchDone.current = true;
+      setLoading(true);
+      geocode(value)
+        .then((results) => {
+          if (results?.length > 0) {
+            setSuggestions(results);
+            setOpen(true);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
   }, []);
 
   function handleChange(e) {
@@ -53,6 +71,7 @@ export default function AddressAutocomplete({ value, onChange, onSelect, placeho
         onChange={handleChange}
         placeholder={placeholder}
         autoComplete="off"
+        maxLength={maxLength}
       />
       {loading && <p className="address-autocomplete__loading">Buscando...</p>}
       {open && suggestions.length > 0 && (

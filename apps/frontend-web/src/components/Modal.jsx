@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, className, children }) {
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -20,11 +20,13 @@ export default function Modal({ isOpen, onClose, title, children }) {
       className="modal-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div role="dialog" aria-modal="true" aria-labelledby="modal-title" className="modal">
-        <div className="modal__header">
-          <h2 id="modal-title" className="modal__title">{title}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="modal__close">✕</button>
-        </div>
+      <div role="dialog" aria-modal="true" aria-labelledby={title ? "modal-title" : undefined} className={`modal ${className || ''}`.trim()}>
+        {title && (
+          <div className="modal__header">
+            <h2 id="modal-title" className="modal__title">{title}</h2>
+            <button onClick={onClose} aria-label="Cerrar" className="modal__close">✕</button>
+          </div>
+        )}
         <div className="modal__body">
           {children}
         </div>
