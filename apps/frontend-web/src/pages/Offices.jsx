@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, MapPin, Users, Clock, Star, SlidersHorizontal,
-  X, ChevronLeft, ChevronRight, Building2, Wifi, Sparkles
+  X, ChevronLeft, ChevronRight, Building2, Wifi, Sparkles, Navigation
 } from 'lucide-react';
 import { useWorkspaces } from '../hooks/useWorkspaces';
 import { aiSearch } from '../api/offices';
+import LocationFilter from '../components/LocationFilter';
 import './Offices.css';
 
 const AMENITY_OPTIONS = [
@@ -125,6 +126,9 @@ export default function Offices() {
     maxPrice: '',
     minCapacity: '',
     amenities: [],
+    lat: undefined,
+    lon: undefined,
+    radius: undefined,
     page: 1,
     pageSize: 12,
   });
@@ -138,6 +142,9 @@ export default function Offices() {
     maxPrice: filters.maxPrice || undefined,
     minCapacity: filters.minCapacity || undefined,
     amenities: filters.amenities.length > 0 ? filters.amenities.join(',') : undefined,
+    lat: filters.lat,
+    lon: filters.lon,
+    radius: filters.radius,
   };
 
   const { data, isLoading, error } = useWorkspaces(queryParams);
@@ -189,8 +196,12 @@ export default function Offices() {
   const presetAmenities = filters.amenities.filter(isPresetAmenity);
   const customAmenities = filters.amenities.filter((a) => !isPresetAmenity(a));
 
+  function handleLocationChange({ lat, lon, radius }) {
+    setFilters((prev) => ({ ...prev, lat, lon, radius, page: 1 }));
+  }
+
   function clearFilters() {
-    setFilters({ q: '', city: '', minPrice: '', maxPrice: '', minCapacity: '', amenities: [], page: 1, pageSize: 12 });
+    setFilters({ q: '', city: '', minPrice: '', maxPrice: '', minCapacity: '', amenities: [], lat: undefined, lon: undefined, radius: undefined, page: 1, pageSize: 12 });
     setSearch('');
     setAiInterpretation(null);
   }
@@ -232,7 +243,8 @@ export default function Offices() {
 
   const hasActiveFilters =
     filters.q || filters.city || filters.minPrice || filters.maxPrice ||
-    filters.minCapacity || filters.amenities.length > 0 || aiInterpretation;
+    filters.minCapacity || filters.amenities.length > 0 || aiInterpretation ||
+    filters.lat != null;
 
   return (
     <div className="offices-page">
@@ -390,6 +402,17 @@ export default function Offices() {
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Ubicación */}
+              <div className="offices-filters__group">
+                <label className="offices-filters__label">
+                  <MapPin size={14} /> Ubicación
+                </label>
+                <LocationFilter
+                  value={{ lat: filters.lat, lon: filters.lon, radius: filters.radius }}
+                  onChange={handleLocationChange}
+                />
               </div>
 
               {/* Amenities */}
