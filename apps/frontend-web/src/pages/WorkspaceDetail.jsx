@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
 import {
   MapPin, Users, Star, Clock, ArrowLeft,
   Building2, ChevronRight, Maximize2
@@ -8,7 +10,15 @@ import {
 import api from '../lib/api';
 import Modal from '../components/Modal';
 import BookingWidget from '../components/BookingWidget';
+import 'leaflet/dist/leaflet.css';
 import './WorkspaceDetail.css';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 function useWorkspace(id) {
   return useQuery({
@@ -56,6 +66,7 @@ export default function WorkspaceDetail() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [mapOpen, setMapOpen] = useState(false);
 
   const allImages = workspace?.images || [];
 
@@ -259,6 +270,35 @@ export default function WorkspaceDetail() {
                     {location && <p className="wd-location-card__sub">{location}</p>}
                   </div>
                 </div>
+                {workspace.latitude != null && workspace.longitude != null && (
+                  <>
+                    <button
+                      type="button"
+                      className="wd-location__map-toggle"
+                      onClick={() => setMapOpen((prev) => !prev)}
+                    >
+                      <Maximize2 size={14} />
+                      {mapOpen ? 'Ocultar mapa' : 'Ver en mapa'}
+                    </button>
+                    {mapOpen && (
+                      <div className="wd-location__map">
+                        <MapContainer
+                          center={[workspace.latitude, workspace.longitude]}
+                          zoom={15}
+                          className="wd-location__leaflet"
+                          zoomControl={true}
+                          scrollWheelZoom={true}
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                          <Marker position={[workspace.latitude, workspace.longitude]} />
+                        </MapContainer>
+                      </div>
+                    )}
+                  </>
+                )}
               </section>
             )}
           </div>
