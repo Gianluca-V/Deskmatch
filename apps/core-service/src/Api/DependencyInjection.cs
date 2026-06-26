@@ -1,3 +1,4 @@
+using DeskMatch.CoreService.Application.CompanyCalendar.Interfaces;
 using DeskMatch.CoreService.Application.Companies.Commands;
 using DeskMatch.CoreService.Application.Companies.Dtos;
 using DeskMatch.CoreService.Application.Companies.Handlers;
@@ -60,6 +61,8 @@ public static class DependencyInjection
 
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IDashboardService, DashboardService>();
+
+        services.AddScoped<ICompanyCalendarRepository, CompanyCalendarRepository>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
