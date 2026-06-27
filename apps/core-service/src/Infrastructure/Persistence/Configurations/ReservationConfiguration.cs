@@ -34,6 +34,21 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
             .IsRequired()
             .HasConversion<int>();
 
+        builder.Property(r => r.DepositPercentage)
+            .IsRequired()
+            .HasDefaultValue(30);
+
+        builder.Property(r => r.DepositAmount)
+            .HasPrecision(18, 2);
+
+        builder.Property(r => r.DepositPaid)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(r => r.FullyPaid)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(r => r.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("NOW()");

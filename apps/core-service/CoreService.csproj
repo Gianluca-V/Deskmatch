@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\shared\sdk\src\Storage\DeskMatch.SDK.Storage.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\Geocoding\DeskMatch.SDK.Geocoding.csproj" />
     <ProjectReference Include="..\..\shared\sdk\src\Ollama\DeskMatch.SDK.Ollama.csproj" />
+    <ProjectReference Include="..\..\shared\sdk\src\Payments\DeskMatch.SDK.Payments.csproj" />
   </ItemGroup>
 
 </Project>

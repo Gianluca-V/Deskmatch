@@ -5,6 +5,9 @@ using DeskMatch.CoreService.Application.Companies.Interfaces;
 using DeskMatch.CoreService.Application.Companies.Validators;
 using DeskMatch.CoreService.Application.Dashboard.Interfaces;
 using DeskMatch.CoreService.Application.Dashboard.Services;
+using DeskMatch.CoreService.Application.Payments.Commands;
+using DeskMatch.CoreService.Application.Payments.Handlers;
+using DeskMatch.CoreService.Application.Payments.Interfaces;
 using DeskMatch.CoreService.Application.Reservations.Commands;
 using DeskMatch.CoreService.Application.Reservations.Handlers;
 using DeskMatch.CoreService.Application.Reservations.Interfaces;
@@ -17,6 +20,7 @@ using DeskMatch.Domain.CQRS;
 using DeskMatch.SDK.Geocoding;
 using DeskMatch.SDK.Ollama;
 using DeskMatch.SDK.OpenSearch;
+using DeskMatch.SDK.Payments;
 using DeskMatch.SDK.Storage;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -51,11 +55,17 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateReservationCommand, Guid>, CreateReservationCommandHandler>();
         services.AddScoped<ICommandHandler<CancelReservationCommand>, CancelReservationCommandHandler>();
 
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+        services.AddScoped<ICommandHandler<PayDepositCommand, Guid>, PayDepositCommandHandler>();
+        services.AddScoped<ICommandHandler<PayFinalCommand, Guid>, PayFinalCommandHandler>();
+
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IDashboardService, DashboardService>();
 
         services.AddGeocodingSdk(configuration);
         services.AddStorageSdk(configuration);
+        services.AddPaymentSdk(configuration);
 
         return services;
     }

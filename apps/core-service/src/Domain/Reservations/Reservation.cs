@@ -17,4 +17,8 @@ public class Reservation : AggregateRoot<Guid>
     public DateTimeOffset EndTime { get; set; }
     public decimal TotalPrice { get; set; }
     public ReservationStatus Status { get; set; } = ReservationStatus.Confirmed;
+    public decimal DepositPercentage { get; set; } = 30;
+    public decimal? DepositAmount { get; set; }
+    public bool DepositPaid { get; set; } = false;
+    public bool FullyPaid { get; set; } = false;
 }
