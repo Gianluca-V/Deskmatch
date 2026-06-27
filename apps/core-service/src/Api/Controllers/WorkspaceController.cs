@@ -257,6 +257,7 @@ public sealed class WorkspaceController : ControllerBase
     [HttpPost("bulk/preview")]
     [RequestSizeLimit(10_485_760)]
     [Consumes("multipart/form-data")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     [ProducesResponseType(typeof(BulkPreviewResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BulkPreviewResponse>> BulkPreview(
